@@ -16,8 +16,9 @@ function calcTotal(session: FarmSession, itemMap: Map<string, Item>): number {
   for (const e of session.loot) {
     const item = itemMap.get(e.itemId)
     if (!item) continue
-    const qty = Math.max(0, e.qtyAfter - e.qtyBefore)
-    sum += qty * item.price
+    const qty   = Math.max(0, e.qtyAfter - e.qtyBefore)
+    const price = e.priceSnapshot ?? item.price
+    sum += qty * price
   }
   return sum
 }

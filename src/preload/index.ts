@@ -17,5 +17,11 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('export-data'),
 
   importData: (): Promise<{ success: boolean; reason?: string }> =>
-    ipcRenderer.invoke('import-data')
+    ipcRenderer.invoke('import-data'),
+
+  marketSearch: (ids: string[]): Promise<unknown> =>
+    ipcRenderer.invoke('market-search', ids),
+
+  marketPriceDetail: (id: string): Promise<unknown> =>
+    ipcRenderer.invoke('market-price-detail', id)
 })

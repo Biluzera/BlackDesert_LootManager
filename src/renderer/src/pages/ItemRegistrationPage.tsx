@@ -4,6 +4,7 @@ import type { FarmLocation } from './FarmLocationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
 import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
+import { useMarket } from '../context/MarketContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -11,6 +12,7 @@ export interface Item {
   id: string
   name: string
   price: number
+  marketId?: string
   imageFile: string | null
   createdAt: string
 }
@@ -31,6 +33,7 @@ function parsePrice(raw: string): number {
 
 function ItemRegistrationPage(): React.ReactElement {
   const { devMode } = useDevMode()
+  const { marketData, setItems: setMarketItems } = useMarket()
   const [items, setItems] = useState<Item[]>([])
   const [locations, setLocations] = useState<FarmLocation[]>([])
   const [sessions, setSessions] = useState<FarmSession[]>([])
@@ -41,6 +44,7 @@ function ItemRegistrationPage(): React.ReactElement {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
+  const [marketId, setMarketId] = useState('')
   const [imageFile, setImageFile] = useState<string | null>(null)
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -74,6 +78,7 @@ function ItemRegistrationPage(): React.ReactElement {
       const locs = Array.isArray(locData)  ? locData  : []
       const sess = Array.isArray(sessData) ? sessData : []
       setItems(list)
+      setMarketItems(list)
       setLocations(locs)
       setSessions(sess)
 
@@ -95,12 +100,14 @@ function ItemRegistrationPage(): React.ReactElement {
   async function persistItems(list: Item[]): Promise<void> {
     if (!devMode) await window.api.writeJson('items.json', list)
     setItems(list)
+    setMarketItems(list)
   }
 
   function resetForm(): void {
     setEditingId(null)
     setName('')
     setPrice('')
+    setMarketId('')
     setImageFile(null)
     setImageDataUrl(null)
     setError(null)
@@ -140,7 +147,7 @@ function ItemRegistrationPage(): React.ReactElement {
       if (editingId !== null) {
         const updated = items.map(item =>
           item.id === editingId
-            ? { ...item, name: trimmedName, price: parsePrice(price), imageFile }
+            ? { ...item, name: trimmedName, price: parsePrice(price), marketId: String(marketId).trim() || undefined, imageFile }
             : item
         )
         await persistItems(updated)
@@ -149,6 +156,7 @@ function ItemRegistrationPage(): React.ReactElement {
           id: `item_${Date.now()}`,
           name: trimmedName,
           price: parsePrice(price),
+          marketId: String(marketId).trim() || undefined,
           imageFile,
           createdAt: new Date().toISOString()
         }
@@ -166,6 +174,7 @@ function ItemRegistrationPage(): React.ReactElement {
     setEditingId(item.id)
     setName(item.name)
     setPrice(item.price > 0 ? String(item.price) : '')
+    setMarketId(item.marketId != null ? String(item.marketId) : '')
     setImageFile(item.imageFile)
     setImageDataUrl(item.imageFile ? (imageCache[item.imageFile] ?? null) : null)
     setError(null)
@@ -291,7 +300,7 @@ function ItemRegistrationPage(): React.ReactElement {
                   {/* Price */}
                   <div className="form-field">
                     <label className="form-label" htmlFor="item-price">
-                      Preço (prata)
+                      Preço Manual (prata)
                     </label>
                     <input
                       id="item-price"
@@ -304,6 +313,24 @@ function ItemRegistrationPage(): React.ReactElement {
                       placeholder="0"
                     />
                   </div>
+                </div>
+
+                {/* Market ID */}
+                <div className="form-field">
+                  <label className="form-label" htmlFor="item-market-id">
+                    ID de Mercado{' '}
+                    <span className="form-label-hint">(opcional — busca preço na API da arsha.io)</span>
+                  </label>
+                  <input
+                    id="item-market-id"
+                    className="form-input"
+                    type="text"
+                    value={marketId}
+                    onChange={e => setMarketId(e.target.value)}
+                    placeholder="Ex.: 721003"
+                    maxLength={20}
+                    autoComplete="off"
+                  />
                 </div>
 
                 {/* Image picker */}
@@ -462,6 +489,7 @@ function ItemRegistrationPage(): React.ReactElement {
                 : rate?.qtyPerSess != null
                   ? `~${rate.qtyPerSess.toLocaleString('pt-BR')}/sessão`
                   : null
+              const marketEntry = item.marketId != null ? marketData.get(String(item.marketId).trim()) : undefined
               return (
                 <li
                   key={item.id}
@@ -479,15 +507,49 @@ function ItemRegistrationPage(): React.ReactElement {
                   <div className="item-row-info">
                     <div className="item-row-name-line">
                       <span className="item-row-name" title={item.name}>{item.name}</span>
-                      {item.price > 0 && (
-                        <span className="item-row-price-badge">{formatPrice(item.price)}</span>
-                      )}
+                      {marketEntry
+                        ? (
+                          <span className="item-row-price-badge item-price-market" title="Preço de mercado (arsha.io)">
+                            🏪 {marketEntry.basePrice.toLocaleString('pt-BR')} prata
+                          </span>
+                        )
+                        : item.price > 0 && (
+                          <span className="item-row-price-badge item-price-manual" title="Preço configurado manualmente">
+                            ✋ {formatPrice(item.price)}
+                          </span>
+                        )
+                      }
                       {rateLabel && (
                         <span className="item-drop-rate-badge" title="Drop rate médio em todas as sessões">
                           📦 {rateLabel}
                         </span>
                       )}
                     </div>
+                    {/* Market details */}
+                    {marketEntry && (
+                      <div className="item-row-market-details">
+                        <span className="market-detail-chip">
+                          <span className="market-detail-label">Estoque:</span>
+                          <span className="market-detail-value">{marketEntry.stock.toLocaleString('pt-BR')}</span>
+                        </span>
+                        <span className="market-detail-chip">
+                          <span className="market-detail-label">Preço base:</span>
+                          <span className="market-detail-value">{marketEntry.basePrice.toLocaleString('pt-BR')} prata</span>
+                        </span>
+                        {item.price > 0 && (
+                          <span className="market-detail-chip market-detail-override-note">
+                            (preço manual ignorado: {item.price.toLocaleString('pt-BR')} prata)
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {item.marketId != null && String(item.marketId).trim() !== '' && !marketEntry && (
+                      <div className="item-row-market-details">
+                        <span className="market-detail-chip market-detail-loading">
+                          🔄 ID de Mercado: {String(item.marketId)} — aguardando dados…
+                        </span>
+                      </div>
+                    )}
                     {locNames.length > 0 && (
                       <div className="item-row-locs">
                         {locNames.map((n, i) => (

@@ -9,6 +9,8 @@ declare global {
       getImageDataUrl: (filename: string) => Promise<string | null>
       exportData: () => Promise<{ success: boolean; reason?: string }>
       importData: () => Promise<{ success: boolean; reason?: string }>
+      marketSearch: (ids: string[]) => Promise<unknown>
+      marketPriceDetail: (id: string) => Promise<unknown>
     }
   }
 }

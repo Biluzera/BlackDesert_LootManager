@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { useDevMode } from '../context/DevModeContext'
+import { fetchMarketPrices, fetchMarketPriceDetail } from '../services/marketApi'
+import type { MarketEntry, MarketPriceDetail } from '../services/marketApi'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -150,6 +152,38 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
   const [saved, setSaved] = useState(false)
   const { devMode, toggleDevMode } = useDevMode()
 
+  // ── Market debug state ────────────────────────────────────────────────────
+  const [debugId,         setDebugId]         = useState('')
+  const [debugLoading,    setDebugLoading]     = useState(false)
+  const [debugError,      setDebugError]       = useState<string | null>(null)
+  const [debugSearch,     setDebugSearch]      = useState<MarketEntry | null>(null)
+  const [debugDetail,     setDebugDetail]      = useState<MarketPriceDetail | null>(null)
+
+  async function handleDebugFetch(): Promise<void> {
+    const id = debugId.trim()
+    if (!id) return
+    setDebugLoading(true)
+    setDebugError(null)
+    setDebugSearch(null)
+    setDebugDetail(null)
+    try {
+      const [searchResult, detail] = await Promise.all([
+        fetchMarketPrices([id]),
+        fetchMarketPriceDetail(id)
+      ])
+      const entry = searchResult?.get(id) ?? null
+      setDebugSearch(entry)
+      setDebugDetail(detail)
+      if (!entry && !detail) {
+        setDebugError('Nenhum resultado encontrado para este ID.')
+      }
+    } catch (e) {
+      setDebugError(e instanceof Error ? e.message : 'Erro ao buscar dados.')
+    } finally {
+      setDebugLoading(false)
+    }
+  }
+
   function markSaved(): void {
     setSaved(true)
     setTimeout(() => setSaved(false), 1800)
@@ -277,6 +311,104 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
           <p className="dev-mode-warning" role="status">
             ⚠️ Modo ativo: itens, locais, sessões e bosses exibidos são mockados e não serão persistidos.
           </p>
+        )}
+      </section>
+
+      {/* ── Market API Debug ── */}
+      <section className="settings-section">
+        <div className="settings-section-title">
+          <span>🛒</span> Debug — API de Mercado (arsha.io)
+        </div>
+        <p className="settings-section-desc">
+          Informe um ID de item do mercado do Black Desert para inspecionar os dados retornados pela API.
+          Usa as rotas <code>/search</code> e <code>/price</code> para exibir todos os atributos disponíveis.
+        </p>
+
+        <div className="market-debug-row">
+          <input
+            className="form-input market-debug-input"
+            type="text"
+            value={debugId}
+            onChange={e => setDebugId(e.target.value)}
+            placeholder="Ex.: 721003"
+            maxLength={20}
+            onKeyDown={e => e.key === 'Enter' && handleDebugFetch()}
+          />
+          <button
+            className="btn btn-primary"
+            onClick={handleDebugFetch}
+            disabled={debugLoading || !debugId.trim()}
+          >
+            {debugLoading ? 'Buscando…' : '🔍 Buscar'}
+          </button>
+        </div>
+
+        {debugError && (
+          <p className="form-error" role="alert">{debugError}</p>
+        )}
+
+        {(debugSearch || debugDetail) && (
+          <div className="market-debug-results">
+
+            {/* Search result (/search) */}
+            <div className="market-debug-block">
+              <div className="market-debug-block-title">
+                📊 Resultado de <code>/v1/sa/search</code>
+              </div>
+              {debugSearch ? (
+                <table className="market-debug-table">
+                  <tbody>
+                    <tr>
+                      <td className="mdt-key">ID de Mercado</td>
+                      <td className="mdt-val">{debugSearch.marketId}</td>
+                    </tr>
+                    <tr>
+                      <td className="mdt-key">Estoque Atual</td>
+                      <td className="mdt-val">{debugSearch.stock.toLocaleString('pt-BR')} unidades</td>
+                    </tr>
+                    <tr>
+                      <td className="mdt-key">Preço Base</td>
+                      <td className="mdt-val">{debugSearch.basePrice.toLocaleString('pt-BR')} prata</td>
+                    </tr>
+                  </tbody>
+                </table>
+              ) : (
+                <p className="market-debug-empty">Sem resultado nesta rota.</p>
+              )}
+            </div>
+
+            {/* Price detail (/price) */}
+            <div className="market-debug-block">
+              <div className="market-debug-block-title">
+                🏷️ Resultado de <code>/v1/sa/price</code>
+              </div>
+              {debugDetail ? (
+                <table className="market-debug-table">
+                  <tbody>
+                    <tr>
+                      <td className="mdt-key">Nome</td>
+                      <td className="mdt-val">{debugDetail.name}</td>
+                    </tr>
+                    <tr>
+                      <td className="mdt-key">ID</td>
+                      <td className="mdt-val">{debugDetail.id}</td>
+                    </tr>
+                    <tr>
+                      <td className="mdt-key">SID (Sub-ID)</td>
+                      <td className="mdt-val">{debugDetail.sid}</td>
+                    </tr>
+                    <tr>
+                      <td className="mdt-key">Preço Base</td>
+                      <td className="mdt-val">{debugDetail.basePrice.toLocaleString('pt-BR')} prata</td>
+                    </tr>
+                  </tbody>
+                </table>
+              ) : (
+                <p className="market-debug-empty">Sem resultado nesta rota.</p>
+              )}
+            </div>
+
+          </div>
         )}
       </section>
     </div>

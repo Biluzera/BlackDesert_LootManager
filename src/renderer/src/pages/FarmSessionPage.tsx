@@ -4,6 +4,7 @@ import type { Item } from './ItemRegistrationPage'
 import type { FarmLocation } from './FarmLocationPage'
 import { useDevMode } from '../context/DevModeContext'
 import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
+import { useMarket } from '../context/MarketContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -12,6 +13,7 @@ export interface SessionLootEntry {
   qty: number           // for normal items
   qtyBefore: number     // previous quantity before session
   qtyAfter: number      // final quantity after session
+  priceSnapshot?: number // price per unit at time of recording
 }
 
 export interface FarmSession {
@@ -67,6 +69,7 @@ function SessionFormModal({
   onCancel
 }: SessionFormProps): React.ReactElement {
   const isNew = session === null
+  const { getEffectivePrice } = useMarket()
 
   const defaultLocationId = session?.locationId ?? (locations[0]?.id ?? '')
 
@@ -124,22 +127,27 @@ function SessionFormModal({
     }))
   }
 
-  // Running total
+  // Running total (using effective price from market or manual)
   const total = useMemo(() => {
     let sum = 0
     for (const item of locationItems) {
       const e = getEntry(item.id)
       const qty = Math.max(0, e.qtyAfter - e.qtyBefore)
-      sum += qty * item.price
+      const { price } = getEffectivePrice(item)
+      sum += qty * price
     }
     return sum
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lootMap, locationItems])
+  }, [lootMap, locationItems, getEffectivePrice])
 
   const silverPerHour = durationMinutes > 0 ? Math.round(total / (durationMinutes / 60)) : null
 
   function handleSave(): void {
-    const loot = locationItems.map(item => getEntry(item.id))
+    const loot = locationItems.map(item => {
+      const entry = getEntry(item.id)
+      const { price } = getEffectivePrice(item)
+      return { ...entry, priceSnapshot: price }
+    })
     const now  = new Date().toISOString()
     const saved: FarmSession = session
       ? { ...session, locationId, date, duration: durationDisplay, durationMinutes, notes, loot }
@@ -257,7 +265,8 @@ function SessionFormModal({
                   const img = item.imageFile ? imageCache[item.imageFile] : null
 
                   const netQty = Math.max(0, e.qtyAfter - e.qtyBefore)
-                  const lineTotal = netQty * item.price
+                  const { price: effectivePrice, source: priceSource } = getEffectivePrice(item)
+                  const lineTotal = netQty * effectivePrice
 
                   return (
                     <li key={item.id} className="loot-row">
@@ -269,7 +278,16 @@ function SessionFormModal({
                             : <span aria-hidden="true">💎</span>
                           }
                         </div>
-                        <span className="loot-row-name">{item.name}</span>
+                        <div className="loot-row-identity-info">
+                          <span className="loot-row-name">{item.name}</span>
+                          <span
+                            className={`loot-price-source-badge ${priceSource === 'market' ? 'loot-price-source-market' : 'loot-price-source-manual'}`}
+                            title={priceSource === 'market' ? 'Preço vindo da API de mercado (arsha.io)' : 'Preço configurado manualmente'}
+                          >
+                            {priceSource === 'market' ? '🏪 Mercado' : '✋ Manual'}
+                            {' · '}{effectivePrice.toLocaleString('pt-BR')} prata
+                          </span>
+                        </div>
                       </div>
 
                       {/* Quantity inputs */}
@@ -304,7 +322,7 @@ function SessionFormModal({
 
                       {/* Line total */}
                       <div className="loot-row-value">
-                        {item.price > 0
+                        {effectivePrice > 0
                           ? <span className={lineTotal > 0 ? 'loot-value-gold' : 'loot-value-zero'}>
                               {lineTotal.toLocaleString('pt-BR')} prata
                             </span>
@@ -357,8 +375,9 @@ function calcSessionTotal(session: FarmSession, itemMap: Map<string, Item>): num
   for (const e of session.loot) {
     const item = itemMap.get(e.itemId)
     if (!item) continue
-    const qty = Math.max(0, e.qtyAfter - e.qtyBefore)
-    sum += qty * item.price
+    const qty   = Math.max(0, e.qtyAfter - e.qtyBefore)
+    const price = e.priceSnapshot ?? item.price
+    sum += qty * price
   }
   return sum
 }

@@ -10,6 +10,7 @@ import FarmTimer from './components/FarmTimer'
 import type { AppSettings } from './pages/SettingsPage'
 import { DEFAULT_SETTINGS } from './pages/SettingsPage'
 import { DevModeProvider, useDevMode } from './context/DevModeContext'
+import { MarketProvider } from './context/MarketContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -119,7 +120,9 @@ function AppInner(): React.ReactElement {
 function App(): React.ReactElement {
   return (
     <DevModeProvider>
-      <AppInner />
+      <MarketProvider>
+        <AppInner />
+      </MarketProvider>
     </DevModeProvider>
   )
 }

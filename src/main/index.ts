@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, net } from 'electron'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
 import * as fs from 'fs'
@@ -245,6 +245,30 @@ ipcMain.handle('import-data', async () => {
   }
 
   return { success: true }
+})
+
+// ── Market API (bypasses CORS — runs in main process via net.fetch) ───────────
+
+ipcMain.handle('market-search', async (_event, ids: string[]) => {
+  try {
+    const url = `https://api.arsha.io/v1/sa/search?ids=${ids.join(',')}`
+    const res = await net.fetch(url)
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
+})
+
+ipcMain.handle('market-price-detail', async (_event, id: string) => {
+  try {
+    const url = `https://api.arsha.io/v1/sa/price?sid=0&id=${id}&lang=pt`
+    const res = await net.fetch(url)
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
 })
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────

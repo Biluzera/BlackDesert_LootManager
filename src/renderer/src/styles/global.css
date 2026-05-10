@@ -3959,3 +3959,197 @@ input[type='date'].form-input {
   white-space: nowrap;
   flex-shrink: 0;
 }
+
+/* ============================================================
+   MARKET INTEGRATION
+   ============================================================ */
+
+/* ── Item price badges (market vs manual) ── */
+.item-price-market {
+  background: rgba(30, 130, 200, 0.15) !important;
+  border-color: rgba(30, 130, 200, 0.4) !important;
+  color: #6ec6f0 !important;
+}
+
+.item-price-manual {
+  background: rgba(180, 130, 30, 0.15) !important;
+  border-color: rgba(180, 130, 30, 0.35) !important;
+  color: var(--color-gold, #c9a030) !important;
+}
+
+/* ── Market detail chips (below item name in card) ── */
+.item-row-market-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+
+.market-detail-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(30, 130, 200, 0.10);
+  border: 1px solid rgba(30, 130, 200, 0.25);
+  font-size: 0.65rem;
+  font-family: var(--font-body, sans-serif);
+  color: #8ecde8;
+  white-space: nowrap;
+}
+
+.market-detail-label {
+  opacity: 0.7;
+  margin-right: 0.15rem;
+}
+
+.market-detail-value {
+  font-weight: 700;
+  color: #a8ddf4;
+}
+
+.market-detail-override-note {
+  background: rgba(100, 80, 20, 0.12);
+  border-color: rgba(150, 110, 30, 0.3);
+  color: #b09050;
+  font-style: italic;
+}
+
+.market-detail-loading {
+  color: #8a8a8a;
+  font-style: italic;
+  background: rgba(100, 100, 100, 0.08);
+  border-color: rgba(100, 100, 100, 0.2);
+}
+
+/* ── Form label hint ── */
+.form-label-hint {
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.65;
+  margin-left: 0.2rem;
+}
+
+/* ── Loot row identity info (name + price badge) ── */
+.loot-row-identity-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+/* ── Price source badge in session form ── */
+.loot-price-source-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-family: var(--font-body, sans-serif);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.loot-price-source-market {
+  background: rgba(30, 130, 200, 0.15);
+  border: 1px solid rgba(30, 130, 200, 0.35);
+  color: #6ec6f0;
+}
+
+.loot-price-source-manual {
+  background: rgba(180, 130, 30, 0.12);
+  border: 1px solid rgba(180, 130, 30, 0.3);
+  color: var(--color-gold, #c9a030);
+}
+
+/* ── Market Debug Section (Settings) ── */
+.market-debug-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.market-debug-input {
+  max-width: 180px;
+  flex-shrink: 0;
+}
+
+.market-debug-results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .market-debug-results {
+    grid-template-columns: 1fr;
+  }
+}
+
+.market-debug-block {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.market-debug-block-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--font-heading, serif);
+  color: var(--color-gold, #c9a030);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+.market-debug-block-title code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.72rem;
+  background: rgba(255,255,255,0.07);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+}
+
+.market-debug-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.market-debug-table tr + tr td {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mdt-key {
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #a0a0a0);
+  padding: 0.35rem 0.5rem 0.35rem 0;
+  white-space: nowrap;
+  vertical-align: top;
+  width: 40%;
+}
+
+.mdt-val {
+  font-size: 0.78rem;
+  color: var(--color-text, #e8d5b0);
+  font-weight: 600;
+  padding: 0.35rem 0;
+  word-break: break-all;
+}
+
+.market-debug-empty {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #888);
+  font-style: italic;
+}
+
+.settings-section code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  color: #a8ddf4;
+}
