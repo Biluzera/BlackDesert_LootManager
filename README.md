@@ -90,6 +90,21 @@ Gera os arquivos compilados na pasta `out/`.
 npm run preview
 ```
 
+### Gerar instalador `.exe` (Windows)
+
+```bash
+npm run package
+```
+
+Gera o instalador `.exe` na pasta `dist/`. O processo compila o projeto via `electron-vite` e empacota com `electron-builder`.
+
+**Requisitos para o build:**
+- Rode o terminal como **Administrador**, ou ative o **Modo Desenvolvedor** do Windows (Configurações → Sistema → Para desenvolvedores).
+
+**Ícone do aplicativo:**
+
+Coloque um arquivo `icon.ico` em `resources/icon.ico` para personalizar o ícone do executável e do instalador. Tamanho recomendado: 256x256 px.
+
 ---
 
 ## Tecnologias utilizadas
@@ -100,6 +115,7 @@ npm run preview
 | [React 18](https://react.dev/) | Interface |
 | [TypeScript](https://www.typescriptlang.org/) | Tipagem estática |
 | [electron-vite](https://electron-vite.org/) | Build e dev server |
+| [electron-builder](https://www.electron.build/) | Empacotamento e geração do `.exe` |
 | [Recharts](https://recharts.org/) | Gráficos de estatísticas |
 | [Lucide React](https://lucide.dev/) | Ícones |
 
