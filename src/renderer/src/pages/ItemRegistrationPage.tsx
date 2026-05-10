@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { Pencil, Trash2, MapPin, Search, ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from 'lucide-react'
 import type { FarmLocation } from './FarmLocationPage'
+import { useDevMode } from '../context/DevModeContext'
+import { MOCK_ITEMS, MOCK_LOCATIONS } from '../context/DevModeContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -27,6 +29,7 @@ function parsePrice(raw: string): number {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 function ItemRegistrationPage(): React.ReactElement {
+  const { devMode } = useDevMode()
   const [items, setItems] = useState<Item[]>([])
   const [locations, setLocations] = useState<FarmLocation[]>([])
   const [imageCache, setImageCache] = useState<Record<string, string>>({})
@@ -53,6 +56,12 @@ function ItemRegistrationPage(): React.ReactElement {
 
   useEffect(() => {
     async function load(): Promise<void> {
+      if (devMode) {
+        setItems(MOCK_ITEMS)
+        setLocations(MOCK_LOCATIONS)
+        setLoaded(true)
+        return
+      }
       const [itemData, locData] = await Promise.all([
         window.api.readJson('items.json')     as Promise<Item[]         | null>,
         window.api.readJson('locations.json') as Promise<FarmLocation[] | null>
@@ -73,12 +82,12 @@ function ItemRegistrationPage(): React.ReactElement {
       setLoaded(true)
     }
     load()
-  }, [])
+  }, [devMode])
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   async function persistItems(list: Item[]): Promise<void> {
-    await window.api.writeJson('items.json', list)
+    if (!devMode) await window.api.writeJson('items.json', list)
     setItems(list)
   }
 

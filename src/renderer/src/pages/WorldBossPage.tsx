@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Pencil, Trash2, Plus, Bell } from 'lucide-react'
+import { useDevMode } from '../context/DevModeContext'
+import { MOCK_BOSSES } from '../context/DevModeContext'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -172,6 +174,7 @@ const MOCK_BOSS_3:  WorldBoss = { id: 'mock', name: 'Boss Teste', imageFile: nul
 // ─────────────────────────────────────────────────────────────────────────────
 
 function WorldBossPage(): React.ReactElement {
+  const { devMode } = useDevMode()
   // ── Data ──────────────────────────────────────────────────────────────────
   const [bosses,     setBosses]     = useState<WorldBoss[]>([])
   const [imageCache, setImageCache] = useState<Record<string, string>>({})
@@ -198,6 +201,11 @@ function WorldBossPage(): React.ReactElement {
   // ── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     async function load(): Promise<void> {
+      if (devMode) {
+        setBosses(MOCK_BOSSES)
+        setLoaded(true)
+        return
+      }
       const data = (await window.api.readJson('bosses.json')) as WorldBoss[] | null
       const list = Array.isArray(data) ? data : []
       setBosses(list)
@@ -212,7 +220,7 @@ function WorldBossPage(): React.ReactElement {
       setLoaded(true)
     }
     load()
-  }, [])
+  }, [devMode])
 
   // ── Tick ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -266,7 +274,7 @@ function WorldBossPage(): React.ReactElement {
 
   // ── Persist ───────────────────────────────────────────────────────────────
   async function persist(list: WorldBoss[]): Promise<void> {
-    await window.api.writeJson('bosses.json', list)
+    if (!devMode) await window.api.writeJson('bosses.json', list)
     setBosses(list)
   }
 

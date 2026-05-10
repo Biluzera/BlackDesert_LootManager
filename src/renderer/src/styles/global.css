@@ -3832,3 +3832,80 @@ input[type='date'].form-input {
   --font-body:    'Courier Prime', 'Courier New', monospace;
 }
 
+/* ============================================================
+   DEV MODE
+   ============================================================ */
+
+/* ── Floating banner ── */
+.dev-mode-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    -45deg,
+    #1a0a00,
+    #1a0a00 10px,
+    #2d1200 10px,
+    #2d1200 20px
+  );
+  border-top: 2px solid #e8a020;
+  color: #f5d060;
+  font-family: var(--font-body, monospace);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 5px 12px;
+  pointer-events: none;
+  text-shadow: 0 1px 4px #000a;
+}
+
+/* ── Settings button ── */
+.dev-mode-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.25rem;
+  border-radius: 6px;
+  border: 2px solid var(--gold-mid, #a07820);
+  background: var(--bg-wood, #2b180a);
+  color: var(--parchment, #f0deb4);
+  font-family: var(--font-display, serif);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.dev-mode-toggle-btn:hover {
+  background: var(--bg-wood-light, #3e2410);
+  border-color: var(--gold, #c9a030);
+  color: var(--gold-hi, #f5d060);
+}
+.dev-mode-toggle-btn--active {
+  background: #3a0a0a;
+  border-color: #c83030;
+  color: #f5c0c0;
+}
+.dev-mode-toggle-btn--active:hover {
+  background: #4e0f0f;
+  border-color: #e84040;
+  color: #ffdada;
+}
+.dev-mode-toggle-icon {
+  font-size: 1rem;
+}
+
+/* ── Warning text ── */
+.dev-mode-warning {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(200, 48, 48, 0.12);
+  border: 1px solid rgba(200, 48, 48, 0.4);
+  border-radius: 4px;
+  color: #f0a0a0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}

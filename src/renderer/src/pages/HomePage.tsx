@@ -3,6 +3,8 @@ import type { TabId } from '../App'
 import type { Item } from './ItemRegistrationPage'
 import type { FarmLocation } from './FarmLocationPage'
 import type { FarmSession } from './FarmSessionPage'
+import { useDevMode } from '../context/DevModeContext'
+import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
 
 interface HomePageProps {
   onNavigate: (tab: TabId) => void
@@ -56,6 +58,7 @@ function formatDate(iso: string): string {
 }
 
 function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
+  const { devMode } = useDevMode()
   const [sessions,   setSessions]   = useState<FarmSession[]>([])
   const [locations,  setLocations]  = useState<FarmLocation[]>([])
   const [allItems,   setAllItems]   = useState<Item[]>([])
@@ -67,6 +70,13 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
 
   useEffect(() => {
     async function load(): Promise<void> {
+      if (devMode) {
+        setSessions(MOCK_SESSIONS)
+        setLocations(MOCK_LOCATIONS)
+        setAllItems(MOCK_ITEMS)
+        setLoaded(true)
+        return
+      }
       const [sessData, locData, itemData] = await Promise.all([
         window.api.readJson('sessions.json')  as Promise<FarmSession[]  | null>,
         window.api.readJson('locations.json') as Promise<FarmLocation[] | null>,
@@ -95,7 +105,7 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
       setLoaded(true)
     }
     load()
-  }, [])
+  }, [devMode])
 
   const stats = useMemo(() => {
     if (!loaded || sessions.length === 0) return null

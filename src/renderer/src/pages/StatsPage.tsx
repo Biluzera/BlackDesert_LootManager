@@ -6,6 +6,8 @@ import {
 import type { Item } from './ItemRegistrationPage'
 import type { FarmLocation } from './FarmLocationPage'
 import type { FarmSession } from './FarmSessionPage'
+import { useDevMode } from '../context/DevModeContext'
+import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -72,6 +74,7 @@ function PphTooltip({ active, payload, label }: { active?: boolean; payload?: To
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function StatsPage(): React.ReactElement {
+  const { devMode } = useDevMode()
   const [sessions,  setSessions]  = useState<FarmSession[]>([])
   const [locations, setLocations] = useState<FarmLocation[]>([])
   const [allItems,  setAllItems]  = useState<Item[]>([])
@@ -79,6 +82,13 @@ export default function StatsPage(): React.ReactElement {
 
   useEffect(() => {
     async function load(): Promise<void> {
+      if (devMode) {
+        setSessions(MOCK_SESSIONS)
+        setLocations(MOCK_LOCATIONS)
+        setAllItems(MOCK_ITEMS)
+        setLoaded(true)
+        return
+      }
       const [sessData, locData, itemData] = await Promise.all([
         window.api.readJson('sessions.json')  as Promise<FarmSession[]  | null>,
         window.api.readJson('locations.json') as Promise<FarmLocation[] | null>,
@@ -90,7 +100,7 @@ export default function StatsPage(): React.ReactElement {
       setLoaded(true)
     }
     load()
-  }, [])
+  }, [devMode])
 
   const itemMap = useMemo(() => {
     const m = new Map<string, Item>()

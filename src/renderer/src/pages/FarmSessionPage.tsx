@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { Item } from './ItemRegistrationPage'
 import type { FarmLocation } from './FarmLocationPage'
+import { useDevMode } from '../context/DevModeContext'
+import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -370,6 +372,7 @@ function formatDate(iso: string): string {
 // ── Main component ────────────────────────────────────────────────────────────
 
 function FarmSessionPage(): React.ReactElement {
+  const { devMode } = useDevMode()
   const [sessions,   setSessions]   = useState<FarmSession[]>([])
   const [locations,  setLocations]  = useState<FarmLocation[]>([])
   const [allItems,   setAllItems]   = useState<Item[]>([])
@@ -388,6 +391,13 @@ function FarmSessionPage(): React.ReactElement {
 
   useEffect(() => {
     async function load(): Promise<void> {
+      if (devMode) {
+        setSessions(MOCK_SESSIONS)
+        setLocations(MOCK_LOCATIONS)
+        setAllItems(MOCK_ITEMS)
+        setLoaded(true)
+        return
+      }
       const [sessData, locData, itemData] = await Promise.all([
         window.api.readJson('sessions.json')  as Promise<FarmSession[]  | null>,
         window.api.readJson('locations.json') as Promise<FarmLocation[] | null>,
@@ -415,7 +425,7 @@ function FarmSessionPage(): React.ReactElement {
       setLoaded(true)
     }
     load()
-  }, [])
+  }, [devMode])
 
   const itemMap = useMemo(() => {
     const m = new Map<string, Item>()
@@ -426,7 +436,7 @@ function FarmSessionPage(): React.ReactElement {
   // ── Persist ──────────────────────────────────────────────────────────────
 
   async function persist(list: FarmSession[]): Promise<void> {
-    await window.api.writeJson('sessions.json', list)
+    if (!devMode) await window.api.writeJson('sessions.json', list)
     setSessions(list)
   }
 

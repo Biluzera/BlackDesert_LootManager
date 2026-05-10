@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useDevMode } from '../context/DevModeContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -147,6 +148,7 @@ interface SettingsPageProps {
 
 export default function SettingsPage({ settings, onSettingsChange }: SettingsPageProps): React.ReactElement {
   const [saved, setSaved] = useState(false)
+  const { devMode, toggleDevMode } = useDevMode()
 
   function markSaved(): void {
     setSaved(true)
@@ -251,6 +253,32 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
       {saved && (
         <p className="settings-saved-msg" role="status">✦ Configurações salvas!</p>
       )}
+
+      {/* ── Dev Mode ── */}
+      <section className="settings-section">
+        <div className="settings-section-title">
+          <span>🛠️</span> Ferramentas de Desenvolvimento
+        </div>
+        <p className="settings-section-desc">
+          Preenche todas as abas com dados fictícios para testes de interface. Nenhum dado é
+          salvo — ao desativar, tudo volta ao estado real.
+        </p>
+        <button
+          className={`dev-mode-toggle-btn${devMode ? ' dev-mode-toggle-btn--active' : ''}`}
+          onClick={toggleDevMode}
+          aria-pressed={devMode}
+        >
+          <span className="dev-mode-toggle-icon" aria-hidden="true">
+            {devMode ? '🔴' : '🟢'}
+          </span>
+          {devMode ? 'Desativar Modo Desenvolvimento' : 'Ativar Modo Desenvolvimento'}
+        </button>
+        {devMode && (
+          <p className="dev-mode-warning" role="status">
+            ⚠️ Modo ativo: itens, locais, sessões e bosses exibidos são mockados e não serão persistidos.
+          </p>
+        )}
+      </section>
     </div>
   )
 }

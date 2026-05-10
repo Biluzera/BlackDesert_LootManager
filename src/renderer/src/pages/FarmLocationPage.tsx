@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { Item } from './ItemRegistrationPage'
 import type { FarmSession } from './FarmSessionPage'
+import { useDevMode } from '../context/DevModeContext'
+import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -16,6 +18,7 @@ export interface FarmLocation {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 function FarmLocationPage(): React.ReactElement {
+  const { devMode } = useDevMode()
   const [locations, setLocations] = useState<FarmLocation[]>([])
   const [allItems, setAllItems]   = useState<Item[]>([])
   const [imageCache, setImageCache] = useState<Record<string, string>>({})
@@ -40,6 +43,13 @@ function FarmLocationPage(): React.ReactElement {
 
   useEffect(() => {
     async function load(): Promise<void> {
+      if (devMode) {
+        setLocations(MOCK_LOCATIONS)
+        setAllItems(MOCK_ITEMS)
+        setSessions(MOCK_SESSIONS)
+        setLoaded(true)
+        return
+      }
       const [locData, itemData, sessData] = await Promise.all([
         window.api.readJson('locations.json') as Promise<FarmLocation[] | null>,
         window.api.readJson('items.json')     as Promise<Item[] | null>,
@@ -68,7 +78,7 @@ function FarmLocationPage(): React.ReactElement {
       setLoaded(true)
     }
     load()
-  }, [])
+  }, [devMode])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -84,7 +94,7 @@ function FarmLocationPage(): React.ReactElement {
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   async function persist(list: FarmLocation[]): Promise<void> {
-    await window.api.writeJson('locations.json', list)
+    if (!devMode) await window.api.writeJson('locations.json', list)
     setLocations(list)
   }
 

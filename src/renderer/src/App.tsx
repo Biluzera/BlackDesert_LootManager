@@ -9,6 +9,7 @@ import WorldBossPage from './pages/WorldBossPage'
 import FarmTimer from './components/FarmTimer'
 import type { AppSettings } from './pages/SettingsPage'
 import { DEFAULT_SETTINGS } from './pages/SettingsPage'
+import { DevModeProvider, useDevMode } from './context/DevModeContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -34,9 +35,10 @@ const TABS: Tab[] = [
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-function App(): React.ReactElement {
+function AppInner(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<TabId>('home')
   const [settings,  setSettings]  = useState<AppSettings>(DEFAULT_SETTINGS)
+  const { devMode } = useDevMode()
 
   // Load settings on mount and apply theme
   useEffect(() => {
@@ -103,7 +105,22 @@ function App(): React.ReactElement {
 
       {/* ── Floating timer widget ── */}
       <FarmTimer />
+
+      {/* ── Dev mode banner ── */}
+      {devMode && (
+        <div className="dev-mode-banner" role="status" aria-live="polite">
+          🛠️ Modo Desenvolvimento ativo — dados mockados, nada será salvo
+        </div>
+      )}
     </div>
+  )
+}
+
+function App(): React.ReactElement {
+  return (
+    <DevModeProvider>
+      <AppInner />
+    </DevModeProvider>
   )
 }
 
