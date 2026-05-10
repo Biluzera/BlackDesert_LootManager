@@ -1,0 +1,35 @@
+{
+  "name": "bdo-loot-log",
+  "version": "1.0.0",
+  "description": "BDO Loot Tracker — Registro de Itens e Sessões de Farm",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview"
+  },
+  "keywords": [
+    "bdo",
+    "black-desert-online",
+    "loot",
+    "tracker"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "lucide-react": "^1.14.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^3.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.0",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2"
+  }
+}
