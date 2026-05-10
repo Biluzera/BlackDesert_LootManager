@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Settings, Palette, Type, Wrench, ShoppingCart, Search, BarChart2, Tag, CircleOff, CircleCheck, TriangleAlert } from 'lucide-react'
+import { Settings, Palette, Type, Wrench, ShoppingCart, Search, BarChart2, Tag, CircleOff, CircleCheck, TriangleAlert, Check, CheckCircle2 } from 'lucide-react'
 import { useDevMode } from '../context/DevModeContext'
 import { fetchMarketPrices, fetchMarketPriceDetail } from '../services/marketApi'
 import type { MarketEntry, MarketPriceDetail } from '../services/marketApi'
@@ -240,14 +240,13 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
                   <span className="theme-card-name">{theme.label}</span>
                   <span className="theme-card-desc">{theme.description}</span>
                 </div>
-                {active && <span className="theme-card-check" aria-hidden="true">✓</span>}
+                {active && <Check size={15} className="theme-card-check" aria-hidden="true" />}
               </button>
             )
           })}
         </div>
       </section>
 
-      {/* ── Fonts ── */}
       <section className="settings-section">
         <div className="settings-section-title">
           <Type size={16} aria-hidden="true" /> Fonte da Interface
@@ -278,7 +277,7 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
                   <span className="font-card-name">{font.label}</span>
                   <span className="font-card-desc">{font.description}</span>
                 </div>
-                {active && <span className="theme-card-check" aria-hidden="true">✓</span>}
+                {active && <Check size={15} className="theme-card-check" aria-hidden="true" />}
               </button>
             )
           })}
@@ -286,7 +285,10 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
       </section>
 
       {saved && (
-        <p className="settings-saved-msg" role="status">✦ Configurações salvas!</p>
+        <p className="settings-saved-msg" role="status">
+          <CheckCircle2 size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" />
+          Configurações salvas!
+        </p>
       )}
 
       {/* ── Dev Mode ── */}

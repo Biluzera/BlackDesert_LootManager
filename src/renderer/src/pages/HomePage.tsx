@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Gem, Map as MapIcon, ScrollText, BarChart2, Coins, Mountain, ArrowLeftRight, Upload, Download } from 'lucide-react'
+import { Gem, Map as MapIcon, ScrollText, BarChart2, Coins, Mountain, ArrowLeftRight, Upload, Download, HardDrive } from 'lucide-react'
 import type { TabId } from '../App'
 import type { Item } from './ItemRegistrationPage'
 import type { FarmLocation } from './FarmLocationPage'
@@ -325,7 +325,8 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
       </section>
 
       <p className="home-data-note">
-        ✦ Todos os dados são salvos localmente em arquivos .json no seu computador ✦
+        <HardDrive size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" />
+        Todos os dados são salvos localmente em arquivos .json no seu computador
       </p>
     </div>
   )

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings } from 'lucide-react'
+import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings, Wrench } from 'lucide-react'
 import HomePage from './pages/HomePage'
 import ItemRegistrationPage from './pages/ItemRegistrationPage'
 import FarmLocationPage from './pages/FarmLocationPage'
@@ -88,9 +88,9 @@ function AppInner(): React.ReactElement {
       {/* ── Header ── */}
       <header className="app-header">
         <div className="app-title">
-          <span className="title-ornament" aria-hidden="true">⚜</span>
+          <span className="title-ornament" aria-hidden="true"><Swords size={16} /></span>
           <h1>BDO Loot Log</h1>
-          <span className="title-ornament" aria-hidden="true">⚜</span>
+          <span className="title-ornament" aria-hidden="true"><Swords size={16} /></span>
         </div>
         <p className="app-subtitle">Registro de Itens &amp; Sessões de Farm</p>
       </header>
@@ -121,7 +121,8 @@ function AppInner(): React.ReactElement {
       {/* ── Dev mode banner ── */}
       {devMode && (
         <div className="dev-mode-banner" role="status" aria-live="polite">
-          🛠️ Modo Desenvolvimento ativo — dados mockados, nada será salvo
+          <Wrench size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" />
+          Modo Desenvolvimento ativo — dados mockados, nada será salvo
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { Pencil, Trash2, MapPin, Search, ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01, Gem, Package, FolderOpen, Save, RefreshCw, Store, Clock } from 'lucide-react'
+import { Pencil, Trash2, MapPin, Search, ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01, Gem, Package, FolderOpen, Save, RefreshCw, Store, Clock, Check, X } from 'lucide-react'
 import type { FarmLocation } from './FarmLocationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
@@ -358,7 +358,7 @@ function ItemRegistrationPage(): React.ReactElement {
                     <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Selecionar PNG / WebP
                     </button>
                     {imageFile
-                      ? <span className="image-filename" title={imageFile}>Imagem selecionada ✓</span>
+                      ? <span className="image-filename" title={imageFile}><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />Imagem selecionada</span>
                       : <span className="image-filename-empty">Nenhuma imagem selecionada</span>
                     }
                     {imageFile && (
@@ -369,7 +369,7 @@ function ItemRegistrationPage(): React.ReactElement {
                         onClick={handleRemoveImage}
                         title="Remover imagem"
                       >
-                        ✕
+                        <X size={12} aria-hidden="true" />
                       </button>
                     )}
                   </div>
@@ -444,7 +444,7 @@ function ItemRegistrationPage(): React.ReactElement {
                 autoComplete="off"
               />
               {searchQuery && (
-                <button className="item-search-clear" onClick={() => setSearchQuery('')} aria-label="Limpar pesquisa">✕</button>
+                <button className="item-search-clear" onClick={() => setSearchQuery('')} aria-label="Limpar pesquisa"><X size={12} aria-hidden="true" /></button>
               )}
             </div>
 
