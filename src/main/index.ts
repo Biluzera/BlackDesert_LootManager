@@ -162,8 +162,9 @@ ipcMain.handle('export-data', async () => {
 
   const items     = readOptional('items.json')
   const locations = readOptional('locations.json')
+  const bosses    = readOptional('bosses.json')
 
-  // Collect all PNG filenames referenced by items and locations
+  // Collect all PNG filenames referenced by items, locations and bosses
   const imageFiles = new Set<string>()
   const collectImage = (obj: unknown): void => {
     if (obj && typeof obj === 'object' && 'imageFile' in obj) {
@@ -173,6 +174,7 @@ ipcMain.handle('export-data', async () => {
   }
   if (Array.isArray(items))     items.forEach(collectImage)
   if (Array.isArray(locations)) locations.forEach(collectImage)
+  if (Array.isArray(bosses))    bosses.forEach(collectImage)
 
   const images: Record<string, string> = {}
   for (const filename of imageFiles) {
@@ -182,7 +184,7 @@ ipcMain.handle('export-data', async () => {
     }
   }
 
-  const payload = { version: 1, exportedAt: new Date().toISOString(), items, locations, images }
+  const payload = { version: 1, exportedAt: new Date().toISOString(), items, locations, bosses, images }
   fs.writeFileSync(result.filePath, JSON.stringify(payload, null, 2), 'utf-8')
   return { success: true }
 })
@@ -213,7 +215,7 @@ ipcMain.handle('import-data', async () => {
     return { success: false, reason: 'invalid' }
   }
 
-  const { items, locations, images } = payload as Record<string, unknown>
+  const { items, locations, bosses, images } = payload as Record<string, unknown>
 
   const dataDir   = getDataDir()
   const imagesDir = getImagesDir()
@@ -223,6 +225,9 @@ ipcMain.handle('import-data', async () => {
   }
   if (Array.isArray(locations)) {
     fs.writeFileSync(path.join(dataDir, 'locations.json'), JSON.stringify(locations, null, 2), 'utf-8')
+  }
+  if (Array.isArray(bosses)) {
+    fs.writeFileSync(path.join(dataDir, 'bosses.json'), JSON.stringify(bosses, null, 2), 'utf-8')
   }
 
   // Restore images — validate magic bytes before writing
