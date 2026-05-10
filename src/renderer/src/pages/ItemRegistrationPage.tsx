@@ -234,6 +234,15 @@ function ItemRegistrationPage(): React.ReactElement {
 
   // Filtered + sorted list
   const visibleItems = useMemo(() => {
+    // Helper: resolve the effective price for sorting (market > manual > 0)
+    const effectivePrice = (item: Item): number => {
+      if (item.marketId != null && String(item.marketId).trim() !== '') {
+        const entry = marketData.get(String(item.marketId).trim())
+        if (entry && entry.basePrice > 0) return entry.basePrice
+      }
+      return item.price ?? 0
+    }
+
     let list = items.slice()
     // search
     const q = searchQuery.trim().toLowerCase()
@@ -244,13 +253,13 @@ function ItemRegistrationPage(): React.ReactElement {
     }
     // sort
     list.sort((a, b) => {
-      if (sortKey === 'name-asc')  return a.name.localeCompare(b.name, 'pt-BR')
-      if (sortKey === 'name-desc') return b.name.localeCompare(a.name, 'pt-BR')
-      if (sortKey === 'price-asc')  return a.price - b.price
-      return b.price - a.price
+      if (sortKey === 'name-asc')   return a.name.localeCompare(b.name, 'pt-BR')
+      if (sortKey === 'name-desc')  return b.name.localeCompare(a.name, 'pt-BR')
+      if (sortKey === 'price-asc')  return effectivePrice(a) - effectivePrice(b)
+      return effectivePrice(b) - effectivePrice(a)
     })
     return list
-  }, [items, searchQuery, filterLocId, sortKey, itemLocationMap])
+  }, [items, searchQuery, filterLocId, sortKey, itemLocationMap, marketData])
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
