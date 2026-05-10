@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { Pencil, Trash2, MapPin, Search, ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from 'lucide-react'
 import type { FarmLocation } from './FarmLocationPage'
+import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
-import { MOCK_ITEMS, MOCK_LOCATIONS } from '../context/DevModeContext'
+import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -32,6 +33,7 @@ function ItemRegistrationPage(): React.ReactElement {
   const { devMode } = useDevMode()
   const [items, setItems] = useState<Item[]>([])
   const [locations, setLocations] = useState<FarmLocation[]>([])
+  const [sessions, setSessions] = useState<FarmSession[]>([])
   const [imageCache, setImageCache] = useState<Record<string, string>>({})
   const [loaded, setLoaded] = useState(false)
 
@@ -59,17 +61,21 @@ function ItemRegistrationPage(): React.ReactElement {
       if (devMode) {
         setItems(MOCK_ITEMS)
         setLocations(MOCK_LOCATIONS)
+        setSessions(MOCK_SESSIONS)
         setLoaded(true)
         return
       }
-      const [itemData, locData] = await Promise.all([
+      const [itemData, locData, sessData] = await Promise.all([
         window.api.readJson('items.json')     as Promise<Item[]         | null>,
-        window.api.readJson('locations.json') as Promise<FarmLocation[] | null>
+        window.api.readJson('locations.json') as Promise<FarmLocation[] | null>,
+        window.api.readJson('sessions.json')  as Promise<FarmSession[]  | null>
       ])
       const list = Array.isArray(itemData) ? itemData : []
       const locs = Array.isArray(locData)  ? locData  : []
+      const sess = Array.isArray(sessData) ? sessData : []
       setItems(list)
       setLocations(locs)
+      setSessions(sess)
 
       const cache: Record<string, string> = {}
       for (const item of list) {
@@ -189,6 +195,33 @@ function ItemRegistrationPage(): React.ReactElement {
     }
     return map
   }, [locations])
+
+  // ── Global drop rate per item (across all sessions / all locations) ─────────
+  // Map<itemId, { qtyPerHour: number|null; qtyPerSess: number|null }>
+  const itemDropRates = useMemo(() => {
+    const result = new Map<string, { qtyPerHour: number | null; qtyPerSess: number | null }>()
+    // accumulate across every session
+    const acc = new Map<string, { totalQty: number; timedQty: number; totalMins: number; sessCount: number }>()
+    for (const s of sessions) {
+      const mins = s.durationMinutes ?? 0
+      for (const e of s.loot) {
+        const qty  = Math.max(0, e.qtyAfter - e.qtyBefore)
+        const prev = acc.get(e.itemId) ?? { totalQty: 0, timedQty: 0, totalMins: 0, sessCount: 0 }
+        acc.set(e.itemId, {
+          totalQty:  prev.totalQty  + qty,
+          timedQty:  prev.timedQty  + (mins > 0 ? qty : 0),
+          totalMins: prev.totalMins + (mins > 0 ? mins : 0),
+          sessCount: prev.sessCount + 1,
+        })
+      }
+    }
+    for (const [itemId, d] of acc) {
+      const qtyPerHour = d.totalMins > 0 ? Math.round((d.timedQty / d.totalMins) * 60 * 10) / 10 : null
+      const qtyPerSess = d.sessCount > 0 ? Math.round((d.totalQty / d.sessCount) * 10) / 10 : null
+      result.set(itemId, { qtyPerHour, qtyPerSess })
+    }
+    return result
+  }, [sessions])
 
   // Filtered + sorted list
   const visibleItems = useMemo(() => {
@@ -423,6 +456,12 @@ function ItemRegistrationPage(): React.ReactElement {
             {visibleItems.map(item => {
               const img      = item.imageFile ? imageCache[item.imageFile] : null
               const locNames = (itemLocationMap.get(item.id) ?? []).map(l => l.name)
+              const rate     = itemDropRates.get(item.id)
+              const rateLabel = rate?.qtyPerHour != null
+                ? `${rate.qtyPerHour.toLocaleString('pt-BR')}/h`
+                : rate?.qtyPerSess != null
+                  ? `~${rate.qtyPerSess.toLocaleString('pt-BR')}/sessão`
+                  : null
               return (
                 <li
                   key={item.id}
@@ -442,6 +481,11 @@ function ItemRegistrationPage(): React.ReactElement {
                       <span className="item-row-name" title={item.name}>{item.name}</span>
                       {item.price > 0 && (
                         <span className="item-row-price-badge">{formatPrice(item.price)}</span>
+                      )}
+                      {rateLabel && (
+                        <span className="item-drop-rate-badge" title="Drop rate médio em todas as sessões">
+                          📦 {rateLabel}
+                        </span>
                       )}
                     </div>
                     {locNames.length > 0 && (

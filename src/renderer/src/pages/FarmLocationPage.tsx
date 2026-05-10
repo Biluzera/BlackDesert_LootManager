@@ -162,6 +162,37 @@ function FarmLocationPage(): React.ReactElement {
     return result
   }, [locations, sessions, allItems])
 
+  // ── Drop rate per item per location ────────────────────────────────────────
+  // Map<locId, Map<itemId, { qtyPerHour: number|null; qtyPerSess: number|null }>>
+  const lootDropRates = useMemo(() => {
+    const result = new Map<string, Map<string, { qtyPerHour: number | null; qtyPerSess: number | null }>>()
+    for (const loc of locations) {
+      const locSessions = sessions.filter(s => s.locationId === loc.id)
+      const itemMap2 = new Map<string, { totalQty: number; timedQty: number; totalMins: number; sessCount: number }>()
+      for (const s of locSessions) {
+        const mins = s.durationMinutes ?? 0
+        for (const e of s.loot) {
+          const qty = Math.max(0, e.qtyAfter - e.qtyBefore)
+          const prev = itemMap2.get(e.itemId) ?? { totalQty: 0, timedQty: 0, totalMins: 0, sessCount: 0 }
+          itemMap2.set(e.itemId, {
+            totalQty:  prev.totalQty  + qty,
+            timedQty:  prev.timedQty  + (mins > 0 ? qty : 0),
+            totalMins: prev.totalMins + (mins > 0 ? mins : 0),
+            sessCount: prev.sessCount + 1,
+          })
+        }
+      }
+      const locMap = new Map<string, { qtyPerHour: number | null; qtyPerSess: number | null }>()
+      for (const [itemId, d] of itemMap2) {
+        const qtyPerHour  = d.totalMins > 0 ? Math.round((d.timedQty / d.totalMins) * 60 * 10) / 10 : null
+        const qtyPerSess  = d.sessCount > 0 ? Math.round((d.totalQty / d.sessCount) * 10) / 10 : null
+        locMap.set(itemId, { qtyPerHour, qtyPerSess })
+      }
+      result.set(loc.id, locMap)
+    }
+    return result
+  }, [locations, sessions])
+
   const addLoot = useCallback((id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev : [...prev, id])
     setSearchQuery('')
@@ -503,14 +534,25 @@ function FarmLocationPage(): React.ReactElement {
                     {loc.lootIds.map(id => {
                       const item = itemById(id)
                       if (!item) return null
-                      const img = item.imageFile ? imageCache[item.imageFile] : null
+                      const img  = item.imageFile ? imageCache[item.imageFile] : null
+                      const rate = lootDropRates.get(loc.id)?.get(id)
+                      const rateLabel = rate?.qtyPerHour != null
+                        ? `${rate.qtyPerHour.toLocaleString('pt-BR')}/h`
+                        : rate?.qtyPerSess != null
+                          ? `~${rate.qtyPerSess.toLocaleString('pt-BR')}/sessão`
+                          : null
                       return (
-                        <li key={id} className="loc-loot-chip">
+                        <li key={id} className={`loc-loot-chip${rateLabel ? ' loc-loot-chip--has-rate' : ''}`}>
                           {img
                             ? <img src={img} alt="" className="loc-loot-img" draggable={false} />
                             : <span aria-hidden="true">💎</span>
                           }
-                          <span>{item.name}</span>
+                          <span className="loc-loot-name">{item.name}</span>
+                          {rateLabel && (
+                            <span className="loc-loot-rate" title="Drop rate médio neste local">
+                              {rateLabel}
+                            </span>
+                          )}
                         </li>
                       )
                     })}
