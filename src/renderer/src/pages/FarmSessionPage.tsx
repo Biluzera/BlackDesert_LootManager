@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, BarChart2, Gem, MapPin, ScrollText, Mountain, Store, Hand, X, Save, MessageSquare, MapPinned } from 'lucide-react'
 import type { Item } from './ItemRegistrationPage'
 import type { FarmLocation } from './FarmLocationPage'
 import { useDevMode } from '../context/DevModeContext'
@@ -43,6 +43,122 @@ function ConfirmDialog({ message, onConfirm, onCancel }: ConfirmDialogProps): Re
         <div className="confirm-actions">
           <button className="btn btn-primary" onClick={onConfirm}>Confirmar</button>
           <button className="btn btn-secondary" onClick={onCancel}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Session stats modal ──────────────────────────────────────────────────────
+
+interface SessionStatsModalProps {
+  session: FarmSession
+  sessionNumber: number
+  locationName: string
+  allItems: Item[]
+  imageCache: Record<string, string>
+  onClose: () => void
+}
+
+function SessionStatsModal({ session, sessionNumber, locationName, allItems, imageCache, onClose }: SessionStatsModalProps): React.ReactElement {
+  const itemMap = useMemo(() => {
+    const m = new Map<string, Item>()
+    for (const i of allItems) m.set(i.id, i)
+    return m
+  }, [allItems])
+
+  const rows = useMemo(() => {
+    return session.loot
+      .map(e => {
+        const item = itemMap.get(e.itemId)
+        if (!item) return null
+        const qty       = Math.max(0, e.qtyAfter - e.qtyBefore)
+        const unitPrice = e.priceSnapshot ?? item.price
+        const total     = qty * unitPrice
+        const img       = item.imageFile ? imageCache[item.imageFile] : null
+        return { item, qty, unitPrice, total, img }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null && r.qty > 0)
+      .sort((a, b) => b.total - a.total)
+  }, [session.loot, itemMap, imageCache])
+
+  const grandTotal = rows.reduce((acc, r) => acc + r.total, 0)
+
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Estatísticas da sessão">
+      <div className="modal-box session-stats-modal">
+        <div className="modal-header">
+          <div className="stats-modal-header-content">
+            <span className="modal-title">
+              <BarChart2 size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} aria-hidden="true" />
+              Estatísticas · <span className="stats-modal-session-id">#{sessionNumber}</span>
+            </span>
+            <span className="stats-modal-subtitle">
+              <MapPin size={11} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" /> {locationName} &bull; {formatDate(session.date)}
+            </span>
+          </div>
+          <button className="modal-close" aria-label="Fechar" onClick={onClose}><X size={12} aria-hidden="true" /></button>
+        </div>
+        <div className="modal-body">
+          {rows.length === 0 ? (
+            <p className="loot-table-empty">Nenhum item obtido nesta sessão.</p>
+          ) : (
+            <table className="session-stats-table">
+              <thead>
+                <tr>
+                  <th className="stats-col-rank">#</th>
+                  <th className="stats-col-item">Item</th>
+                  <th className="stats-col-qty">Qtd.</th>
+                  <th className="stats-col-unit">Valor Unit.</th>
+                  <th className="stats-col-total">Total</th>
+                  <th className="stats-col-pct">Participação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, idx) => {
+                  const pct = grandTotal > 0 ? (row.total / grandTotal) * 100 : 0
+                  return (
+                    <tr key={row.item.id} className="stats-row">
+                      <td className="stats-col-rank">{idx + 1}</td>
+                      <td className="stats-col-item">
+                        <div className="stats-item-cell">
+                          <div className="stats-item-img">
+                            {row.img
+                              ? <img src={row.img} alt="" draggable={false} />
+                              : <Gem size={16} aria-hidden="true" className="stats-item-placeholder" />
+                            }
+                          </div>
+                          <span className="stats-item-name">{row.item.name}</span>
+                        </div>
+                      </td>
+                      <td className="stats-col-qty">{row.qty.toLocaleString('pt-BR')}</td>
+                      <td className="stats-col-unit">
+                        {row.unitPrice > 0 ? row.unitPrice.toLocaleString('pt-BR') + ' prata' : '—'}
+                      </td>
+                      <td className="stats-col-total">
+                        {row.total > 0 ? row.total.toLocaleString('pt-BR') + ' prata' : '—'}
+                      </td>
+                      <td className="stats-col-pct">
+                        <div className="stats-pct-wrap">
+                          <span className="stats-pct-value">{pct.toFixed(1)}%</span>
+                          <div className="stats-pct-bar">
+                            <div className="stats-pct-fill" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="stats-total-row">
+                  <td colSpan={4} className="stats-total-label">Total da Sessão</td>
+                  <td className="stats-total-value">{grandTotal.toLocaleString('pt-BR')} prata</td>
+                  <td className="stats-total-pct">100%</td>
+                </tr>
+              </tfoot>
+            </table>
+          )}
         </div>
       </div>
     </div>
@@ -161,8 +277,11 @@ function SessionFormModal({
 
         {/* Header */}
         <div className="modal-header">
-          <span className="modal-title">{isNew ? '📜 Nova Sessão de Farm' : '✏️ Editar Sessão'}</span>
-          <button className="modal-close" aria-label="Fechar" onClick={onCancel}>✕</button>
+          <span className="modal-title">{isNew
+            ? <><ScrollText size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} aria-hidden="true" /> Nova Sessão de Farm</>
+            : <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} aria-hidden="true" /> Editar Sessão</>}
+          </span>
+          <button className="modal-close" aria-label="Fechar" onClick={onCancel}><X size={12} aria-hidden="true" /></button>
         </div>
 
         <div className="modal-body">
@@ -248,7 +367,7 @@ function SessionFormModal({
             <div className="loot-table-heading">
               <span>Itens da Sessão</span>
               {location && (
-                <span className="loot-table-loc">📍 {location.name}</span>
+                <span className="loot-table-loc"><MapPinned size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" /> {location.name}</span>
               )}
             </div>
 
@@ -275,7 +394,7 @@ function SessionFormModal({
                         <div className="loot-row-img">
                           {img
                             ? <img src={img} alt="" draggable={false} />
-                            : <span aria-hidden="true">💎</span>
+                            : <Gem size={16} aria-hidden="true" className="loot-img-placeholder" />
                           }
                         </div>
                         <div className="loot-row-identity-info">
@@ -284,7 +403,9 @@ function SessionFormModal({
                             className={`loot-price-source-badge ${priceSource === 'market' ? 'loot-price-source-market' : 'loot-price-source-manual'}`}
                             title={priceSource === 'market' ? 'Preço vindo da API de mercado (arsha.io)' : 'Preço configurado manualmente'}
                           >
-                            {priceSource === 'market' ? '🏪 Mercado' : '✋ Manual'}
+                            {priceSource === 'market'
+                              ? <><Store size={11} style={{ verticalAlign: 'middle', marginRight: 2 }} aria-hidden="true" /> Mercado</>
+                              : <><Hand size={11} style={{ verticalAlign: 'middle', marginRight: 2 }} aria-hidden="true" /> Manual</>}
                             {' · '}{effectivePrice.toLocaleString('pt-BR')} prata
                           </span>
                         </div>
@@ -357,7 +478,7 @@ function SessionFormModal({
               onClick={handleSave}
               disabled={!locationId}
             >
-              ⚔ {isNew ? 'Registrar Sessão' : 'Salvar Alterações'}
+              <Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> {isNew ? 'Registrar Sessão' : 'Salvar Alterações'}
             </button>
             <button className="btn btn-secondary" onClick={onCancel}>Cancelar</button>
           </div>
@@ -401,6 +522,9 @@ function FarmSessionPage(): React.ReactElement {
   // Modal state
   type ModalMode = { type: 'add' } | { type: 'edit'; session: FarmSession } | null
   const [modal, setModal] = useState<ModalMode>(null)
+
+  // Stats modal state
+  const [statsSession, setStatsSession] = useState<FarmSession | null>(null)
 
   // Confirmation state
   type ConfirmState = { message: string; onConfirm: () => void } | null
@@ -495,6 +619,10 @@ function FarmSessionPage(): React.ReactElement {
     setModal({ type: 'edit', session })
   }
 
+  function handleStatsRequest(session: FarmSession): void {
+    setStatsSession(session)
+  }
+
   function handleAddRequest(): void {
     setModal({ type: 'add' })
   }
@@ -511,7 +639,7 @@ function FarmSessionPage(): React.ReactElement {
   return (
     <div className="page-container">
       <h2 className="page-title">
-        <span className="page-title-icon" aria-hidden="true">📜</span>
+        <span className="page-title-icon" aria-hidden="true"><ScrollText size={20} /></span>
         Sessões de Farm
       </h2>
 
@@ -535,12 +663,13 @@ function FarmSessionPage(): React.ReactElement {
         <p className="loading-text">Carregando…</p>
       ) : sessions.length === 0 ? (
         <div className="empty-state" style={{ marginTop: 24 }}>
-          <span className="empty-state-icon" aria-hidden="true">📜</span>
+          <span className="empty-state-icon" aria-hidden="true"><ScrollText size={48} /></span>
           <span className="empty-state-text">Nenhuma sessão registrada ainda.</span>
         </div>
       ) : (
         <ul className="session-list" role="list">
-          {[...sessions].reverse().map(session => {
+          {[...sessions].reverse().map((session, reverseIdx) => {
+            const sessionNumber  = sessions.length - reverseIdx
             const loc            = locations.find(l => l.id === session.locationId)
             const total          = calcSessionTotal(session, itemMap)
             const locImg         = loc?.imageFile ? imageCache[loc.imageFile] : null
@@ -556,11 +685,14 @@ function FarmSessionPage(): React.ReactElement {
                     <div className="session-card-loc-icon">
                       {locImg
                         ? <img src={locImg} alt="" draggable={false} />
-                        : <span aria-hidden="true">⛰️</span>
+                        : <Mountain size={20} aria-hidden="true" />
                       }
                     </div>
                     <div className="session-card-loc-info">
-                      <span className="session-card-loc-name">{loc?.name ?? '—'}</span>
+                      <span className="session-card-loc-name">
+                        <span className="session-card-number">#{sessionNumber}</span>
+                        {loc?.name ?? '—'}
+                      </span>
                       <span className="session-card-meta">
                         {formatDate(session.date)}
                         {session.duration && <> &bull; {session.duration}</>}
@@ -568,6 +700,14 @@ function FarmSessionPage(): React.ReactElement {
                     </div>
                   </div>
                   <div className="session-card-actions">
+                    <button
+                      className="btn-labeled btn-labeled-stats"
+                      aria-label="Estatísticas da sessão"
+                      onClick={() => handleStatsRequest(session)}
+                    >
+                      <BarChart2 size={13} aria-hidden="true" />
+                      Estatísticas
+                    </button>
                     <button
                       className="btn-labeled btn-labeled-edit"
                       aria-label="Editar sessão"
@@ -605,7 +745,7 @@ function FarmSessionPage(): React.ReactElement {
                         <li key={e.itemId} className="session-loot-chip">
                           {img
                             ? <img src={img} alt="" className="loc-loot-img" draggable={false} />
-                            : <span aria-hidden="true">💎</span>
+                            : <Gem size={14} aria-hidden="true" />
                           }
                           <span className="session-loot-qty">×{qty}</span>
                           <span className="session-loot-name">{item.name}</span>
@@ -617,7 +757,7 @@ function FarmSessionPage(): React.ReactElement {
 
                 {/* Notes */}
                 {session.notes && (
-                  <p className="session-card-notes">💬 {session.notes}</p>
+                  <p className="session-card-notes"><MessageSquare size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" />{session.notes}</p>
                 )}
 
                 {/* Total */}
@@ -646,6 +786,17 @@ function FarmSessionPage(): React.ReactElement {
           imageCache={imageCache}
           onSave={handleSave}
           onCancel={handleModalCancel}
+        />
+      )}
+
+      {statsSession && (
+        <SessionStatsModal
+          session={statsSession}
+          sessionNumber={sessions.indexOf(statsSession) + 1}
+          locationName={locations.find(l => l.id === statsSession.locationId)?.name ?? '—'}
+          allItems={allItems}
+          imageCache={imageCache}
+          onClose={() => setStatsSession(null)}
         />
       )}
 

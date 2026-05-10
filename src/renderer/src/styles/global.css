@@ -1585,6 +1585,11 @@ body {
   border-color: #8b1a1a;
   color: #d46060;
 }
+.btn-labeled-stats:hover {
+  background: rgba(68, 136, 204, 0.15);
+  border-color: #4488cc;
+  color: #88bbee;
+}
 
 /* ============================================================
    FARM LOCATION PAGE
@@ -1995,6 +2000,23 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.session-card-number {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--bg-stone);
+  border: 1px solid var(--border-stone);
+  border-radius: 2px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+  text-shadow: none;
 }
 
 .session-card-meta {
@@ -2074,6 +2096,214 @@ body {
   font-weight: 600;
   color: var(--gold);
   text-shadow: var(--glow-gold-soft);
+}
+
+.stats-modal-header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.stats-modal-session-id {
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+
+.stats-modal-subtitle {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Session stats modal ────────────────────────────────────── */
+.session-stats-modal {
+  width: auto;
+  max-width: min(880px, calc(100vw - 40px));
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.session-stats-table {
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  table-layout: auto;
+}
+
+.session-stats-table thead tr {
+  border-bottom: 2px solid var(--border-gold);
+}
+
+.session-stats-table th {
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0 10px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.stats-row {
+  border-bottom: 1px solid var(--border-stone);
+  transition: background 0.12s;
+}
+.stats-row:hover {
+  background: rgba(201, 160, 48, 0.05);
+}
+
+.session-stats-table td {
+  padding: 9px 10px;
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.stats-col-rank {
+  width: 32px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.stats-col-qty {
+  text-align: right;
+  font-weight: 600;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.stats-col-unit {
+  text-align: right;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.stats-col-total {
+  text-align: right;
+  font-weight: 600;
+  color: var(--gold);
+  text-shadow: var(--glow-gold-soft);
+  white-space: nowrap;
+}
+
+.stats-col-pct {
+  width: 130px;
+}
+
+.stats-item-cell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.stats-item-img {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  background: var(--bg-stone);
+  border: 1px solid var(--border-stone);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.stats-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2px;
+}
+
+.stats-item-placeholder {
+  opacity: 0.35;
+}
+
+.stats-item-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.stats-pct-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stats-pct-value {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+}
+
+.stats-pct-bar {
+  height: 5px;
+  background: var(--bg-stone);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stats-pct-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-shadow), var(--gold));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.stats-total-row {
+  border-top: 2px solid var(--border-gold);
+}
+
+.stats-total-row td {
+  padding: 10px 10px;
+}
+
+.stats-total-label {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.stats-total-value {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: var(--glow-gold-soft);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.stats-total-pct {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding-left: 10px;
 }
 
 /* ── Modal backdrop ──────────────────────────────────────────── */
