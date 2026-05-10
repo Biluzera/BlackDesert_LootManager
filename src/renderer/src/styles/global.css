@@ -1867,6 +1867,72 @@ body {
   background: rgba(0, 0, 0, 0.2);
 }
 
+/* Gear requirements row in form */
+.loc-gear-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.loc-gear-input {
+  text-align: right;
+}
+
+/* Gear badge strip on card */
+.loc-gear-req {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border-stone);
+  background: rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+}
+
+.loc-gear-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border-stone);
+  border-radius: 3px;
+  padding: 3px 9px;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+}
+
+.loc-gear-key {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.loc-gear-val {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.loc-gear-icon {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.loc-gear-ap-min { border-color: rgba(201, 160, 48, 0.35); }
+.loc-gear-ap-min .loc-gear-val { color: var(--gold); }
+.loc-gear-ap-min .loc-gear-icon { color: var(--gold); }
+
+.loc-gear-ap-max { border-color: rgba(201, 100, 48, 0.4); }
+.loc-gear-ap-max .loc-gear-val { color: #e07840; }
+.loc-gear-ap-max .loc-gear-icon { color: #e07840; }
+
+.loc-gear-dp { border-color: rgba(80, 140, 200, 0.4); }
+.loc-gear-dp .loc-gear-val { color: #7ab0e0; }
+.loc-gear-dp .loc-gear-icon { color: #7ab0e0; }
+
 .loc-stat-item {
   flex: 1;
   display: flex;

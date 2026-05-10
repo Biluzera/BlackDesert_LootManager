@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Pencil, Trash2, Map as MapIcon, Mountain, FolderOpen, Gem, Search, Save, X, Check } from 'lucide-react'
+import { Pencil, Trash2, Map as MapIcon, Mountain, FolderOpen, Gem, Search, Save, X, Check, Sword, Swords, Shield } from 'lucide-react'
 import type { Item } from './ItemRegistrationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
@@ -12,6 +12,9 @@ export interface FarmLocation {
   name: string
   imageFile: string | null
   lootIds: string[]   // references to Item.id
+  apMin?: number
+  apMax?: number
+  dp?: number
   createdAt: string
 }
 
@@ -33,6 +36,9 @@ function FarmLocationPage(): React.ReactElement {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [saving, setSaving]         = useState(false)
   const [error, setError]           = useState<string | null>(null)
+  const [apMin, setApMin]           = useState('')
+  const [apMax, setApMax]           = useState('')
+  const [dp, setDp]                 = useState('')
 
   // Loot search dropdown
   const [searchQuery, setSearchQuery]   = useState('')
@@ -107,6 +113,9 @@ function FarmLocationPage(): React.ReactElement {
     setSearchQuery('')
     setDropdownOpen(false)
     setError(null)
+    setApMin('')
+    setApMax('')
+    setDp('')
   }
 
   async function handlePickImage(): Promise<void> {
@@ -215,7 +224,10 @@ function FarmLocationPage(): React.ReactElement {
       if (editingId !== null) {
         const updated = locations.map(loc =>
           loc.id === editingId
-            ? { ...loc, name: trimmed, imageFile, lootIds: selectedIds }
+            ? { ...loc, name: trimmed, imageFile, lootIds: selectedIds,
+                apMin: apMin ? Number(apMin) : undefined,
+                apMax: apMax ? Number(apMax) : undefined,
+                dp:    dp    ? Number(dp)    : undefined }
             : loc
         )
         await persist(updated)
@@ -225,6 +237,9 @@ function FarmLocationPage(): React.ReactElement {
           name: trimmed,
           imageFile,
           lootIds: selectedIds,
+          apMin: apMin ? Number(apMin) : undefined,
+          apMax: apMax ? Number(apMax) : undefined,
+          dp:    dp    ? Number(dp)    : undefined,
           createdAt: new Date().toISOString()
         }
         await persist([...locations, newLoc])
@@ -246,6 +261,9 @@ function FarmLocationPage(): React.ReactElement {
     setSearchQuery('')
     setDropdownOpen(false)
     setError(null)
+    setApMin(loc.apMin != null ? String(loc.apMin) : '')
+    setApMax(loc.apMax != null ? String(loc.apMax) : '')
+    setDp(loc.dp != null ? String(loc.dp) : '')
     const area = document.querySelector('.content-area')
     if (area) area.scrollTop = 0
   }
@@ -300,6 +318,49 @@ function FarmLocationPage(): React.ReactElement {
                   required
                   autoComplete="off"
                 />
+              </div>
+
+              {/* Gear requirements */}
+              <div className="loc-gear-row">
+                <div className="form-field">
+                  <label className="form-label" htmlFor="loc-ap-min">PA Mínimo</label>
+                  <input
+                    id="loc-ap-min"
+                    className="form-input loc-gear-input"
+                    type="number"
+                    min="0"
+                    max="9999"
+                    value={apMin}
+                    onChange={e => setApMin(e.target.value)}
+                    placeholder="—"
+                  />
+                </div>
+                <div className="form-field">
+                  <label className="form-label" htmlFor="loc-ap-max">PA Máximo (cap)</label>
+                  <input
+                    id="loc-ap-max"
+                    className="form-input loc-gear-input"
+                    type="number"
+                    min="0"
+                    max="9999"
+                    value={apMax}
+                    onChange={e => setApMax(e.target.value)}
+                    placeholder="—"
+                  />
+                </div>
+                <div className="form-field">
+                  <label className="form-label" htmlFor="loc-dp">PD Recomendado</label>
+                  <input
+                    id="loc-dp"
+                    className="form-input loc-gear-input"
+                    type="number"
+                    min="0"
+                    max="9999"
+                    value={dp}
+                    onChange={e => setDp(e.target.value)}
+                    placeholder="—"
+                  />
+                </div>
               </div>
 
                   {/* Image picker */}
@@ -502,6 +563,32 @@ function FarmLocationPage(): React.ReactElement {
                     </button>
                   </div>
                 </div>
+
+                {(loc.apMin != null || loc.apMax != null || loc.dp != null) && (
+                  <div className="loc-gear-req">
+                    {loc.apMin != null && (
+                      <span className="loc-gear-badge loc-gear-ap-min" title="PA Mínimo">
+                        <Sword size={11} aria-hidden="true" className="loc-gear-icon" />
+                        <span className="loc-gear-key">PA min</span>
+                        <span className="loc-gear-val">{loc.apMin}</span>
+                      </span>
+                    )}
+                    {loc.apMax != null && (
+                      <span className="loc-gear-badge loc-gear-ap-max" title="PA Máximo (cap)">
+                        <Swords size={11} aria-hidden="true" className="loc-gear-icon" />
+                        <span className="loc-gear-key">PA cap</span>
+                        <span className="loc-gear-val">{loc.apMax}</span>
+                      </span>
+                    )}
+                    {loc.dp != null && (
+                      <span className="loc-gear-badge loc-gear-dp" title="PD Recomendado">
+                        <Shield size={11} aria-hidden="true" className="loc-gear-icon" />
+                        <span className="loc-gear-key">PD rec.</span>
+                        <span className="loc-gear-val">{loc.dp}</span>
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {(() => {
                   const st = locationStats.get(loc.id) ?? { count: 0, total: 0, avg: 0, avgPph: null }
