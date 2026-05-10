@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { Target, Plus, Pencil, Trash2, Coins, X, CheckCircle2, Mountain, BarChart2 } from 'lucide-react'
+import { Target, Plus, Pencil, Trash2, Coins, X, CheckCircle2, Mountain, BarChart2, TrendingUp, TriangleAlert } from 'lucide-react'
 import { useDevMode } from '../context/DevModeContext'
 import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
 import type { Item } from '../pages/ItemRegistrationPage'
@@ -82,6 +82,25 @@ function clamp(val: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, val))
 }
 
+function shortSilver(n: number): string {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`
+  if (n >= 1_000_000)     return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000)         return `${(n / 1_000).toFixed(0)}K`
+  return Math.round(n).toLocaleString('pt-BR')
+}
+
+function calcDailyRateLast14Days(sessions: FarmSession[], itemMap: Map<string, Item>): number {
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - 14)
+  cutoff.setHours(0, 0, 0, 0)
+  let total = 0
+  for (const sess of sessions) {
+    if (new Date(sess.createdAt) < cutoff) continue
+    total += sessionTotal(sess, itemMap)
+  }
+  return total / 14
+}
+
 function sessionTotal(session: FarmSession, itemMap: Map<string, Item>): number {
   let sum = 0
   for (const e of session.loot) {
@@ -124,18 +143,34 @@ function ProgressBar({ pct }: ProgressBarProps): React.ReactElement {
 }
 
 interface GoalCardProps {
-  goal:        FarmGoal
-  onEdit:      (goal: FarmGoal) => void
-  onDelete:    (goal: FarmGoal) => void
-  onContribute:(goal: FarmGoal) => void
-  onStats:     (goal: FarmGoal) => void
+  goal:         FarmGoal
+  dailyRate:    number
+  onEdit:       (goal: FarmGoal) => void
+  onDelete:     (goal: FarmGoal) => void
+  onContribute: (goal: FarmGoal) => void
+  onStats:      (goal: FarmGoal) => void
 }
 
-function GoalCard({ goal, onEdit, onDelete, onContribute, onStats }: GoalCardProps): React.ReactElement {
+function GoalCard({ goal, dailyRate, onEdit, onDelete, onContribute, onStats }: GoalCardProps): React.ReactElement {
   const pct       = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0
   const remaining = goal.targetAmount - goal.currentAmount
   const days      = daysLeft(goal.targetDate)
   const done      = pct >= 100
+
+  // ── Forecast ───────────────────────────────────────────────────────────────
+  const showForecast = !done && remaining > 0 && dailyRate > 0
+  let forecastDays = 0
+  let forecastDateStr = ''
+  let forecastLate = false
+  if (showForecast) {
+    forecastDays = Math.ceil(remaining / dailyRate)
+    const fd = new Date()
+    fd.setDate(fd.getDate() + forecastDays)
+    forecastDateStr = formatDate(fd.toISOString().slice(0, 10))
+    if (goal.targetDate) {
+      forecastLate = fd > new Date(`${goal.targetDate}T00:00:00`)
+    }
+  }
 
   let daysLabel = ''
   if (days === null)      daysLabel = ''
@@ -231,6 +266,26 @@ function GoalCard({ goal, onEdit, onDelete, onContribute, onStats }: GoalCardPro
           <span className="fgoal-done-label">Meta concluída!</span>
         )}
       </div>
+
+      {/* Forecast row */}
+      {showForecast && (
+        <div className={`fgoal-forecast-row${forecastLate ? ' fgoal-forecast-row--warn' : ''}`}>
+          {forecastLate
+            ? <TriangleAlert size={13} className="fgoal-forecast-icon fgoal-forecast-icon--warn" aria-hidden="true" />
+            : <TrendingUp    size={13} className="fgoal-forecast-icon fgoal-forecast-icon--ok"   aria-hidden="true" />
+          }
+          <span>
+            No seu ritmo atual{' '}
+            <strong>({shortSilver(Math.round(dailyRate))} prata/dia</strong> nos últimos 14 dias),
+            {' '}você atinge essa meta em{' '}
+            <strong>{forecastDays} dia{forecastDays !== 1 ? 's' : ''}</strong>
+            {' '}({forecastDateStr})
+            {forecastLate && (
+              <span className="fgoal-forecast-warn-label"> — prazo não será alcançado</span>
+            )}
+          </span>
+        </div>
+      )}
     </div>
   )
 }
@@ -848,6 +903,9 @@ export default function FarmGoalSection(): React.ReactElement {
   const contributeGoal  = dialog.mode === 'contribute' && editingGoal ? editingGoal : null
   const statsGoal       = dialog.mode === 'stats'      && editingGoal ? editingGoal : null
 
+  const itemMap   = useMemo(() => new Map(items.map(i => [i.id, i])), [items])
+  const dailyRate = useMemo(() => calcDailyRateLast14Days(sessions, itemMap), [sessions, itemMap])
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -882,6 +940,7 @@ export default function FarmGoalSection(): React.ReactElement {
             <li key={goal.id}>
               <GoalCard
                 goal={goal}
+                dailyRate={dailyRate}
                 onEdit={openEdit}
                 onDelete={setDeleteGoal}
                 onContribute={openContribute}

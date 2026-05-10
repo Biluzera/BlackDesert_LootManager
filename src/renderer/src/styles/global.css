@@ -4735,6 +4735,50 @@ input[type='date'].form-input {
   color: var(--text-secondary);
 }
 
+/* ── Forecast row ─────────────────────────────────────────────── */
+.fgoal-forecast-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 5px;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.fgoal-forecast-row strong {
+  font-style: normal;
+  color: var(--text-secondary);
+}
+
+.fgoal-forecast-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.fgoal-forecast-icon--ok {
+  color: #55aa55;
+}
+
+.fgoal-forecast-icon--warn {
+  color: var(--crimson-light, #e06060);
+}
+
+.fgoal-forecast-row--warn {
+  color: var(--crimson-light, #e06060);
+}
+
+.fgoal-forecast-row--warn strong {
+  color: var(--crimson-light, #e06060);
+}
+
+.fgoal-forecast-warn-label {
+  font-style: normal;
+  font-weight: 700;
+}
+
 .fgoal-done-label {
   font-family: var(--font-display);
   font-size: 0.6rem;
