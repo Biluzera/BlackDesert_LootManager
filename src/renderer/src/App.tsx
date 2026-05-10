@@ -11,7 +11,7 @@ import FarmTimer from './components/FarmTimer'
 import type { AppSettings } from './pages/SettingsPage'
 import { DEFAULT_SETTINGS } from './pages/SettingsPage'
 import { DevModeProvider, useDevMode } from './context/DevModeContext'
-import { MarketProvider } from './context/MarketContext'
+import { MarketProvider, useMarket } from './context/MarketContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -41,6 +41,16 @@ function AppInner(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<TabId>('home')
   const [settings,  setSettings]  = useState<AppSettings>(DEFAULT_SETTINGS)
   const { devMode } = useDevMode()
+  const { setItems: setMarketItems } = useMarket()
+
+  // Load items on startup so market prices are fetched immediately
+  useEffect(() => {
+    async function loadItemsForMarket(): Promise<void> {
+      const data = await window.api.readJson('items.json')
+      if (Array.isArray(data)) setMarketItems(data)
+    }
+    loadItemsForMarket()
+  }, [setMarketItems])
 
   // Load settings on mount and apply theme
   useEffect(() => {
