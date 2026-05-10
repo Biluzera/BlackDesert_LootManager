@@ -45,6 +45,7 @@ function App(): React.ReactElement {
       if (data && data.theme) {
         setSettings(data)
         document.documentElement.setAttribute('data-theme', data.theme)
+        document.documentElement.setAttribute('data-font', data.font ?? 'classic')
       }
     }
     loadSettings()
@@ -53,6 +54,7 @@ function App(): React.ReactElement {
   function handleSettingsChange(s: AppSettings): void {
     setSettings(s)
     document.documentElement.setAttribute('data-theme', s.theme)
+    document.documentElement.setAttribute('data-font', s.font ?? 'classic')
   }
 
   function renderPage(): React.ReactElement {

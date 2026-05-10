@@ -39,7 +39,16 @@ Dashboard com resumo geral: total acumulado em prata, local de farm mais utiliza
 - Agrupamento de bosses que spawnizam no mesmo horário.
 
 ### ⚙️ Configurações
-- Seleção de tema visual com 6 opções: Medieval Dourado, Crimson Sangue, Elvia Violeta, Noite Estrelada, Deserto de Valencia e Abismo Oceânico.
+- Seleção de tema visual com 10 opções:
+  - Medieval Dourado, Crimson Sangue, Elvia Violeta, Noite Estrelada, Deserto de Valencia, Abismo Oceânico
+  - Floresta de Kamasylve, Vulcão de Drieghan, Calpheon Aristocrático, Sombra Cinzenta
+- Seleção de fonte da interface com 5 opções:
+  - **Clássico Medieval** — Cinzel + Crimson Text (padrão)
+  - **Velho Mundo** — IM Fell English, estilo manuscrito antigo
+  - **Interface Moderna** — Rajdhani + Nunito, limpo e legível
+  - **Runas Antigas** — Uncial Antiqua + Merriweather, estilo celta
+  - **Diário de Aventureiro** — Special Elite + Courier Prime, máquina de escrever
+- A fonte selecionada é aplicada globalmente em todas as páginas do sistema.
 
 ### ⏱ Timer Flutuante
 Widget flutuante disponível em todas as telas para cronometrar sessões de farm com iniciar, pausar e resetar.

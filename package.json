@@ -1,6 +1,6 @@
 {
   "name": "bdo-loot-log",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "BDO Loot Tracker — Registro de Itens e Sessões de Farm",
   "main": "out/main/index.js",
   "scripts": {
