@@ -4473,3 +4473,728 @@ input[type='date'].form-input {
   border-radius: 3px;
   color: #a8ddf4;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Farm Goal Section
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Section wrapper ─────────────────────────────────────────── */
+.fgoal-section {
+  margin-bottom: 26px;
+}
+
+/* ── Heading row ─────────────────────────────────────────────── */
+.fgoal-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.fgoal-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.fgoal-heading-icon { flex-shrink: 0; }
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.fgoal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 20px;
+  background: rgba(15, 10, 6, 0.3);
+  border: 1px dashed var(--border-stone);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.fgoal-empty-icon {
+  opacity: 0.18;
+  color: var(--text-muted);
+}
+
+.fgoal-empty-text {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.fgoal-empty-hint {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+  font-style: italic;
+}
+
+/* ── Goals list ──────────────────────────────────────────────── */
+.fgoal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Goal card ───────────────────────────────────────────────── */
+.fgoal-card {
+  background: linear-gradient(160deg, var(--bg-wood-light) 0%, var(--bg-wood) 55%, var(--bg-dark-wood) 100%);
+  border: 1px solid var(--border-wood);
+  border-radius: 4px;
+  padding: 14px 16px 12px;
+  box-shadow: var(--shadow-medium);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fgoal-card:hover {
+  border-color: var(--border-gold);
+  box-shadow: var(--shadow-deep), var(--glow-gold-soft);
+}
+
+.fgoal-card--done {
+  border-color: var(--gold-shadow) !important;
+  opacity: 0.82;
+}
+
+/* ── Card header ─────────────────────────────────────────────── */
+.fgoal-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fgoal-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.fgoal-card-name {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fgoal-target-icon { color: var(--gold-mid); flex-shrink: 0; }
+.fgoal-done-icon   { color: #55aa55;        flex-shrink: 0; }
+
+/* ── Card action buttons ─────────────────────────────────────── */
+.fgoal-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.fgoal-action-btn {
+  padding: 5px 10px !important;
+}
+
+.fgoal-delete-btn:hover:not(:disabled) {
+  border-color: var(--crimson) !important;
+  color: var(--crimson-light) !important;
+  background: rgba(139, 26, 26, 0.12) !important;
+}
+
+/* ── Progress bar ────────────────────────────────────────────── */
+.fgoal-progress-track {
+  height: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-stone);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.fgoal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-shadow) 0%, var(--gold) 100%);
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 6px rgba(201, 160, 48, 0.4);
+}
+
+.fgoal-progress-fill--done {
+  background: linear-gradient(90deg, #337733 0%, #55aa55 100%);
+  box-shadow: 0 0 6px rgba(85, 170, 85, 0.45);
+}
+
+/* ── Amounts row ─────────────────────────────────────────────── */
+.fgoal-amounts-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fgoal-amounts-left {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.fgoal-current {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: var(--glow-gold-soft);
+}
+
+.fgoal-sep {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.fgoal-target {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.fgoal-prata {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.fgoal-amounts-right { flex-shrink: 0; }
+
+.fgoal-pct {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold-mid);
+}
+
+/* ── Meta row (dates + remaining) ────────────────────────────── */
+.fgoal-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.fgoal-meta-dates {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.fgoal-meta-dates strong {
+  font-style: normal;
+  color: var(--text-secondary);
+}
+
+.fgoal-date-sep {
+  margin: 0 5px;
+  color: var(--border-wood);
+}
+
+.fgoal-overdue {
+  color: var(--crimson-light) !important;
+  font-style: normal;
+}
+
+.fgoal-remaining {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.fgoal-remaining strong {
+  font-style: normal;
+  color: var(--text-secondary);
+}
+
+.fgoal-done-label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #55aa55;
+}
+
+/* ── Dialog box ──────────────────────────────────────────────── */
+.fgoal-dialog-box {
+  width: min(460px, 100%);
+}
+
+.fgoal-dialog-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fgoal-optional {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--text-muted);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.fgoal-required {
+  color: var(--crimson-light);
+  font-style: normal;
+}
+
+/* Amount input with icon + suffix */
+.fgoal-amount-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.fgoal-amount-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--gold-mid);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.fgoal-amount-input {
+  padding-left: 32px !important;
+  padding-right: 46px !important;
+}
+
+.fgoal-amount-suffix {
+  position: absolute;
+  right: 10px;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  font-style: italic;
+}
+
+.fgoal-dialog-error {
+  margin-top: 10px;
+}
+
+.fgoal-dialog-actions {
+  margin-top: 16px;
+}
+
+/* ── Contribute dialog ───────────────────────────────────────── */
+.fgoal-contribute-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-stone);
+  border-radius: 3px;
+}
+
+.fgoal-contribute-stat {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.fgoal-contribute-stat strong {
+  color: var(--gold);
+}
+
+.fgoal-contribute-remaining strong {
+  color: var(--text-primary);
+}
+
+/* ── Wide dialog variant ─────────────────────────────────────── */
+.fgoal-dialog-box--wide {
+  width: min(600px, 100%);
+}
+
+/* ── Session picker ──────────────────────────────────────────── */
+.fgoal-sess-picker {
+  margin-top: 16px;
+}
+
+.fgoal-sess-picker-label {
+  font-family: var(--font-display);
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.fgoal-sess-picker-empty {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px dashed var(--border-stone);
+  border-radius: 3px;
+}
+
+.fgoal-sess-list {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-wood) var(--bg-stone);
+  border: 1px solid var(--border-stone);
+  border-radius: 3px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.2);
+}
+.fgoal-sess-list::-webkit-scrollbar { width: 5px; }
+.fgoal-sess-list::-webkit-scrollbar-track { background: var(--bg-stone); }
+.fgoal-sess-list::-webkit-scrollbar-thumb { background: var(--border-wood); border-radius: 2px; }
+
+/* Each session row (label element for click-to-toggle) */
+.fgoal-sess-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+  user-select: none;
+  -webkit-app-region: no-drag;
+}
+.fgoal-sess-row:hover {
+  background: rgba(201, 160, 48, 0.06);
+  border-color: var(--border-stone);
+}
+.fgoal-sess-row--checked {
+  background: rgba(201, 160, 48, 0.12) !important;
+  border-color: var(--border-gold) !important;
+}
+
+.fgoal-sess-checkbox {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  accent-color: var(--gold-mid);
+  cursor: pointer;
+}
+
+.fgoal-sess-loc-icon {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  background: var(--bg-stone);
+  border: 1px solid var(--border-stone);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--text-muted);
+}
+.fgoal-sess-loc-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2px;
+}
+
+.fgoal-sess-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.fgoal-sess-loc-name {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fgoal-sess-linked-badge {
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-mid);
+  background: rgba(201, 160, 48, 0.12);
+  border: 1px solid rgba(201, 160, 48, 0.3);
+  border-radius: 2px;
+  padding: 1px 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fgoal-sess-meta {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fgoal-sess-total {
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gold);
+  text-shadow: var(--glow-gold-soft);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.fgoal-sess-prata {
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* Summary bar shown when sessions are selected */
+.fgoal-sess-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 7px 10px;
+  background: rgba(201, 160, 48, 0.07);
+  border: 1px solid rgba(201, 160, 48, 0.2);
+  border-radius: 3px;
+  flex-wrap: wrap;
+}
+
+.fgoal-sess-summary-text {
+  font-family: var(--font-body);
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.fgoal-sess-summary-text strong {
+  color: var(--gold);
+}
+
+/* ── Goal stats dialog ───────────────────────────────────────── */
+.fgoal-stats-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.fgoal-stats-summary {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-stone);
+  border-radius: 3px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.fgoal-stats-summary-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 14px;
+}
+
+.fgoal-stats-summary-sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border-stone);
+}
+
+.fgoal-stats-summary-label {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.fgoal-stats-summary-value {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.fgoal-stats-summary-value--gold {
+  color: var(--gold);
+  text-shadow: var(--glow-gold-soft);
+}
+
+.fgoal-stats-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 340px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-wood) var(--bg-stone);
+}
+.fgoal-stats-list::-webkit-scrollbar { width: 5px; }
+.fgoal-stats-list::-webkit-scrollbar-track { background: var(--bg-stone); }
+.fgoal-stats-list::-webkit-scrollbar-thumb { background: var(--border-wood); border-radius: 2px; }
+
+.fgoal-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(15, 10, 6, 0.4);
+  border: 1px solid var(--border-stone);
+  border-radius: 3px;
+  transition: background 0.12s, border-color 0.12s;
+}
+.fgoal-stats-row:hover {
+  background: rgba(42, 26, 10, 0.55);
+  border-color: var(--border-wood);
+}
+
+.fgoal-stats-loc-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  background: var(--bg-stone);
+  border: 1px solid var(--border-stone);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--text-muted);
+}
+.fgoal-stats-loc-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 3px;
+}
+
+.fgoal-stats-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fgoal-stats-loc-name {
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fgoal-stats-meta {
+  font-family: var(--font-body);
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fgoal-stats-total {
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: var(--glow-gold-soft);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.fgoal-stats-remove-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  padding: 0;
+}
+.fgoal-stats-remove-btn:hover {
+  color: #e05555;
+  background: rgba(200, 50, 50, 0.15);
+  border-color: rgba(200, 50, 50, 0.35);
+}
+
+/* ── Delete confirm button (danger variant) ──────────────────── */
+.fgoal-delete-confirm-btn {
+  background: linear-gradient(175deg, var(--crimson) 0%, var(--crimson-dark) 100%) !important;
+  border-color: var(--crimson) !important;
+}
+
+.fgoal-delete-confirm-btn:hover:not(:disabled) {
+  background: linear-gradient(175deg, var(--crimson-light) 0%, var(--crimson) 100%) !important;
+  box-shadow: var(--shadow-medium), 0 0 10px rgba(139, 26, 26, 0.4) !important;
+}

@@ -6,6 +6,7 @@ import type { FarmLocation } from './FarmLocationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
 import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
+import FarmGoalSection from '../components/FarmGoalSection'
 
 interface HomePageProps {
   onNavigate: (tab: TabId) => void
@@ -151,6 +152,9 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
 
   return (
     <div className="page-container">
+      {/* Farm Goals */}
+      <FarmGoalSection />
+
       {/* Stats section */}
       {loaded && stats && (
         <section className="home-stats-section" aria-label="Estatísticas">
