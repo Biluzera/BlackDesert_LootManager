@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, Map as MapIcon, Mountain } from 'lucide-react'
 import type { Item } from './ItemRegistrationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
@@ -262,7 +262,7 @@ function FarmLocationPage(): React.ReactElement {
   return (
     <div className="page-container">
       <h2 className="page-title">
-        <span className="page-title-icon" aria-hidden="true">🗺️</span>
+        <span className="page-title-icon" aria-hidden="true"><MapIcon size={20} /></span>
         Locais de Farm
       </h2>
 
@@ -455,7 +455,7 @@ function FarmLocationPage(): React.ReactElement {
           <p className="loading-text">Carregando…</p>
         ) : locations.length === 0 ? (
           <div className="empty-state">
-            <span className="empty-state-icon" aria-hidden="true">🗺️</span>
+            <span className="empty-state-icon" aria-hidden="true"><MapIcon size={48} /></span>
             <span className="empty-state-text">Nenhum local cadastrado ainda.</span>
           </div>
         ) : (
@@ -470,7 +470,7 @@ function FarmLocationPage(): React.ReactElement {
                     <div className="loc-card-icon-wrap">
                       {loc.imageFile && imageCache[loc.imageFile]
                         ? <img src={imageCache[loc.imageFile]} alt="" draggable={false} />
-                        : <span aria-hidden="true">⛰️</span>
+                        : <Mountain size={20} aria-hidden="true" />
                       }
                     </div>
                     <span className="loc-card-name">{loc.name}</span>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Settings, Palette, Type, Wrench, ShoppingCart, Search, BarChart2, Tag, CircleOff, CircleCheck, TriangleAlert } from 'lucide-react'
 import { useDevMode } from '../context/DevModeContext'
 import { fetchMarketPrices, fetchMarketPriceDetail } from '../services/marketApi'
 import type { MarketEntry, MarketPriceDetail } from '../services/marketApi'
@@ -206,14 +207,14 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
   return (
     <div className="page-container">
       <h2 className="page-title">
-        <span className="page-title-icon" aria-hidden="true">⚙️</span>
+        <Settings size={20} className="page-title-icon" aria-hidden="true" />
         Configurações
       </h2>
 
       {/* ── Themes ── */}
       <section className="settings-section">
         <div className="settings-section-title">
-          <span>🎨</span> Tema da Interface
+          <Palette size={16} aria-hidden="true" /> Tema da Interface
         </div>
         <p className="settings-section-desc">
           Escolha o conjunto de cores que mais combina com o seu estilo de aventureiro.
@@ -249,7 +250,7 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
       {/* ── Fonts ── */}
       <section className="settings-section">
         <div className="settings-section-title">
-          <span>🔤</span> Fonte da Interface
+          <Type size={16} aria-hidden="true" /> Fonte da Interface
         </div>
         <p className="settings-section-desc">
           Escolha a tipografia que melhor se adapta à sua leitura.
@@ -291,7 +292,7 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
       {/* ── Dev Mode ── */}
       <section className="settings-section">
         <div className="settings-section-title">
-          <span>🛠️</span> Ferramentas de Desenvolvimento
+          <Wrench size={16} aria-hidden="true" /> Ferramentas de Desenvolvimento
         </div>
         <p className="settings-section-desc">
           Preenche todas as abas com dados fictícios para testes de interface. Nenhum dado é
@@ -303,13 +304,13 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
           aria-pressed={devMode}
         >
           <span className="dev-mode-toggle-icon" aria-hidden="true">
-            {devMode ? '🔴' : '🟢'}
+            {devMode ? <CircleOff size={16} /> : <CircleCheck size={16} />}
           </span>
           {devMode ? 'Desativar Modo Desenvolvimento' : 'Ativar Modo Desenvolvimento'}
         </button>
         {devMode && (
           <p className="dev-mode-warning" role="status">
-            ⚠️ Modo ativo: itens, locais, sessões e bosses exibidos são mockados e não serão persistidos.
+            <TriangleAlert size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Modo ativo: itens, locais, sessões e bosses exibidos são mockados e não serão persistidos.
           </p>
         )}
       </section>
@@ -317,7 +318,7 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
       {/* ── Market API Debug ── */}
       <section className="settings-section">
         <div className="settings-section-title">
-          <span>🛒</span> Debug — API de Mercado (arsha.io)
+          <ShoppingCart size={16} aria-hidden="true" /> Debug — API de Mercado (arsha.io)
         </div>
         <p className="settings-section-desc">
           Informe um ID de item do mercado do Black Desert para inspecionar os dados retornados pela API.
@@ -339,7 +340,7 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
             onClick={handleDebugFetch}
             disabled={debugLoading || !debugId.trim()}
           >
-            {debugLoading ? 'Buscando…' : '🔍 Buscar'}
+            {debugLoading ? 'Buscando…' : <><Search size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Buscar</>}
           </button>
         </div>
 
@@ -353,7 +354,7 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
             {/* Search result (/search) */}
             <div className="market-debug-block">
               <div className="market-debug-block-title">
-                📊 Resultado de <code>/v1/sa/search</code>
+                <BarChart2 size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Resultado de <code>/v1/sa/search</code>
               </div>
               {debugSearch ? (
                 <table className="market-debug-table">
@@ -380,7 +381,7 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
             {/* Price detail (/price) */}
             <div className="market-debug-block">
               <div className="market-debug-block-title">
-                🏷️ Resultado de <code>/v1/sa/price</code>
+                <Tag size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Resultado de <code>/v1/sa/price</code>
               </div>
               {debugDetail ? (
                 <table className="market-debug-table">

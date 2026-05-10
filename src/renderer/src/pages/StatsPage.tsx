@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { BarChart2, Coins, ScrollText, Trophy, Zap, Flame, TrendingUp } from 'lucide-react'
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
@@ -207,11 +208,11 @@ export default function StatsPage(): React.ReactElement {
     return (
       <div className="page-container">
         <h2 className="page-title">
-          <span className="page-title-icon" aria-hidden="true">📊</span>
+          <BarChart2 size={20} className="page-title-icon" aria-hidden="true" />
           Estatísticas
         </h2>
         <div className="empty-state" style={{ marginTop: 32 }}>
-          <span className="empty-state-icon" aria-hidden="true">📊</span>
+          <BarChart2 size={48} className="empty-state-icon" aria-hidden="true" />
           <span className="empty-state-text">Nenhuma sessão registrada ainda. Comece a farmar!</span>
         </div>
       </div>
@@ -221,7 +222,7 @@ export default function StatsPage(): React.ReactElement {
   return (
     <div className="page-container">
       <h2 className="page-title">
-        <span className="page-title-icon" aria-hidden="true">📊</span>
+        <BarChart2 size={20} className="page-title-icon" aria-hidden="true" />
         Estatísticas
       </h2>
 
@@ -229,30 +230,30 @@ export default function StatsPage(): React.ReactElement {
       {summary && (
         <div className="stats-summary-grid">
           <div className="stats-summary-card">
-            <span className="stats-summary-icon">💰</span>
+            <Coins size={22} className="stats-summary-icon" />
             <span className="stats-summary-value">{shortNum(summary.grandTotal)}</span>
             <span className="stats-summary-label">prata total</span>
           </div>
           <div className="stats-summary-card">
-            <span className="stats-summary-icon">📜</span>
+            <ScrollText size={22} className="stats-summary-icon" />
             <span className="stats-summary-value">{summary.count}</span>
             <span className="stats-summary-label">sessões</span>
           </div>
           <div className="stats-summary-card">
-            <span className="stats-summary-icon">🏆</span>
+            <Trophy size={22} className="stats-summary-icon" />
             <span className="stats-summary-value">{shortNum(summary.best)}</span>
             <span className="stats-summary-label">melhor sessão</span>
           </div>
           {summary.avgPph !== null && (
             <div className="stats-summary-card">
-              <span className="stats-summary-icon">⚡</span>
+              <Zap size={22} className="stats-summary-icon" />
               <span className="stats-summary-value">{shortNum(summary.avgPph)}</span>
               <span className="stats-summary-label">média prata/h</span>
             </div>
           )}
           {summary.bestPph !== null && (
             <div className="stats-summary-card">
-              <span className="stats-summary-icon">🔥</span>
+              <Flame size={22} className="stats-summary-icon" />
               <span className="stats-summary-value">{shortNum(summary.bestPph)}</span>
               <span className="stats-summary-label">melhor prata/h</span>
             </div>
@@ -264,7 +265,7 @@ export default function StatsPage(): React.ReactElement {
       {lineData.length > 1 && (
         <section className="stats-section">
           <div className="stats-section-title">
-            <span>📈</span> Prata por Sessão
+            <TrendingUp size={16} aria-hidden="true" /> Prata por Sessão
           </div>
           <div className="stats-chart-box">
             <ResponsiveContainer width="100%" height={220}>
@@ -302,7 +303,7 @@ export default function StatsPage(): React.ReactElement {
       {locBarData.length > 0 && (
         <section className="stats-section">
           <div className="stats-section-title">
-            <span>⚡</span> Prata/Hora por Local
+            <Zap size={16} aria-hidden="true" /> Prata/Hora por Local
           </div>
           <div className="stats-chart-box">
             <ResponsiveContainer width="100%" height={220}>
@@ -337,7 +338,7 @@ export default function StatsPage(): React.ReactElement {
       {locTotalData.length > 0 && (
         <section className="stats-section">
           <div className="stats-section-title">
-            <span>💰</span> Prata Total por Local
+            <Coins size={16} aria-hidden="true" /> Prata Total por Local
           </div>
           <div className="stats-chart-box">
             <ResponsiveContainer width="100%" height={220}>

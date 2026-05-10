@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { Gem, Map as MapIcon, ScrollText, BarChart2, Coins, Mountain, ArrowLeftRight, Upload, Download } from 'lucide-react'
 import type { TabId } from '../App'
 import type { Item } from './ItemRegistrationPage'
 import type { FarmLocation } from './FarmLocationPage'
@@ -12,7 +13,7 @@ interface HomePageProps {
 
 interface NavCard {
   tab: TabId
-  icon: string
+  icon: React.ReactElement
   title: string
   desc: string
 }
@@ -20,19 +21,19 @@ interface NavCard {
 const NAV_CARDS: NavCard[] = [
   {
     tab:   'items',
-    icon:  '💎',
+    icon:  <Gem size={28} />,
     title: 'Registro de Itens',
     desc:  'Cadastre os itens que podem ser obtidos no farm e defina suas propriedades.'
   },
   {
     tab:   'locations',
-    icon:  '🗺️',
+    icon:  <MapIcon size={28} />,
     title: 'Locais de Farm',
     desc:  'Registre os locais onde você faz farm e organize-os por região ou tipo.'
   },
   {
     tab:   'sessions',
-    icon:  '📜',
+    icon:  <ScrollText size={28} />,
     title: 'Sessões de Farm',
     desc:  'Registre e acompanhe cada sessão de farm com os itens obtidos.'
   }
@@ -212,14 +213,14 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
       {loaded && stats && (
         <section className="home-stats-section" aria-label="Estatísticas">
           <div className="home-stats-heading">
-            <span className="home-stats-heading-icon" aria-hidden="true">📊</span>
+            <BarChart2 size={18} className="home-stats-heading-icon" aria-hidden="true" />
             Estatísticas Gerais
           </div>
 
           {/* Grand total + top location */}
           <div className="home-stat-highlights">
             <div className="home-highlight-card">
-              <span className="home-highlight-icon" aria-hidden="true">💰</span>
+              <Coins size={22} className="home-highlight-icon" aria-hidden="true" />
               <div className="home-highlight-body">
                 <span className="home-highlight-value">{stats.grandTotal.toLocaleString('pt-BR')}</span>
                 <span className="home-highlight-label">prata total em todas as sessões</span>
@@ -231,7 +232,7 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
                 <div className="home-highlight-loc-icon">
                   {stats.topLoc.imageFile && imageCache[stats.topLoc.imageFile]
                     ? <img src={imageCache[stats.topLoc.imageFile]} alt="" draggable={false} />
-                    : <span aria-hidden="true">⛰️</span>
+                    : <Mountain size={20} aria-hidden="true" />
                   }
                 </div>
                 <div className="home-highlight-body">
@@ -252,7 +253,7 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
                 <div className="home-recent-loc-icon">
                   {location?.imageFile && imageCache[location.imageFile]
                     ? <img src={imageCache[location.imageFile]} alt="" draggable={false} />
-                    : <span aria-hidden="true">⛰️</span>
+                    : <Mountain size={20} aria-hidden="true" />
                   }
                 </div>
                 <div className="home-recent-info">
@@ -275,12 +276,12 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
       {/* Transfer section */}
       <section className="home-transfer-section" aria-label="Exportar e importar dados">
         <div className="home-transfer-heading">
-          <span className="home-transfer-heading-icon" aria-hidden="true">🔄</span>
+          <ArrowLeftRight size={18} className="home-transfer-heading-icon" aria-hidden="true" />
           Transferir Dados
         </div>
         <div className="home-transfer-row">
           <div className="home-transfer-card">
-            <div className="home-transfer-card-icon" aria-hidden="true">📤</div>
+            <div className="home-transfer-card-icon" aria-hidden="true"><Upload size={24} /></div>
             <div className="home-transfer-card-body">
               <span className="home-transfer-card-title">Exportar</span>
               <span className="home-transfer-card-desc">
@@ -293,12 +294,12 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
               onClick={handleExport}
               disabled={transferBusy}
             >
-              {transferBusy ? 'Aguarde…' : '📤 Exportar'}
+              {transferBusy ? 'Aguarde…' : <><Upload size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Exportar</>}
             </button>
           </div>
 
           <div className="home-transfer-card">
-            <div className="home-transfer-card-icon" aria-hidden="true">📥</div>
+            <div className="home-transfer-card-icon" aria-hidden="true"><Download size={24} /></div>
             <div className="home-transfer-card-body">
               <span className="home-transfer-card-title">Importar</span>
               <span className="home-transfer-card-desc">
@@ -311,7 +312,7 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
               onClick={handleImport}
               disabled={transferBusy}
             >
-              {transferBusy ? 'Aguarde…' : '📥 Importar'}
+              {transferBusy ? 'Aguarde…' : <><Download size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Importar</>}
             </button>
           </div>
         </div>

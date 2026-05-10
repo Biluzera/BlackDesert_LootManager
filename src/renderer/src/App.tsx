@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings } from 'lucide-react'
 import HomePage from './pages/HomePage'
 import ItemRegistrationPage from './pages/ItemRegistrationPage'
 import FarmLocationPage from './pages/FarmLocationPage'
@@ -19,19 +20,19 @@ export type TabId = 'home' | 'items' | 'locations' | 'sessions' | 'stats' | 'bos
 interface Tab {
   id: TabId
   label: string
-  icon: string
+  icon: React.ReactElement
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TABS: Tab[] = [
-  { id: 'home',      label: 'Início',           icon: '🏰' },
-  { id: 'items',     label: 'Registro de Itens', icon: '💎' },
-  { id: 'locations', label: 'Locais de Farm',    icon: '🗺️' },
-  { id: 'sessions',  label: 'Sessões de Farm',   icon: '📜' },
-  { id: 'stats',     label: 'Estatísticas',      icon: '📊' },
-  { id: 'bosses',    label: 'Bosses Mundiais',   icon: '⚔️' },
-  { id: 'settings',  label: 'Configurações',     icon: '⚙️' }
+  { id: 'home',      label: 'Início',           icon: <Home size={16} /> },
+  { id: 'items',     label: 'Registro de Itens', icon: <Gem size={16} /> },
+  { id: 'locations', label: 'Locais de Farm',    icon: <Map size={16} /> },
+  { id: 'sessions',  label: 'Sessões de Farm',   icon: <ScrollText size={16} /> },
+  { id: 'stats',     label: 'Estatísticas',      icon: <BarChart2 size={16} /> },
+  { id: 'bosses',    label: 'Bosses Mundiais',   icon: <Swords size={16} /> },
+  { id: 'settings',  label: 'Configurações',     icon: <Settings size={16} /> }
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { Pencil, Trash2, MapPin, Search, ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01 } from 'lucide-react'
+import { Pencil, Trash2, MapPin, Search, ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01, Gem, Package, FolderOpen, Save, RefreshCw, Store } from 'lucide-react'
 import type { FarmLocation } from './FarmLocationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
@@ -266,7 +266,7 @@ function ItemRegistrationPage(): React.ReactElement {
   return (
     <div className="page-container">
       <h2 className="page-title">
-        <span className="page-title-icon" aria-hidden="true">💎</span>
+        <Gem size={20} className="page-title-icon" aria-hidden="true" />
         Registro de Itens
       </h2>
 
@@ -274,7 +274,7 @@ function ItemRegistrationPage(): React.ReactElement {
       <section className="form-section" ref={formSectionRef}>
         <div className="wood-panel">
           <h3 className="panel-section-title">
-            {isEditing ? '✏️ Editar Item' : '+ Novo Item'}
+            {isEditing ? <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Editar Item</> : '+ Novo Item'}
           </h3>
 
           {error && (
@@ -351,7 +351,7 @@ function ItemRegistrationPage(): React.ReactElement {
                       className="btn btn-secondary btn-sm"
                       onClick={handlePickImage}
                     >
-                    📁 Selecionar PNG / WebP
+                    <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Selecionar PNG / WebP
                     </button>
                     {imageFile
                       ? <span className="image-filename" title={imageFile}>Imagem selecionada ✓</span>
@@ -378,7 +378,7 @@ function ItemRegistrationPage(): React.ReactElement {
                     className="btn btn-primary"
                     disabled={saving || !name.trim()}
                   >
-                    {saving ? 'Salvando…' : isEditing ? '⚔ Salvar Alterações' : '⚔ Cadastrar Item'}
+                    {saving ? 'Salvando…' : isEditing ? <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Salvar Alterações</> : <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Cadastrar Item</>}
                   </button>
                   {isEditing && (
                     <button
@@ -398,7 +398,7 @@ function ItemRegistrationPage(): React.ReactElement {
                 <div className="image-preview-box">
                   {imageDataUrl
                     ? <img src={imageDataUrl} alt="Prévia do item" draggable={false} />
-                    : <span className="image-preview-placeholder" aria-hidden="true">💎</span>
+                    : <Gem size={32} className="image-preview-placeholder" aria-hidden="true" />
                   }
                 </div>
               </div>
@@ -479,12 +479,12 @@ function ItemRegistrationPage(): React.ReactElement {
           <p className="loading-text">Carregando…</p>
         ) : items.length === 0 ? (
           <div className="empty-state">
-            <span className="empty-state-icon" aria-hidden="true">📦</span>
+            <Package size={48} className="empty-state-icon" aria-hidden="true" />
             <span className="empty-state-text">Nenhum item cadastrado ainda.</span>
           </div>
         ) : visibleItems.length === 0 ? (
           <div className="empty-state">
-            <span className="empty-state-icon" aria-hidden="true">🔍</span>
+            <Search size={48} className="empty-state-icon" aria-hidden="true" />
             <span className="empty-state-text">Nenhum item encontrado para os filtros selecionados.</span>
           </div>
         ) : (
@@ -508,7 +508,7 @@ function ItemRegistrationPage(): React.ReactElement {
                   <div className="item-row-img">
                     {img
                       ? <img src={img} alt={item.name} draggable={false} />
-                      : <span className="item-image-placeholder" aria-hidden="true">💎</span>
+                      : <Gem size={24} className="item-image-placeholder" aria-hidden="true" />
                     }
                   </div>
 
@@ -519,18 +519,18 @@ function ItemRegistrationPage(): React.ReactElement {
                       {marketEntry
                         ? (
                           <span className="item-row-price-badge item-price-market" title="Preço de mercado (arsha.io)">
-                            🏪 {marketEntry.basePrice.toLocaleString('pt-BR')} prata
+                            <Store size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} /> {marketEntry.basePrice.toLocaleString('pt-BR')} prata
                           </span>
                         )
                         : item.price > 0 && (
                           <span className="item-row-price-badge item-price-manual" title="Preço configurado manualmente">
-                            ✋ {formatPrice(item.price)}
+                            <Pencil size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} /> {formatPrice(item.price)}
                           </span>
                         )
                       }
                       {rateLabel && (
                         <span className="item-drop-rate-badge" title="Drop rate médio em todas as sessões">
-                          📦 {rateLabel}
+                          <Package size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} /> {rateLabel}
                         </span>
                       )}
                     </div>
@@ -555,7 +555,7 @@ function ItemRegistrationPage(): React.ReactElement {
                     {item.marketId != null && String(item.marketId).trim() !== '' && !marketEntry && (
                       <div className="item-row-market-details">
                         <span className="market-detail-chip market-detail-loading">
-                          🔄 ID de Mercado: {String(item.marketId)} — aguardando dados…
+                          <RefreshCw size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} /> ID de Mercado: {String(item.marketId)} — aguardando dados…
                         </span>
                       </div>
                     )}
