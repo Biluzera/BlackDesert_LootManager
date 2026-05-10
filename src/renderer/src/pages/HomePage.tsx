@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Gem, Map as MapIcon, ScrollText, BarChart2, Coins, Mountain, ArrowLeftRight, Upload, Download, HardDrive } from 'lucide-react'
+import { BarChart2, Coins, Mountain, ArrowLeftRight, Upload, Download, HardDrive } from 'lucide-react'
 import type { TabId } from '../App'
 import type { Item } from './ItemRegistrationPage'
 import type { FarmLocation } from './FarmLocationPage'
@@ -10,34 +10,6 @@ import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeCon
 interface HomePageProps {
   onNavigate: (tab: TabId) => void
 }
-
-interface NavCard {
-  tab: TabId
-  icon: React.ReactElement
-  title: string
-  desc: string
-}
-
-const NAV_CARDS: NavCard[] = [
-  {
-    tab:   'items',
-    icon:  <Gem size={28} />,
-    title: 'Registro de Itens',
-    desc:  'Cadastre os itens que podem ser obtidos no farm e defina suas propriedades.'
-  },
-  {
-    tab:   'locations',
-    icon:  <MapIcon size={28} />,
-    title: 'Locais de Farm',
-    desc:  'Registre os locais onde você faz farm e organize-os por região ou tipo.'
-  },
-  {
-    tab:   'sessions',
-    icon:  <ScrollText size={28} />,
-    title: 'Sessões de Farm',
-    desc:  'Registre e acompanhe cada sessão de farm com os itens obtidos.'
-  }
-]
 
 const RECENT_COUNT = 5
 
@@ -179,36 +151,6 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
 
   return (
     <div className="page-container">
-      {/* Welcome banner */}
-      <section className="home-banner" aria-label="Bem-vindo">
-        <div className="parchment-panel">
-          <p className="home-banner-title">— Bem-vindo ao BDO Loot Log —</p>
-          <p className="home-banner-text">
-            Rastreie com precisão cada item obtido em suas sessões de farm em
-            Black Desert Online. Cadastre itens, defina locais de caça e registre
-            o histórico completo das suas aventuras.
-          </p>
-        </div>
-      </section>
-
-      {/* Navigation cards */}
-      <nav aria-label="Atalhos de navegação">
-        <div className="home-cards">
-          {NAV_CARDS.map((card) => (
-            <button
-              key={card.tab}
-              className="home-card"
-              onClick={() => onNavigate(card.tab)}
-              aria-label={`Ir para ${card.title}`}
-            >
-              <span className="home-card-icon" aria-hidden="true">{card.icon}</span>
-              <span className="home-card-title">{card.title}</span>
-              <span className="home-card-desc">{card.desc}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
-
       {/* Stats section */}
       {loaded && stats && (
         <section className="home-stats-section" aria-label="Estatísticas">
