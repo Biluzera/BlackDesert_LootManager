@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Pencil, Trash2, Map as MapIcon, Mountain } from 'lucide-react'
+import { Pencil, Trash2, Map as MapIcon, Mountain, FolderOpen, Gem, Search, Save, X, Check, Sword, Swords, Shield } from 'lucide-react'
 import type { Item } from './ItemRegistrationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
@@ -12,6 +12,9 @@ export interface FarmLocation {
   name: string
   imageFile: string | null
   lootIds: string[]   // references to Item.id
+  apMin?: number
+  apMax?: number
+  dp?: number
   createdAt: string
 }
 
@@ -33,6 +36,9 @@ function FarmLocationPage(): React.ReactElement {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [saving, setSaving]         = useState(false)
   const [error, setError]           = useState<string | null>(null)
+  const [apMin, setApMin]           = useState('')
+  const [apMax, setApMax]           = useState('')
+  const [dp, setDp]                 = useState('')
 
   // Loot search dropdown
   const [searchQuery, setSearchQuery]   = useState('')
@@ -107,6 +113,9 @@ function FarmLocationPage(): React.ReactElement {
     setSearchQuery('')
     setDropdownOpen(false)
     setError(null)
+    setApMin('')
+    setApMax('')
+    setDp('')
   }
 
   async function handlePickImage(): Promise<void> {
@@ -215,7 +224,10 @@ function FarmLocationPage(): React.ReactElement {
       if (editingId !== null) {
         const updated = locations.map(loc =>
           loc.id === editingId
-            ? { ...loc, name: trimmed, imageFile, lootIds: selectedIds }
+            ? { ...loc, name: trimmed, imageFile, lootIds: selectedIds,
+                apMin: apMin ? Number(apMin) : undefined,
+                apMax: apMax ? Number(apMax) : undefined,
+                dp:    dp    ? Number(dp)    : undefined }
             : loc
         )
         await persist(updated)
@@ -225,6 +237,9 @@ function FarmLocationPage(): React.ReactElement {
           name: trimmed,
           imageFile,
           lootIds: selectedIds,
+          apMin: apMin ? Number(apMin) : undefined,
+          apMax: apMax ? Number(apMax) : undefined,
+          dp:    dp    ? Number(dp)    : undefined,
           createdAt: new Date().toISOString()
         }
         await persist([...locations, newLoc])
@@ -246,6 +261,9 @@ function FarmLocationPage(): React.ReactElement {
     setSearchQuery('')
     setDropdownOpen(false)
     setError(null)
+    setApMin(loc.apMin != null ? String(loc.apMin) : '')
+    setApMax(loc.apMax != null ? String(loc.apMax) : '')
+    setDp(loc.dp != null ? String(loc.dp) : '')
     const area = document.querySelector('.content-area')
     if (area) area.scrollTop = 0
   }
@@ -270,7 +288,10 @@ function FarmLocationPage(): React.ReactElement {
       <section className="form-section">
         <div className="wood-panel">
           <h3 className="panel-section-title">
-            {isEditing ? '✏️ Editar Local' : '+ Novo Local de Farm'}
+            {isEditing
+              ? <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" /> Editar Local</>
+              : '+ Novo Local de Farm'
+            }
           </h3>
 
           {error && <p className="form-error" role="alert">{error}</p>}
@@ -299,6 +320,49 @@ function FarmLocationPage(): React.ReactElement {
                 />
               </div>
 
+              {/* Gear requirements */}
+              <div className="loc-gear-row">
+                <div className="form-field">
+                  <label className="form-label" htmlFor="loc-ap-min">PA Mínimo</label>
+                  <input
+                    id="loc-ap-min"
+                    className="form-input loc-gear-input"
+                    type="number"
+                    min="0"
+                    max="9999"
+                    value={apMin}
+                    onChange={e => setApMin(e.target.value)}
+                    placeholder="—"
+                  />
+                </div>
+                <div className="form-field">
+                  <label className="form-label" htmlFor="loc-ap-max">PA Máximo (cap)</label>
+                  <input
+                    id="loc-ap-max"
+                    className="form-input loc-gear-input"
+                    type="number"
+                    min="0"
+                    max="9999"
+                    value={apMax}
+                    onChange={e => setApMax(e.target.value)}
+                    placeholder="—"
+                  />
+                </div>
+                <div className="form-field">
+                  <label className="form-label" htmlFor="loc-dp">PD Recomendado</label>
+                  <input
+                    id="loc-dp"
+                    className="form-input loc-gear-input"
+                    type="number"
+                    min="0"
+                    max="9999"
+                    value={dp}
+                    onChange={e => setDp(e.target.value)}
+                    placeholder="—"
+                  />
+                </div>
+              </div>
+
                   {/* Image picker */}
                   <div className="form-field">
                     <span className="form-label">Ícone do Local (PNG opcional)</span>
@@ -308,10 +372,10 @@ function FarmLocationPage(): React.ReactElement {
                         className="btn btn-secondary btn-sm"
                         onClick={handlePickImage}
                       >
-                        📁 Selecionar PNG
+                      <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Selecionar PNG
                       </button>
                       {imageFile
-                        ? <span className="image-filename">Imagem selecionada ✓</span>
+                        ? <span className="image-filename"><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />Imagem selecionada</span>
                         : <span className="image-filename-empty">Nenhuma imagem selecionada</span>
                       }
                       {imageFile && (
@@ -320,7 +384,7 @@ function FarmLocationPage(): React.ReactElement {
                           className="btn-icon-remove"
                           aria-label="Remover imagem"
                           onClick={() => { setImageFile(null); setImageDataUrl(null) }}
-                        >✕</button>
+                        ><X size={12} aria-hidden="true" /></button>
                       )}
                     </div>
                   </div>
@@ -333,7 +397,7 @@ function FarmLocationPage(): React.ReactElement {
                   <div className="image-preview-box">
                     {imageDataUrl
                       ? <img src={imageDataUrl} alt="Prévia do local" draggable={false} />
-                      : <span className="image-preview-placeholder" aria-hidden="true">⛰️</span>
+                      : <Mountain size={32} className="image-preview-placeholder" aria-hidden="true" />
                     }
                   </div>
                 </div>
@@ -355,7 +419,7 @@ function FarmLocationPage(): React.ReactElement {
                         <li key={id} className="loot-tag">
                           {img
                             ? <img src={img} alt="" className="loot-tag-img" draggable={false} />
-                            : <span className="loot-tag-icon" aria-hidden="true">💎</span>
+                            : <Gem size={14} className="loot-tag-icon" aria-hidden="true" />
                           }
                           <span className="loot-tag-name">{item.name}</span>
                           <button
@@ -364,7 +428,7 @@ function FarmLocationPage(): React.ReactElement {
                             aria-label={`Remover ${item.name}`}
                             onClick={() => removeLoot(id)}
                           >
-                            ✕
+                            <X size={11} aria-hidden="true" />
                           </button>
                         </li>
                       )
@@ -377,7 +441,7 @@ function FarmLocationPage(): React.ReactElement {
                   <input
                     className="form-input loot-search-input"
                     type="text"
-                    placeholder={allItems.length === 0 ? 'Nenhum item cadastrado ainda…' : '🔍 Pesquisar item…'}
+                    placeholder={allItems.length === 0 ? 'Nenhum item cadastrado ainda…' : 'Pesquisar item…'}
                     value={searchQuery}
                     disabled={allItems.length === 0}
                     onChange={e => { setSearchQuery(e.target.value); setDropdownOpen(true) }}
@@ -400,7 +464,7 @@ function FarmLocationPage(): React.ReactElement {
                             <div className="loot-dropdown-img">
                               {img
                                 ? <img src={img} alt="" draggable={false} />
-                                : <span aria-hidden="true">💎</span>
+                                : <Gem size={16} aria-hidden="true" />
                               }
                             </div>
                             <span className="loot-dropdown-name">{item.name}</span>
@@ -430,7 +494,12 @@ function FarmLocationPage(): React.ReactElement {
                   className="btn btn-primary"
                   disabled={saving || !name.trim()}
                 >
-                  {saving ? 'Salvando…' : isEditing ? '⚔ Salvar Alterações' : '⚔ Cadastrar Local'}
+                  {saving
+                    ? 'Salvando…'
+                    : isEditing
+                      ? <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Salvar Alterações</>
+                      : <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Cadastrar Local</>
+                  }
                 </button>
                 {isEditing && (
                   <button type="button" className="btn btn-secondary" onClick={resetForm}>
@@ -495,6 +564,32 @@ function FarmLocationPage(): React.ReactElement {
                   </div>
                 </div>
 
+                {(loc.apMin != null || loc.apMax != null || loc.dp != null) && (
+                  <div className="loc-gear-req">
+                    {loc.apMin != null && (
+                      <span className="loc-gear-badge loc-gear-ap-min" title="PA Mínimo">
+                        <Sword size={11} aria-hidden="true" className="loc-gear-icon" />
+                        <span className="loc-gear-key">PA min</span>
+                        <span className="loc-gear-val">{loc.apMin}</span>
+                      </span>
+                    )}
+                    {loc.apMax != null && (
+                      <span className="loc-gear-badge loc-gear-ap-max" title="PA Máximo (cap)">
+                        <Swords size={11} aria-hidden="true" className="loc-gear-icon" />
+                        <span className="loc-gear-key">PA cap</span>
+                        <span className="loc-gear-val">{loc.apMax}</span>
+                      </span>
+                    )}
+                    {loc.dp != null && (
+                      <span className="loc-gear-badge loc-gear-dp" title="PD Recomendado">
+                        <Shield size={11} aria-hidden="true" className="loc-gear-icon" />
+                        <span className="loc-gear-key">PD rec.</span>
+                        <span className="loc-gear-val">{loc.dp}</span>
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 {(() => {
                   const st = locationStats.get(loc.id) ?? { count: 0, total: 0, avg: 0, avgPph: null }
                   if (st.count === 0) return null
@@ -545,7 +640,7 @@ function FarmLocationPage(): React.ReactElement {
                         <li key={id} className={`loc-loot-chip${rateLabel ? ' loc-loot-chip--has-rate' : ''}`}>
                           {img
                             ? <img src={img} alt="" className="loc-loot-img" draggable={false} />
-                            : <span aria-hidden="true">💎</span>
+                            : <Gem size={14} aria-hidden="true" />
                           }
                           <span className="loc-loot-name">{item.name}</span>
                           {rateLabel && (

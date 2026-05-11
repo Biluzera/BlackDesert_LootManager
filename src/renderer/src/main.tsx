@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { TriangleAlert } from 'lucide-react'
 import App from './App'
 import './styles/global.css'
 
@@ -19,7 +20,9 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, EBSta
     if (this.state.error) {
       return (
         <div style={{ padding: 32, fontFamily: 'monospace', color: '#f08080', background: '#1a0505', minHeight: '100vh' }}>
-          <h2>⚠️ Erro na aplicação</h2>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <TriangleAlert size={20} aria-hidden="true" /> Erro na aplicação
+          </h2>
           <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
             {this.state.error.message}
             {'\n\n'}

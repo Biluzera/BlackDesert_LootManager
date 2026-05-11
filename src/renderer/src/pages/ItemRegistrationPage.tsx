@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { Pencil, Trash2, MapPin, Search, ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01, Gem, Package, FolderOpen, Save, RefreshCw, Store } from 'lucide-react'
+import { Pencil, Trash2, MapPin, Search, ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01, Gem, Package, FolderOpen, Save, RefreshCw, Store, Clock, Check, X } from 'lucide-react'
 import type { FarmLocation } from './FarmLocationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
@@ -24,6 +24,10 @@ function formatPrice(p: number): string {
   return p.toLocaleString('pt-BR') + ' prata'
 }
 
+function formatTime(d: Date): string {
+  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
+
 function parsePrice(raw: string): number {
   const n = parseFloat(raw.replace(/\./g, '').replace(',', '.'))
   return isNaN(n) || n < 0 ? 0 : Math.round(n)
@@ -33,7 +37,7 @@ function parsePrice(raw: string): number {
 
 function ItemRegistrationPage(): React.ReactElement {
   const { devMode } = useDevMode()
-  const { marketData, setItems: setMarketItems } = useMarket()
+  const { marketData, setItems: setMarketItems, loading: marketLoading, lastUpdated } = useMarket()
   const [items, setItems] = useState<Item[]>([])
   const [locations, setLocations] = useState<FarmLocation[]>([])
   const [sessions, setSessions] = useState<FarmSession[]>([])
@@ -354,7 +358,7 @@ function ItemRegistrationPage(): React.ReactElement {
                     <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Selecionar PNG / WebP
                     </button>
                     {imageFile
-                      ? <span className="image-filename" title={imageFile}>Imagem selecionada ✓</span>
+                      ? <span className="image-filename" title={imageFile}><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />Imagem selecionada</span>
                       : <span className="image-filename-empty">Nenhuma imagem selecionada</span>
                     }
                     {imageFile && (
@@ -365,7 +369,7 @@ function ItemRegistrationPage(): React.ReactElement {
                         onClick={handleRemoveImage}
                         title="Remover imagem"
                       >
-                        ✕
+                        <X size={12} aria-hidden="true" />
                       </button>
                     )}
                   </div>
@@ -413,6 +417,16 @@ function ItemRegistrationPage(): React.ReactElement {
         <div className="items-list-heading">
           <span>Itens Cadastrados</span>
           <span className="items-count">{items.length}</span>
+          {items.some(i => i.marketId != null && String(i.marketId).trim() !== '') && (
+            <span className="market-status-label" title="Última atualização dos preços de mercado (arsha.io)">
+              {marketLoading
+                ? <><RefreshCw size={11} className="market-status-spin" aria-hidden="true" /> Atualizando mercado…</>
+                : lastUpdated
+                  ? <><Clock size={11} aria-hidden="true" /> Mercado · {formatTime(lastUpdated)}</>
+                  : null
+              }
+            </span>
+          )}
         </div>
 
         {/* Toolbar: search + filter + sort */}
@@ -430,7 +444,7 @@ function ItemRegistrationPage(): React.ReactElement {
                 autoComplete="off"
               />
               {searchQuery && (
-                <button className="item-search-clear" onClick={() => setSearchQuery('')} aria-label="Limpar pesquisa">✕</button>
+                <button className="item-search-clear" onClick={() => setSearchQuery('')} aria-label="Limpar pesquisa"><X size={12} aria-hidden="true" /></button>
               )}
             </div>
 

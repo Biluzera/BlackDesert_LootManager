@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { Pencil, Trash2, Plus, Bell } from 'lucide-react'
+import { Pencil, Trash2, Plus, Bell, Swords, FolderOpen, X, Check, Save, Calendar, Timer } from 'lucide-react'
 import { useDevMode } from '../context/DevModeContext'
 import { MOCK_BOSSES } from '../context/DevModeContext'
 
@@ -398,7 +398,7 @@ function WorldBossPage(): React.ReactElement {
             <div className="boss-notif-icons">
               {n.bosses.map(({ boss, imageUrl }, i) => (
                 <div key={i} className="boss-notif-icon" style={{ borderColor: boss.color }}>
-                  {imageUrl ? <img src={imageUrl} alt="" draggable={false} /> : <span>⚔</span>}
+                  {imageUrl ? <img src={imageUrl} alt="" draggable={false} /> : <Swords size={16} aria-hidden="true" />}
                 </div>
               ))}
             </div>
@@ -419,13 +419,13 @@ function WorldBossPage(): React.ReactElement {
               className="boss-notif-close"
               onClick={() => setNotifs(prev => prev.filter(x => x.id !== n.id))}
               aria-label="Fechar"
-            >✕</button>
+            ><X size={12} aria-hidden="true" /></button>
           </div>
         ))}
       </div>
 
       <h2 className="page-title">
-        <span className="page-title-icon" aria-hidden="true">⚔️</span>
+        <span className="page-title-icon" aria-hidden="true"><Swords size={20} /></span>
         Bosses Mundiais
       </h2>
 
@@ -458,7 +458,7 @@ function WorldBossPage(): React.ReactElement {
                   <div key={i} className="boss-next-icon" style={{ borderColor: boss.color }}>
                     {boss.imageFile && imageCache[boss.imageFile]
                       ? <img src={imageCache[boss.imageFile]} alt="" draggable={false} />
-                      : <span>⚔</span>
+                      : <Swords size={20} aria-hidden="true" />
                     }
                   </div>
                 ))}
@@ -478,7 +478,7 @@ function WorldBossPage(): React.ReactElement {
             </div>
           ) : (
             <div className="boss-no-next">
-              <span>⚔ Nenhum boss registrado</span>
+              <Swords size={16} aria-hidden="true" /> Nenhum boss registrado
             </div>
           )}
         </div>
@@ -502,7 +502,7 @@ function WorldBossPage(): React.ReactElement {
                     <div key={j} className="boss-upcoming-img" style={{ borderColor: boss.color }}>
                       {boss.imageFile && imageCache[boss.imageFile]
                         ? <img src={imageCache[boss.imageFile]} alt="" draggable={false} />
-                        : <span>⚔</span>
+                        : <Swords size={14} aria-hidden="true" />
                       }
                     </div>
                   ))}
@@ -528,7 +528,10 @@ function WorldBossPage(): React.ReactElement {
       {/* ── Weekly calendar ── */}
       {bosses.length > 0 && (
         <section className="wood-panel boss-calendar-section">
-          <h3 className="panel-section-title">📅 Calendário Semanal</h3>
+          <h3 className="panel-section-title">
+            <Calendar size={15} style={{ verticalAlign: 'middle', marginRight: 6 }} aria-hidden="true" />
+            Calendário Semanal
+          </h3>
           <div className="boss-cal-grid">
             {Array.from({ length: 7 }, (_, day) => {
               const daySpawns = calByDay.get(day) ?? []
@@ -549,7 +552,7 @@ function WorldBossPage(): React.ReactElement {
                             <span className="boss-cal-chip-time">{entry.time}</span>
                             {entry.boss.imageFile && imageCache[entry.boss.imageFile]
                               ? <img className="boss-cal-chip-img" src={imageCache[entry.boss.imageFile]} alt="" draggable={false} />
-                              : <span className="boss-cal-chip-icon">⚔</span>
+                              : <Swords size={14} className="boss-cal-chip-icon" aria-hidden="true" />
                             }
                             <span className="boss-cal-chip-name">{entry.boss.name}</span>
                           </div>
@@ -615,7 +618,10 @@ function WorldBossPage(): React.ReactElement {
         {showForm && (
           <div className="wood-panel boss-form-panel">
             <h3 className="panel-section-title">
-              {editingId ? '✏️ Editar Boss' : '+ Novo Boss'}
+              {editingId
+              ? <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" /> Editar Boss</>
+              : '+ Novo Boss'
+            }
             </h3>
             {formError && <p className="form-error" role="alert">{formError}</p>}
 
@@ -669,10 +675,10 @@ function WorldBossPage(): React.ReactElement {
                   <span className="form-label">Imagem (PNG / WebP)</span>
                   <div className="pick-image-row">
                     <button type="button" className="btn btn-secondary btn-sm" onClick={handlePickImage}>
-                      📁 Selecionar
+                      <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Selecionar
                     </button>
                     {formImage
-                      ? <span className="image-filename">Imagem selecionada ✓</span>
+                      ? <span className="image-filename"><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />Imagem selecionada</span>
                       : <span className="image-filename-empty">Nenhuma imagem</span>
                     }
                     {formImage && (
@@ -681,7 +687,7 @@ function WorldBossPage(): React.ReactElement {
                         className="btn-icon-remove"
                         onClick={() => { setFormImage(null); setFormImageUrl(null) }}
                         aria-label="Remover imagem"
-                      >✕</button>
+                      ><X size={12} aria-hidden="true" /></button>
                     )}
                   </div>
                   {formImageUrl && (
@@ -734,7 +740,7 @@ function WorldBossPage(): React.ReactElement {
                         onClick={() => setFormSpawns(prev => prev.filter((_, i) => i !== idx))}
                         disabled={formSpawns.length <= 1}
                         aria-label="Remover este horário"
-                      >✕</button>
+                      ><X size={12} aria-hidden="true" /></button>
                     </div>
                   ))}
                 </div>
@@ -746,7 +752,12 @@ function WorldBossPage(): React.ReactElement {
                   className="btn btn-primary"
                   disabled={saving || !formName.trim()}
                 >
-                  {saving ? 'Salvando…' : editingId ? '⚔ Salvar Alterações' : '⚔ Cadastrar Boss'}
+                  {saving
+                    ? 'Salvando…'
+                    : editingId
+                      ? <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Salvar Alterações</>
+                      : <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Cadastrar Boss</>
+                  }
                 </button>
                 <button type="button" className="btn btn-secondary" onClick={resetForm}>
                   Cancelar
@@ -761,7 +772,7 @@ function WorldBossPage(): React.ReactElement {
           <p className="loading-text">Carregando…</p>
         ) : bosses.length === 0 && !showForm ? (
           <div className="empty-state">
-            <span className="empty-state-icon" aria-hidden="true">⚔️</span>
+            <span className="empty-state-icon" aria-hidden="true"><Swords size={48} /></span>
             <span className="empty-state-text">Nenhum boss registrado ainda. Clique em "Novo Boss" para começar.</span>
           </div>
         ) : (
@@ -780,7 +791,7 @@ function WorldBossPage(): React.ReactElement {
                   <div className="boss-card-img">
                     {img
                       ? <img src={img} alt={boss.name} draggable={false} />
-                      : <span aria-hidden="true">⚔</span>
+                      : <Swords size={24} aria-hidden="true" />
                     }
                   </div>
 
@@ -791,7 +802,7 @@ function WorldBossPage(): React.ReactElement {
                     </span>
                     {nextForBoss && (
                       <span className="boss-card-next">
-                        ⏱ Próximo: {fmtDayTime(nextForBoss.spawnAt)}
+                        <Timer size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" /> Próximo: {fmtDayTime(nextForBoss.spawnAt)}
                         &ensp;({formatCountdown(nextForBoss.spawnAt.getTime() - now.getTime())})
                       </span>
                     )}

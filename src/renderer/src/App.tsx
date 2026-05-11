@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings } from 'lucide-react'
+import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings, Wrench } from 'lucide-react'
 import HomePage from './pages/HomePage'
 import ItemRegistrationPage from './pages/ItemRegistrationPage'
 import FarmLocationPage from './pages/FarmLocationPage'
@@ -11,7 +11,7 @@ import FarmTimer from './components/FarmTimer'
 import type { AppSettings } from './pages/SettingsPage'
 import { DEFAULT_SETTINGS } from './pages/SettingsPage'
 import { DevModeProvider, useDevMode } from './context/DevModeContext'
-import { MarketProvider } from './context/MarketContext'
+import { MarketProvider, useMarket } from './context/MarketContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -41,6 +41,16 @@ function AppInner(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<TabId>('home')
   const [settings,  setSettings]  = useState<AppSettings>(DEFAULT_SETTINGS)
   const { devMode } = useDevMode()
+  const { setItems: setMarketItems } = useMarket()
+
+  // Load items on startup so market prices are fetched immediately
+  useEffect(() => {
+    async function loadItemsForMarket(): Promise<void> {
+      const data = await window.api.readJson('items.json')
+      if (Array.isArray(data)) setMarketItems(data)
+    }
+    loadItemsForMarket()
+  }, [setMarketItems])
 
   // Load settings on mount and apply theme
   useEffect(() => {
@@ -78,9 +88,9 @@ function AppInner(): React.ReactElement {
       {/* ── Header ── */}
       <header className="app-header">
         <div className="app-title">
-          <span className="title-ornament" aria-hidden="true">⚜</span>
+          <span className="title-ornament" aria-hidden="true"><Swords size={16} /></span>
           <h1>BDO Loot Log</h1>
-          <span className="title-ornament" aria-hidden="true">⚜</span>
+          <span className="title-ornament" aria-hidden="true"><Swords size={16} /></span>
         </div>
         <p className="app-subtitle">Registro de Itens &amp; Sessões de Farm</p>
       </header>
@@ -111,7 +121,8 @@ function AppInner(): React.ReactElement {
       {/* ── Dev mode banner ── */}
       {devMode && (
         <div className="dev-mode-banner" role="status" aria-live="polite">
-          🛠️ Modo Desenvolvimento ativo — dados mockados, nada será salvo
+          <Wrench size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" />
+          Modo Desenvolvimento ativo — dados mockados, nada será salvo
         </div>
       )}
     </div>
