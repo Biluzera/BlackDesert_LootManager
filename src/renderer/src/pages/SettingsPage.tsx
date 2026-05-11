@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Settings, Palette, Type, Wrench, ShoppingCart, Search, BarChart2, Tag, CircleOff, CircleCheck, TriangleAlert, Check, CheckCircle2 } from 'lucide-react'
+import { Settings, Palette, Type, Wrench, ShoppingCart, Search, BarChart2, Tag, CircleOff, CircleCheck, TriangleAlert, Check, CheckCircle2, ArrowLeftRight, Upload, Download, HardDrive } from 'lucide-react'
 import { useDevMode } from '../context/DevModeContext'
 import { fetchMarketPrices, fetchMarketPriceDetail } from '../services/marketApi'
 import type { MarketEntry, MarketPriceDetail } from '../services/marketApi'
@@ -152,6 +152,47 @@ interface SettingsPageProps {
 export default function SettingsPage({ settings, onSettingsChange }: SettingsPageProps): React.ReactElement {
   const [saved, setSaved] = useState(false)
   const { devMode, toggleDevMode } = useDevMode()
+
+  const [transferBusy,    setTransferBusy]    = useState(false)
+  const [transferMessage, setTransferMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+
+  async function handleExport(): Promise<void> {
+    setTransferBusy(true)
+    setTransferMessage(null)
+    try {
+      const res = await window.api.exportData()
+      if (res.success) {
+        setTransferMessage({ type: 'ok', text: 'Dados exportados com sucesso!' })
+      } else if (res.reason !== 'cancelled') {
+        setTransferMessage({ type: 'err', text: 'Erro ao exportar os dados.' })
+      }
+    } catch {
+      setTransferMessage({ type: 'err', text: 'Erro inesperado ao exportar.' })
+    } finally {
+      setTransferBusy(false)
+    }
+  }
+
+  async function handleImport(): Promise<void> {
+    setTransferBusy(true)
+    setTransferMessage(null)
+    try {
+      const res = await window.api.importData()
+      if (res.success) {
+        setTransferMessage({ type: 'ok', text: 'Dados importados! Reinicie o app para ver as alterações.' })
+      } else if (res.reason === 'size') {
+        setTransferMessage({ type: 'err', text: 'Arquivo muito grande (máximo 50 MB).' })
+      } else if (res.reason === 'parse' || res.reason === 'invalid') {
+        setTransferMessage({ type: 'err', text: 'Arquivo inválido ou corrompido.' })
+      } else if (res.reason !== 'cancelled') {
+        setTransferMessage({ type: 'err', text: 'Erro ao importar os dados.' })
+      }
+    } catch {
+      setTransferMessage({ type: 'err', text: 'Erro inesperado ao importar.' })
+    } finally {
+      setTransferBusy(false)
+    }
+  }
 
   // ── Market debug state ────────────────────────────────────────────────────
   const [debugId,         setDebugId]         = useState('')
@@ -413,6 +454,65 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
 
           </div>
         )}
+      </section>
+
+      {/* ── Data Transfer ── */}
+      <section className="settings-section" aria-label="Exportar e importar dados">
+        <div className="settings-section-title">
+          <ArrowLeftRight size={16} aria-hidden="true" /> Transferir Dados
+        </div>
+        <p className="settings-section-desc">
+          Exporte seus dados para compartilhar com amigos ou faça backup. Importe um arquivo
+          exportado pelo BDO Loot Log para restaurar ou receber dados de outro jogador.
+        </p>
+        <div className="home-transfer-row">
+          <div className="home-transfer-card">
+            <div className="home-transfer-card-icon" aria-hidden="true"><Upload size={24} /></div>
+            <div className="home-transfer-card-body">
+              <span className="home-transfer-card-title">Exportar</span>
+              <span className="home-transfer-card-desc">
+                Salva seus itens e locais cadastrados (incluindo imagens) em um arquivo
+                que pode ser compartilhado com amigos.
+              </span>
+            </div>
+            <button
+              className="btn btn-secondary"
+              onClick={handleExport}
+              disabled={transferBusy}
+            >
+              {transferBusy ? 'Aguarde…' : <><Upload size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Exportar</>}
+            </button>
+          </div>
+
+          <div className="home-transfer-card">
+            <div className="home-transfer-card-icon" aria-hidden="true"><Download size={24} /></div>
+            <div className="home-transfer-card-body">
+              <span className="home-transfer-card-title">Importar</span>
+              <span className="home-transfer-card-desc">
+                Carrega um arquivo exportado pelo BDO Loot Log, substituindo os itens
+                e locais atuais pelos do arquivo importado.
+              </span>
+            </div>
+            <button
+              className="btn btn-secondary"
+              onClick={handleImport}
+              disabled={transferBusy}
+            >
+              {transferBusy ? 'Aguarde…' : <><Download size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Importar</>}
+            </button>
+          </div>
+        </div>
+
+        {transferMessage && (
+          <p className={`home-transfer-msg home-transfer-msg--${transferMessage.type}`} role="status">
+            {transferMessage.text}
+          </p>
+        )}
+
+        <p className="home-data-note" style={{ marginTop: '12px' }}>
+          <HardDrive size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" />
+          Todos os dados são salvos localmente em arquivos .json no seu computador
+        </p>
       </section>
     </div>
   )
