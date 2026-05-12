@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings, Wrench, Keyboard } from 'lucide-react'
 import HomePage from './pages/HomePage'
 import ItemRegistrationPage from './pages/ItemRegistrationPage'
@@ -9,6 +9,7 @@ import SettingsPage from './pages/SettingsPage'
 import WorldBossPage from './pages/WorldBossPage'
 import ComboOverlayPage from './pages/ComboOverlayPage'
 import FarmTimer from './components/FarmTimer'
+import LoadingScreen from './components/LoadingScreen'
 import type { AppSettings } from './pages/SettingsPage'
 import { DEFAULT_SETTINGS } from './pages/SettingsPage'
 import { DevModeProvider, useDevMode } from './context/DevModeContext'
@@ -40,20 +41,38 @@ const TABS: Tab[] = [
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-function AppInner(): React.ReactElement {
+// ── AppInner ──────────────────────────────────────────────────────────────────
+
+interface AppInnerProps {
+  onDataReady: () => void
+}
+
+function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
   const [activeTab, setActiveTab] = useState<TabId>('home')
   const [settings,  setSettings]  = useState<AppSettings>(DEFAULT_SETTINGS)
   const { devMode } = useDevMode()
   const { setItems: setMarketItems } = useMarket()
+
+  // Track when both startup loads complete (idempotent set to handle StrictMode)
+  const readySet    = useRef(new Set<string>())
+  const readyCalled = useRef(false)
+  const markReady   = useCallback((key: string) => {
+    readySet.current.add(key)
+    if (readySet.current.size >= 2 && !readyCalled.current) {
+      readyCalled.current = true
+      onDataReady()
+    }
+  }, [onDataReady])
 
   // Load items on startup so market prices are fetched immediately
   useEffect(() => {
     async function loadItemsForMarket(): Promise<void> {
       const data = await window.api.readJson('items.json')
       if (Array.isArray(data)) setMarketItems(data)
+      markReady('items')
     }
     loadItemsForMarket()
-  }, [setMarketItems])
+  }, [setMarketItems, markReady])
 
   // Load settings on mount and apply theme
   useEffect(() => {
@@ -64,9 +83,10 @@ function AppInner(): React.ReactElement {
         document.documentElement.setAttribute('data-theme', data.theme)
         document.documentElement.setAttribute('data-font', data.font ?? 'classic')
       }
+      markReady('settings')
     }
     loadSettings()
-  }, [])
+  }, [markReady])
 
   function handleSettingsChange(s: AppSettings): void {
     setSettings(s)
@@ -137,11 +157,22 @@ function AppInner(): React.ReactElement {
 }
 
 function App(): React.ReactElement {
+  const [dataReady,    setDataReady]    = useState(false)
+  const [loadingDone,  setLoadingDone]  = useState(false)
+
   return (
     <DevModeProvider>
       <MarketProvider>
         <ComboProvider>
-          <AppInner />
+          {/* App renders underneath; loading screen is fixed on top */}
+          <AppInner onDataReady={() => setDataReady(true)} />
+
+          {!loadingDone && (
+            <LoadingScreen
+              dataReady={dataReady}
+              onComplete={() => setLoadingDone(true)}
+            />
+          )}
         </ComboProvider>
       </MarketProvider>
     </DevModeProvider>

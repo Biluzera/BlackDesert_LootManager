@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    BDO LOOT LOG — Medieval & Rustic Theme
    ============================================================ */
 
@@ -5616,6 +5616,7 @@ input[type='date'].form-input {
 .btn-move-widgets:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+
 }
 
 .btn-move-widgets.move-active {
@@ -6358,3 +6359,265 @@ input[type='date'].form-input {
   color: #70e070;
 }
 
+/* ============================================================
+   LOADING SCREEN
+   ============================================================ */
+
+.ls-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #060402;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.ls-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.ls-border-outer,
+.ls-border-inner {
+  position: absolute;
+  pointer-events: none;
+}
+.ls-border-outer { inset: 14px; border: 0.8px solid rgba(170,125,28,0.26); }
+.ls-border-inner { inset: 24px; border: 0.5px solid rgba(170,125,28,0.12); }
+.ls-corner {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  pointer-events: none;
+}
+.ls-tl { top: 14px;    left: 14px;  }
+.ls-tr { top: 14px;    right: 14px; }
+.ls-bl { bottom: 14px; left: 14px;  }
+.ls-br { bottom: 14px; right: 14px; }
+.ls-tl::before,.ls-tr::before,.ls-bl::before,.ls-br::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-color: rgba(201,160,48,0.72);
+  border-style: solid;
+  border-width: 0;
+}
+.ls-tl::before { border-top-width:    1.2px; border-left-width:  1.2px; }
+.ls-tr::before { border-top-width:    1.2px; border-right-width: 1.2px; }
+.ls-bl::before { border-bottom-width: 1.2px; border-left-width:  1.2px; }
+.ls-br::before { border-bottom-width: 1.2px; border-right-width: 1.2px; }
+.ls-tl::after,.ls-tr::after,.ls-bl::after,.ls-br::after {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border-color: rgba(201,160,48,0.28);
+  border-style: solid;
+  border-width: 0;
+}
+.ls-tl::after { border-top-width:    0.5px; border-left-width:  0.5px; }
+.ls-tr::after { border-top-width:    0.5px; border-right-width: 0.5px; }
+.ls-bl::after { border-bottom-width: 0.5px; border-left-width:  0.5px; }
+.ls-br::after { border-bottom-width: 0.5px; border-right-width: 0.5px; }
+.ls-corner-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(201,160,48,0.82);
+  box-shadow: 0 0 7px rgba(201,160,48,0.60), 0 0 16px rgba(201,160,48,0.22);
+}
+.ls-tl .ls-corner-dot { top: -2.5px;    left: -2.5px;  }
+.ls-tr .ls-corner-dot { top: -2.5px;    right: -2.5px; }
+.ls-bl .ls-corner-dot { bottom: -2.5px; left: -2.5px;  }
+.ls-br .ls-corner-dot { bottom: -2.5px; right: -2.5px; }
+.ls-hbar {
+  position: absolute;
+  left: 72px;
+  right: 72px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.ls-hbar-top { top: 42px;    }
+.ls-hbar-bot { bottom: 42px; }
+.ls-hbar-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(201,160,48,0), rgba(201,160,48,0.50), rgba(201,160,48,0));
+}
+.ls-hbar-gem {
+  color: rgba(201,160,48,0.62);
+  font-size: 0.52rem;
+  line-height: 1;
+}
+.ls-side-gem {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(201,160,48,0.28);
+  font-size: 0.50rem;
+  pointer-events: none;
+}
+.ls-side-l { left: 20px;  }
+.ls-side-r { right: 20px; }
+.ls-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  padding: 0 60px;
+}
+.ls-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.ls-ornament {
+  color: rgba(201,160,48,0.55);
+  font-size: 1.05rem;
+  line-height: 1;
+  animation: ls-ornament-pulse 2.8s ease-in-out infinite alternate;
+}
+@keyframes ls-ornament-pulse {
+  from { opacity: 0.38; }
+  to   { opacity: 0.82; }
+}
+.ls-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(2rem, 4vw, 3.0rem);
+  font-weight: 700;
+  color: #ddb848;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin: 0;
+  animation: ls-title-glow 3.5s ease-in-out infinite alternate;
+}
+@keyframes ls-title-glow {
+  from { text-shadow: 0 0 14px rgba(201,160,48,0.38), 0 0 38px rgba(201,160,48,0.12), 0 1px 4px rgba(0,0,0,0.96); }
+  to   { text-shadow: 0 0 28px rgba(201,160,48,0.72), 0 0 72px rgba(201,160,48,0.30), 0 1px 4px rgba(0,0,0,0.96); }
+}
+.ls-tagline {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(201,160,48,0.44);
+  margin: -10px 0 0;
+}
+.ls-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 260px;
+}
+.ls-divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(201,160,48,0), rgba(201,160,48,0.42), rgba(201,160,48,0));
+}
+.ls-divider-gem {
+  color: rgba(201,160,48,0.60);
+  font-size: 0.50rem;
+  line-height: 1;
+}
+.ls-bar-outer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+.ls-bar-end {
+  color: rgba(201,160,48,0.48);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+.ls-bar-track {
+  position: relative;
+  width: 300px;
+  height: 2px;
+  background: rgba(201,160,48,0.10);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.ls-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(120,78,10,0.9), #c9a030, #f0d060);
+  border-radius: 1px;
+  transition: width 0.09s linear;
+  position: relative;
+  box-shadow: 0 0 10px rgba(201,160,48,0.60);
+}
+.ls-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+  animation: ls-bar-shimmer 2.2s linear infinite;
+}
+@keyframes ls-bar-shimmer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(300%); }
+}
+.ls-pct {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  color: rgba(201,160,48,0.48);
+  letter-spacing: 0.14em;
+  margin-top: -6px;
+}
+.ls-credits {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 0;
+}
+.ls-letter {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(2.1rem, 3.8vw, 3.1rem);
+  font-weight: 700;
+  color: #d4a83c;
+  letter-spacing: 0.10em;
+  text-shadow:
+    0 0 24px rgba(201,160,48,0.65),
+    0 0 60px rgba(201,160,48,0.24),
+    0 2px 5px rgba(0,0,0,0.96);
+  opacity: 0;
+  display: inline-block;
+  transform: translateY(26px) scale(0.60);
+  filter: blur(5px);
+  will-change: opacity, transform, filter;
+}
+.ls-letter--in {
+  animation: ls-letter-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes ls-letter-in {
+  0%   { opacity: 0; transform: translateY(26px) scale(0.60); filter: blur(5px); }
+  55%  { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.ls-credits--shimmer::after {
+  content: '';
+  position: absolute;
+  top: -14px; bottom: -14px;
+  left: -36px; right: -36px;
+  background: linear-gradient(
+    108deg,
+    transparent 0%, transparent 26%,
+    rgba(255, 232, 100, 0.56) 50%,
+    transparent 74%, transparent 100%
+  );
+  animation: ls-shimmer-sweep 1.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s both;
+  pointer-events: none;
+}
+@keyframes ls-shimmer-sweep {
+  from { transform: translateX(-145%); }
+  to   { transform: translateX(265%);  }
+}
