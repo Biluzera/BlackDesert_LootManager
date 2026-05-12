@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { TriangleAlert } from 'lucide-react'
 import App from './App'
+import OverlayApp from './components/OverlayApp'
 import './styles/global.css'
 
 // ── Error Boundary ────────────────────────────────────────────────────────────
@@ -37,10 +38,25 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, EBSta
 
 // ── Render ────────────────────────────────────────────────────────────────────
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </React.StrictMode>
-)
+const root = document.getElementById('root') as HTMLElement
+const isOverlay = window.location.hash === '#overlay'
+
+if (isOverlay) {
+  // Overlay window: transparent background, no app chrome
+  document.documentElement.setAttribute('data-overlay', 'true')
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <OverlayApp />
+      </ErrorBoundary>
+    </React.StrictMode>
+  )
+} else {
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </React.StrictMode>
+  )
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings, Wrench } from 'lucide-react'
+import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings, Wrench, Keyboard } from 'lucide-react'
 import HomePage from './pages/HomePage'
 import ItemRegistrationPage from './pages/ItemRegistrationPage'
 import FarmLocationPage from './pages/FarmLocationPage'
@@ -7,15 +7,17 @@ import FarmSessionPage from './pages/FarmSessionPage'
 import StatsPage from './pages/StatsPage'
 import SettingsPage from './pages/SettingsPage'
 import WorldBossPage from './pages/WorldBossPage'
+import ComboOverlayPage from './pages/ComboOverlayPage'
 import FarmTimer from './components/FarmTimer'
 import type { AppSettings } from './pages/SettingsPage'
 import { DEFAULT_SETTINGS } from './pages/SettingsPage'
 import { DevModeProvider, useDevMode } from './context/DevModeContext'
 import { MarketProvider, useMarket } from './context/MarketContext'
+import { ComboProvider } from './context/ComboContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type TabId = 'home' | 'items' | 'locations' | 'sessions' | 'stats' | 'bosses' | 'settings'
+export type TabId = 'home' | 'items' | 'locations' | 'sessions' | 'stats' | 'bosses' | 'combo' | 'settings'
 
 interface Tab {
   id: TabId
@@ -32,6 +34,7 @@ const TABS: Tab[] = [
   { id: 'sessions',  label: 'Sessões de Farm',   icon: <ScrollText size={16} /> },
   { id: 'stats',     label: 'Estatísticas',      icon: <BarChart2 size={16} /> },
   { id: 'bosses',    label: 'Bosses Mundiais',   icon: <Swords size={16} /> },
+  { id: 'combo',     label: 'Overlay de Combo',  icon: <Keyboard size={16} /> },
   { id: 'settings',  label: 'Configurações',     icon: <Settings size={16} /> }
 ]
 
@@ -79,6 +82,7 @@ function AppInner(): React.ReactElement {
       case 'sessions':  return <FarmSessionPage />
       case 'stats':     return <StatsPage />
       case 'bosses':    return <WorldBossPage />
+      case 'combo':     return <ComboOverlayPage />
       case 'settings':  return <SettingsPage settings={settings} onSettingsChange={handleSettingsChange} />
     }
   }
@@ -95,25 +99,28 @@ function AppInner(): React.ReactElement {
         <p className="app-subtitle">Registro de Itens &amp; Sessões de Farm</p>
       </header>
 
-      {/* ── Tab navigation ── */}
-      <nav className="tab-nav" aria-label="Navegação principal">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            className={`tab-button${activeTab === tab.id ? ' tab-active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-            aria-current={activeTab === tab.id ? 'page' : undefined}
-          >
-            <span className="tab-icon" aria-hidden="true">{tab.icon}</span>
-            <span className="tab-label">{tab.label}</span>
-          </button>
-        ))}
-      </nav>
+      {/* ── Body: sidebar + content ── */}
+      <div className="app-body">
+        {/* ── Tab navigation ── */}
+        <nav className="tab-nav" aria-label="Navegação principal">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              className={`tab-button${activeTab === tab.id ? ' tab-active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+              aria-current={activeTab === tab.id ? 'page' : undefined}
+            >
+              <span className="tab-icon" aria-hidden="true">{tab.icon}</span>
+              <span className="tab-label">{tab.label}</span>
+            </button>
+          ))}
+        </nav>
 
-      {/* ── Page content ── */}
-      <main className="content-area" role="main">
-        {renderPage()}
-      </main>
+        {/* ── Page content ── */}
+        <main className="content-area" role="main">
+          {renderPage()}
+        </main>
+      </div>
 
       {/* ── Floating timer widget ── */}
       <FarmTimer />
@@ -133,7 +140,9 @@ function App(): React.ReactElement {
   return (
     <DevModeProvider>
       <MarketProvider>
-        <AppInner />
+        <ComboProvider>
+          <AppInner />
+        </ComboProvider>
       </MarketProvider>
     </DevModeProvider>
   )
