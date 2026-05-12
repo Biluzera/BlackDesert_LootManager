@@ -5939,11 +5939,70 @@ input[type='date'].form-input {
 .cscl-del    { width: 28px; flex-shrink: 0; }
 
 /* Labelled columns — widths mirror their row counterparts */
-.cscl-nome   { width: 100px; flex-shrink: 0; }
-.cscl-icone  { width: 46px;  flex-shrink: 0; text-align: center; }
-.cscl-texto  { flex: 1; min-width: 0; }
-.cscl-teclas { width: 120px; flex-shrink: 0; }
-.cscl-cd     { width: 78px;  flex-shrink: 0; }
+.cscl-nome   { width: 100px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; }
+.cscl-icone  { width: 46px;  flex-shrink: 0; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
+.cscl-texto  { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 3px; }
+.cscl-teclas { width: 150px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; }
+.cscl-cd     { width: 78px;  flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; }
+
+/* ── Column info tooltip ────────────────────────────────────── */
+.col-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.col-info-icon {
+  color: var(--text-muted);
+  opacity: 0.5;
+  cursor: default;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.col-info:hover .col-info-icon {
+  opacity: 1;
+  color: var(--gold-mid);
+}
+
+.col-info-tip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  padding: 7px 10px;
+  background: var(--bg-dark, #1a1610);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.55), 0 0 0 1px rgba(201,160,48,0.08);
+  white-space: normal;
+  pointer-events: none;
+  z-index: 200;
+}
+
+/* Arrow pointing down */
+.col-info-tip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--border-gold);
+}
+
+.col-info:hover .col-info-tip {
+  display: block;
+}
 
 .combo-skills-list {
   display: flex;
@@ -6015,6 +6074,7 @@ input[type='date'].form-input {
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-right: -4px;
 }
 
 .skill-texto-input {
@@ -6048,11 +6108,19 @@ input[type='date'].form-input {
 }
 
 /* ── Key capture input ──────────────────────────────────────── */
+.key-capture-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: transparent;
+  cursor: default;
+}
+
 .key-capture-wrapper {
   display: flex;
   align-items: center;
   gap: 4px;
-  width: 120px;
+  width: 150px;
   flex-shrink: 0;
 }
 
@@ -6062,8 +6130,7 @@ input[type='date'].form-input {
   gap: 6px;
   flex: 1;
   min-width: 0;
-  height: 30px;
-  padding: 0 8px;
+  padding: 8px 8px;
   background: var(--bg-stone);
   border: 1px solid var(--border-stone);
   border-radius: 3px;

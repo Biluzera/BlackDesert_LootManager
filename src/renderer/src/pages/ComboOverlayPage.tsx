@@ -1,9 +1,20 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import * as LucideIcons from 'lucide-react'
-import { Plus, Pencil, Trash2, Power, PowerOff, X, Check, GripVertical, Keyboard, Move, Save, RotateCcw, ImageIcon } from 'lucide-react'
+import { Plus, Pencil, Trash2, Power, PowerOff, X, Check, GripVertical, Keyboard, Move, Save, RotateCcw, ImageIcon, Info } from 'lucide-react'
 import { useCombo, ComboConfig, ComboSkill } from '../context/ComboContext'
 import type { WidgetVisualConfig } from '../types.d'
+
+// ── Column info tooltip ──────────────────────────────────────────────────────
+
+function ColInfo({ tip }: { tip: string }): React.ReactElement {
+  return (
+    <span className="col-info" aria-label={tip}>
+      <Info size={9} className="col-info-icon" />
+      <span className="col-info-tip">{tip}</span>
+    </span>
+  )
+}
 
 // ── Visual config defaults ────────────────────────────────────────────────────
 
@@ -375,6 +386,12 @@ function KeyCaptureInput({ value, onChange }: KeyCaptureInputProps): React.React
     const onKeyDown = (e: KeyboardEvent): void => {
       e.preventDefault()
       e.stopPropagation()
+      if (e.code === 'Escape') {
+        pressedRef.current = new Set()
+        setLiveCombo('')
+        setCaptureMode(false)
+        return
+      }
       const name = codeToKeyName(e.code)
       if (!name) return
       pressedRef.current.add(name)
@@ -431,10 +448,19 @@ function KeyCaptureInput({ value, onChange }: KeyCaptureInputProps): React.React
   }, [])
 
   return (
-    <div className="key-capture-wrapper" ref={containerRef}>
+    <>
+      {captureMode && ReactDOM.createPortal(
+        <div className="key-capture-overlay" aria-hidden="true" />,
+        document.body
+      )}
+      <div
+        className="key-capture-wrapper"
+        ref={containerRef}
+        style={captureMode ? { position: 'relative', zIndex: 9999 } : undefined}
+      >
       <div
         className={`key-capture-input ${captureMode ? 'capturing' : ''} ${value ? 'has-value' : ''}`}
-        onClick={startCapture}
+        onClick={() => { if (!captureMode) startCapture() }}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => { if (e.code === 'Space' || e.code === 'Enter') startCapture() }}
@@ -444,7 +470,7 @@ function KeyCaptureInput({ value, onChange }: KeyCaptureInputProps): React.React
         <span className="key-capture-text">
           {captureMode
             ? (liveCombo || 'Pressione as teclas...')
-            : (value || 'Clique para capturar')}
+            : (value || 'Clique aqui...')}
         </span>
         {captureMode && (
           <span className="key-capture-blink" aria-hidden="true" />
@@ -466,6 +492,7 @@ function KeyCaptureInput({ value, onChange }: KeyCaptureInputProps): React.React
         </button>
       )}
     </div>
+    </>
   )
 }
 
@@ -630,11 +657,11 @@ function ConfigModal({ initial, onSave, onClose }: ConfigModalProps): React.Reac
             <div className="combo-skills-col-labels" aria-hidden="true">
               <span className="cscl-handle" />
               <span className="cscl-index" />
-              <span className="cscl-nome">Nome</span>
-              <span className="cscl-icone">Ícone</span>
-              <span className="cscl-texto">Texto</span>
-              <span className="cscl-teclas">Teclas</span>
-              <span className="cscl-cd">CD</span>
+              <span className="cscl-nome">Nome <ColInfo tip={'Nome da habilidade exibido na lista. Ex: "Grab", "Burst", "Flash"'} /></span>
+              <span className="cscl-icone">Ícone <ColInfo tip={'Ícone visual exibido no widget da habilidade. Pesquise pelo nome em inglês. Ex: "Sword", "Zap", "Shield"'} /></span>
+              <span className="cscl-texto">Texto <ColInfo tip={'Texto mostrado no widget no lugar das teclas. Útil para abreviações. Ex: "GRB", "Q+E". Se vazio, usa as teclas capturadas.'} /></span>
+              <span className="cscl-teclas">Teclas <ColInfo tip={'Atalho de teclado ou mouse que aciona a habilidade. Clique no campo e pressione as teclas. Ex: "SHIFT+Q", "LMB", "F1"'} /></span>
+              <span className="cscl-cd">CD <ColInfo tip={'Tempo de recarga (cooldown) em segundos. Após pressionar as teclas, o widget entra em contagem regressiva. Ex: 10, 3.5, 0.5'} /></span>
               <span className="cscl-del" />
             </div>
 
