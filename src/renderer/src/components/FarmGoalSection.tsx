@@ -5,6 +5,7 @@ import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeCon
 import type { Item } from '../pages/ItemRegistrationPage'
 import type { FarmLocation } from '../pages/FarmLocationPage'
 import type { FarmSession } from '../pages/FarmSessionPage'
+import { useLanguage } from '../context/LanguageContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -86,7 +87,7 @@ function shortSilver(n: number): string {
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`
   if (n >= 1_000_000)     return `${(n / 1_000_000).toFixed(1)}M`
   if (n >= 1_000)         return `${(n / 1_000).toFixed(0)}K`
-  return Math.round(n).toLocaleString('pt-BR')
+  return Math.round(n).toLocaleString()
 }
 
 function calcDailyRateLast14Days(sessions: FarmSession[], itemMap: Map<string, Item>): number {
@@ -152,6 +153,7 @@ interface GoalCardProps {
 }
 
 function GoalCard({ goal, dailyRate, onEdit, onDelete, onContribute, onStats }: GoalCardProps): React.ReactElement {
+  const { t } = useLanguage()
   const pct       = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0
   const remaining = goal.targetAmount - goal.currentAmount
   const days      = daysLeft(goal.targetDate)
@@ -174,9 +176,13 @@ function GoalCard({ goal, dailyRate, onEdit, onDelete, onContribute, onStats }: 
 
   let daysLabel = ''
   if (days === null)      daysLabel = ''
-  else if (days < 0)      daysLabel = `${Math.abs(days)} dia${Math.abs(days) !== 1 ? 's' : ''} atrasado`
-  else if (days === 0)    daysLabel = 'Vence hoje'
-  else                    daysLabel = `${days} dia${days !== 1 ? 's' : ''} restante${days !== 1 ? 's' : ''}`
+  else if (days < 0)      daysLabel = Math.abs(days) !== 1
+    ? t('goals.daysLate_other', { n: Math.abs(days) })
+    : t('goals.daysLate_one', { n: Math.abs(days) })
+  else if (days === 0)    daysLabel = t('goals.dueToday')
+  else                    daysLabel = days !== 1
+    ? t('goals.daysLeft_other', { n: days })
+    : t('goals.daysLeft_one', { n: days })
 
   return (
     <div className={`fgoal-card${done ? ' fgoal-card--done' : ''}`}>
@@ -194,34 +200,34 @@ function GoalCard({ goal, dailyRate, onEdit, onDelete, onContribute, onStats }: 
             className="btn btn-sm btn-secondary fgoal-action-btn"
             onClick={() => onContribute(goal)}
             disabled={done}
-            title="Adicionar prata"
-            aria-label="Adicionar prata à meta"
+            title={t('goals.editContributeAria')}
+            aria-label={t('goals.editContributeAria')}
           >
             <Coins size={13} />
-            Adicionar
+            {t('goals.addSilverBtn')}
           </button>
           <button
             className="btn btn-sm btn-secondary fgoal-action-btn"
             onClick={() => onStats(goal)}
-            title="Estatísticas de sessões vinculadas"
-            aria-label="Estatísticas da meta"
+            title={t('goals.statsAria')}
+            aria-label={t('goals.statsAria')}
           >
             <BarChart2 size={13} />
-            Estatísticas
+            {t('goals.statsBtn')}
           </button>
           <button
             className="btn btn-sm btn-secondary fgoal-action-btn"
             onClick={() => onEdit(goal)}
-            title="Editar meta"
-            aria-label="Editar meta"
+            title={t('goals.editAria')}
+            aria-label={t('goals.editAria')}
           >
             <Pencil size={12} />
           </button>
           <button
             className="btn btn-sm btn-secondary fgoal-action-btn fgoal-delete-btn"
             onClick={() => onDelete(goal)}
-            title="Excluir meta"
-            aria-label="Excluir meta"
+            title={t('goals.deleteAria')}
+            aria-label={t('goals.deleteAria')}
           >
             <Trash2 size={12} />
           </button>
@@ -234,10 +240,10 @@ function GoalCard({ goal, dailyRate, onEdit, onDelete, onContribute, onStats }: 
       {/* Amounts row */}
       <div className="fgoal-amounts-row">
         <div className="fgoal-amounts-left">
-          <span className="fgoal-current">{goal.currentAmount.toLocaleString('pt-BR')}</span>
+          <span className="fgoal-current">{goal.currentAmount.toLocaleString()}</span>
           <span className="fgoal-sep"> / </span>
-          <span className="fgoal-target">{goal.targetAmount.toLocaleString('pt-BR')}</span>
-          <span className="fgoal-prata"> prata</span>
+          <span className="fgoal-target">{goal.targetAmount.toLocaleString()}</span>
+          <span className="fgoal-prata"> {t('common.silver')}</span>
         </div>
         <div className="fgoal-amounts-right">
           <span className="fgoal-pct">{Math.min(100, Math.round(pct))}%</span>
@@ -249,7 +255,7 @@ function GoalCard({ goal, dailyRate, onEdit, onDelete, onContribute, onStats }: 
         <span className="fgoal-meta-dates">
           Hoje: <strong>{formatDate(new Date().toISOString().slice(0, 10))}</strong>
           <span className="fgoal-date-sep">·</span>
-          Limite: <strong>{formatDate(goal.targetDate)}</strong>
+          {t('goals.deadline')}: <strong>{formatDate(goal.targetDate)}</strong>
           {daysLabel && (
             <>
               <span className="fgoal-date-sep">·</span>
@@ -259,11 +265,11 @@ function GoalCard({ goal, dailyRate, onEdit, onDelete, onContribute, onStats }: 
         </span>
         {!done && remaining > 0 && (
           <span className="fgoal-remaining">
-            Faltam <strong>{remaining.toLocaleString('pt-BR')}</strong> prata
+            {t('goals.silverRemaining', { amount: remaining.toLocaleString() })}
           </span>
         )}
         {done && (
-          <span className="fgoal-done-label">Meta concluída!</span>
+          <span className="fgoal-done-label">{t('goals.goalDone')}</span>
         )}
       </div>
 
@@ -275,13 +281,15 @@ function GoalCard({ goal, dailyRate, onEdit, onDelete, onContribute, onStats }: 
             : <TrendingUp    size={13} className="fgoal-forecast-icon fgoal-forecast-icon--ok"   aria-hidden="true" />
           }
           <span>
-            No seu ritmo atual{' '}
-            <strong>({shortSilver(Math.round(dailyRate))} prata/dia</strong> nos últimos 14 dias),
-            {' '}você atinge essa meta em{' '}
-            <strong>{forecastDays} dia{forecastDays !== 1 ? 's' : ''}</strong>
+            {t('goals.forecastPrefix')}
+            <strong>({shortSilver(Math.round(dailyRate))} {t('goals.forecastSilverPerDay')}</strong>
+            {t('goals.forecastSuffix14days')}
+            <strong>{forecastDays !== 1
+              ? t('goals.forecastDay_other', { n: forecastDays })
+              : t('goals.forecastDay_one', { n: forecastDays })}</strong>
             {' '}({forecastDateStr})
             {forecastLate && (
-              <span className="fgoal-forecast-warn-label"> — prazo não será alcançado</span>
+              <span className="fgoal-forecast-warn-label">{t('goals.forecastLate')}</span>
             )}
           </span>
         </div>
@@ -303,6 +311,7 @@ interface GoalStatsDialogProps {
 }
 
 function GoalStatsDialog({ goal, sessions, locations, items, imageCache, onRemoveSession, onClose }: GoalStatsDialogProps): React.ReactElement {
+  const { t } = useLanguage()
   const itemMap     = useMemo(() => new Map(items.map(i    => [i.id,    i])), [items])
   const locationMap = useMemo(() => new Map(locations.map(l => [l.id,   l])), [locations])
   const sessionMap  = useMemo(() => new Map(sessions.map(s  => [s.id,   s])), [sessions])
@@ -329,41 +338,41 @@ function GoalStatsDialog({ goal, sessions, locations, items, imageCache, onRemov
   )
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Estatísticas da meta">
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={t('goals.statsAria')}>
       <div className="modal-box fgoal-dialog-box fgoal-dialog-box--wide">
         <div className="modal-header">
           <span className="modal-title">
             <BarChart2 size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} aria-hidden="true" />
-            Sessões Vinculadas · {goal.name}
+            {t('goals.linkedSessionsTitle', { name: goal.name })}
           </span>
-          <button className="modal-close" onClick={onClose} aria-label="Fechar">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label={t('sessions.closeAria')}>✕</button>
         </div>
         <div className="modal-body">
           {linkedEntries.length === 0 ? (
             <div className="fgoal-stats-empty">
               <Mountain size={26} className="fgoal-empty-icon" aria-hidden="true" />
-              <p className="fgoal-empty-text">Nenhuma sessão vinculada a esta meta ainda.</p>
-              <p className="fgoal-empty-hint">Ao adicionar prata, selecione uma ou mais sessões para vinculá-las.</p>
+              <p className="fgoal-empty-text">{t('goals.noLinkedSessions')}</p>
+              <p className="fgoal-empty-hint">{t('goals.noLinkedSessionsHint')}</p>
             </div>
           ) : (
             <>
               {/* Summary bar */}
               <div className="fgoal-stats-summary">
                 <div className="fgoal-stats-summary-item">
-                  <span className="fgoal-stats-summary-label">Sessões vinculadas</span>
+                  <span className="fgoal-stats-summary-label">{t('goals.linkedSessionsCountLabel')}</span>
                   <span className="fgoal-stats-summary-value">{linkedEntries.length}</span>
                 </div>
                 <div className="fgoal-stats-summary-sep" aria-hidden="true" />
                 <div className="fgoal-stats-summary-item">
-                  <span className="fgoal-stats-summary-label">Total gerado nas sessões</span>
+                  <span className="fgoal-stats-summary-label">{t('goals.totalGeneratedLabel')}</span>
                   <span className="fgoal-stats-summary-value fgoal-stats-summary-value--gold">
-                    {grandTotal.toLocaleString('pt-BR')} prata
+                    {grandTotal.toLocaleString()} {t('common.silver')}
                   </span>
                 </div>
               </div>
 
               {/* Session list */}
-              <ul className="fgoal-stats-list" aria-label="Sessões vinculadas">
+              <ul className="fgoal-stats-list" aria-label={t('goals.linkedSessionsTitle', { name: goal.name })}>
                 {linkedEntries.map(({ session, total }) => {
                   const loc = locationMap.get(session.locationId) ?? null
                   return (
@@ -376,7 +385,7 @@ function GoalStatsDialog({ goal, sessions, locations, items, imageCache, onRemov
                       </div>
                       <div className="fgoal-stats-info">
                         <span className="fgoal-stats-loc-name">
-                          {loc?.name ?? 'Local desconhecido'}
+                          {loc?.name ?? t('goals.unknownLocation')}
                         </span>
                         <span className="fgoal-stats-meta">
                           {formatDateTime(session.createdAt)}
@@ -384,14 +393,14 @@ function GoalStatsDialog({ goal, sessions, locations, items, imageCache, onRemov
                         </span>
                       </div>
                       <div className="fgoal-stats-total">
-                        {total.toLocaleString('pt-BR')}
-                        <span className="fgoal-sess-prata"> prata</span>
+                        {total.toLocaleString()}
+                        <span className="fgoal-sess-prata"> {t('common.silver')}</span>
                       </div>
                       <button
                         className="fgoal-stats-remove-btn"
                         onClick={() => onRemoveSession(session.id)}
-                        title="Remover sessão da meta"
-                        aria-label="Remover sessão vinculada"
+                        title={t('goals.removeSessionAria')}
+                        aria-label={t('goals.removeSessionAria')}
                         type="button"
                       >
                         <Trash2 size={13} />
@@ -419,7 +428,8 @@ interface GoalDialogProps {
 }
 
 function GoalDialog({ mode, initial, goalCount, onSave, onClose }: GoalDialogProps): React.ReactElement {
-  const defaultName  = initial.name  ?? `Meta #${goalCount + 1}`
+  const { t } = useLanguage()
+  const defaultName  = initial.name  ?? `${t('goals.nameLabel')} #${goalCount + 1}`
   const [name,       setName]       = useState(defaultName)
   const [amount,     setAmount]     = useState(initial.targetAmount  ? String(initial.targetAmount)  : '')
   const [targetDate, setTargetDate] = useState(initial.targetDate    ?? '')
@@ -429,11 +439,11 @@ function GoalDialog({ mode, initial, goalCount, onSave, onClose }: GoalDialogPro
     e.preventDefault()
     const parsed = Number(amount.replace(/\D/g, ''))
     if (!parsed || parsed <= 0) {
-      setError('Informe um valor válido maior que zero.')
+      setError(t('goals.invalidAmount'))
       return
     }
     if (!targetDate) {
-      setError('Informe a data alvo.')
+      setError(t('goals.invalidDate'))
       return
     }
     setError(null)
@@ -453,13 +463,13 @@ function GoalDialog({ mode, initial, goalCount, onSave, onClose }: GoalDialogPro
   const today = new Date().toISOString().slice(0, 10)
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={mode === 'create' ? 'Criar meta de farm' : 'Editar meta de farm'}>
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={mode === 'create' ? t('goals.createGoalTitle') : t('goals.editGoalTitle')}>
       <div className="modal-box fgoal-dialog-box">
         <div className="modal-header">
           <span className="modal-title">
-            {mode === 'create' ? 'Nova Meta de Farm' : 'Editar Meta'}
+            {mode === 'create' ? t('goals.createGoalTitle') : t('goals.editGoalTitle')}
           </span>
-          <button className="modal-close" onClick={onClose} aria-label="Fechar">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label={t('sessions.closeAria')}>✕</button>
         </div>
         <div className="modal-body">
           <form onSubmit={handleSubmit} id="fgoal-form">
@@ -467,13 +477,13 @@ function GoalDialog({ mode, initial, goalCount, onSave, onClose }: GoalDialogPro
               {/* Name */}
               <div className="form-field">
                 <label className="form-label" htmlFor="fgoal-name">
-                  Nome <span className="fgoal-optional">(opcional)</span>
+                  {t('goals.nameLabel')} <span className="fgoal-optional">{t('goals.optional')}</span>
                 </label>
                 <input
                   id="fgoal-name"
                   className="form-input"
                   type="text"
-                  placeholder={`Meta #${goalCount + 1}`}
+                  placeholder={`${t('goals.nameLabel')} #${goalCount + 1}`}
                   value={name}
                   onChange={e => setName(e.target.value)}
                   maxLength={60}
@@ -484,7 +494,7 @@ function GoalDialog({ mode, initial, goalCount, onSave, onClose }: GoalDialogPro
               {/* Target Amount */}
               <div className="form-field">
                 <label className="form-label" htmlFor="fgoal-amount">
-                  Valor alvo <span className="fgoal-required">*</span>
+                  {t('goals.targetAmountLabel')} <span className="fgoal-required">{t('goals.required')}</span>
                 </label>
                 <div className="fgoal-amount-wrap">
                   <Coins size={15} className="fgoal-amount-icon" aria-hidden="true" />
@@ -494,18 +504,18 @@ function GoalDialog({ mode, initial, goalCount, onSave, onClose }: GoalDialogPro
                     type="text"
                     inputMode="numeric"
                     placeholder="Ex: 500000000"
-                    value={amount ? Number(amount).toLocaleString('pt-BR') : ''}
+                    value={amount ? Number(amount).toLocaleString() : ''}
                     onChange={e => handleAmountChange(e.target.value.replace(/\./g, ''))}
                     autoComplete="off"
                   />
-                  <span className="fgoal-amount-suffix">prata</span>
+                  <span className="fgoal-amount-suffix">{t('common.silver')}</span>
                 </div>
               </div>
 
               {/* Target Date */}
               <div className="form-field">
                 <label className="form-label" htmlFor="fgoal-date">
-                  Data alvo <span className="fgoal-required">*</span>
+                  {t('goals.targetDateLabel')} <span className="fgoal-required">{t('goals.required')}</span>
                 </label>
                 <input
                   id="fgoal-date"
@@ -522,10 +532,10 @@ function GoalDialog({ mode, initial, goalCount, onSave, onClose }: GoalDialogPro
 
             <div className="form-actions fgoal-dialog-actions">
               <button type="submit" className="btn btn-primary">
-                {mode === 'create' ? <><Plus size={14} /> Criar Meta</> : <><Pencil size={14} /> Salvar</>}
+                {mode === 'create' ? <><Plus size={14} /> {t('goals.createBtn')}</> : <><Pencil size={14} /> {t('goals.saveBtn')}</>}
               </button>
               <button type="button" className="btn btn-secondary" onClick={onClose}>
-                Cancelar
+                {t('goals.cancelBtn')}
               </button>
             </div>
           </form>
@@ -548,6 +558,7 @@ interface ContributeDialogProps {
 }
 
 function ContributeDialog({ goal, sessions, locations, items, imageCache, onSave, onClose }: ContributeDialogProps): React.ReactElement {
+  const { t } = useLanguage()
   const [amount,           setAmount]           = useState('')
   const [error,            setError]            = useState<string | null>(null)
   const [linkedSessionIds, setLinkedSessionIds] = useState<string[]>([])
@@ -591,7 +602,7 @@ function ContributeDialog({ goal, sessions, locations, items, imageCache, onSave
     e.preventDefault()
     const parsed = Number(amount)
     if (!parsed || parsed <= 0) {
-      setError('Informe um valor válido maior que zero.')
+      setError(t('goals.invalidAmount'))
       return
     }
     setError(null)
@@ -601,24 +612,24 @@ function ContributeDialog({ goal, sessions, locations, items, imageCache, onSave
   const remaining = Math.max(0, goal.targetAmount - goal.currentAmount)
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Adicionar prata à meta">
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={t('goals.editContributeAria')}>
       <div className="modal-box fgoal-dialog-box fgoal-dialog-box--wide">
         <div className="modal-header">
-          <span className="modal-title">Adicionar Prata · {goal.name}</span>
-          <button className="modal-close" onClick={onClose} aria-label="Fechar">✕</button>
+          <span className="modal-title">{t('goals.contributeTitle', { name: goal.name })}</span>
+          <button className="modal-close" onClick={onClose} aria-label={t('sessions.closeAria')}>✕</button>
         </div>
         <div className="modal-body">
           {/* Progress info */}
           <div className="fgoal-contribute-info">
             <span className="fgoal-contribute-stat">
-              Progresso: <strong>{goal.currentAmount.toLocaleString('pt-BR')}</strong> prata
+              {t('goals.progressLabel')} <strong>{goal.currentAmount.toLocaleString()}</strong> {t('common.silver')}
             </span>
             <span className="fgoal-contribute-stat">
-              Meta: <strong>{goal.targetAmount.toLocaleString('pt-BR')}</strong> prata
+              {t('goals.goalLabel')} <strong>{goal.targetAmount.toLocaleString()}</strong> {t('common.silver')}
             </span>
             {remaining > 0 && (
               <span className="fgoal-contribute-stat fgoal-contribute-remaining">
-                Faltam: <strong>{remaining.toLocaleString('pt-BR')}</strong> prata
+                {t('goals.remainingLabel2')} <strong>{remaining.toLocaleString()}</strong> {t('common.silver')}
               </span>
             )}
           </div>
@@ -627,11 +638,11 @@ function ContributeDialog({ goal, sessions, locations, items, imageCache, onSave
             {/* Session picker */}
             <div className="fgoal-sess-picker">
               <div className="fgoal-sess-picker-label">
-                Vincular a sessões <span className="fgoal-optional">(opcional)</span>
+                {t('goals.linkSessionsLabel')} <span className="fgoal-optional">{t('goals.optional')}</span>
               </div>
               {sortedSessions.length === 0 ? (
                 <div className="fgoal-sess-picker-empty">
-                  Nenhuma sessão cadastrada. Insira o valor manualmente abaixo.
+                  {t('goals.noSessionsRegistered')}
                 </div>
               ) : (
                 <>
@@ -660,9 +671,9 @@ function ContributeDialog({ goal, sessions, locations, items, imageCache, onSave
                           </div>
                           <div className="fgoal-sess-info">
                             <span className="fgoal-sess-loc-name">
-                              {loc?.name ?? 'Local desconhecido'}
+                              {loc?.name ?? t('goals.unknownLocation')}
                               {linked && !checked && (
-                                <span className="fgoal-sess-linked-badge">já vinculada</span>
+                                <span className="fgoal-sess-linked-badge">{t('goals.alreadyLinked')}</span>
                               )}
                             </span>
                             <span className="fgoal-sess-meta">
@@ -671,8 +682,8 @@ function ContributeDialog({ goal, sessions, locations, items, imageCache, onSave
                             </span>
                           </div>
                           <div className="fgoal-sess-total">
-                            {total.toLocaleString('pt-BR')}
-                            <span className="fgoal-sess-prata"> prata</span>
+                            {total.toLocaleString()}
+                            <span className="fgoal-sess-prata"> {t('common.silver')}</span>
                           </div>
                         </label>
                       )
@@ -681,16 +692,18 @@ function ContributeDialog({ goal, sessions, locations, items, imageCache, onSave
                   {linkedSessionIds.length > 0 && (
                     <div className="fgoal-sess-summary">
                       <span className="fgoal-sess-summary-text">
-                        {linkedSessionIds.length} sessão{linkedSessionIds.length !== 1 ? 'ões' : ''} selecionada{linkedSessionIds.length !== 1 ? 's' : ''}
+                        {linkedSessionIds.length !== 1
+                          ? t('goals.sessionSelected_other', { n: linkedSessionIds.length })
+                          : t('goals.sessionSelected_one',   { n: linkedSessionIds.length })}
                         <span className="fgoal-date-sep">·</span>
-                        Total: <strong>{Math.round(selectedTotal).toLocaleString('pt-BR')} prata</strong>
+                        {t('goals.totalLabel')} <strong>{Math.round(selectedTotal).toLocaleString()} {t('common.silver')}</strong>
                       </span>
                       <button
                         type="button"
                         className="btn btn-sm btn-secondary"
                         onClick={fillFromSessions}
                       >
-                        Usar este valor
+                        {t('goals.useThisValue')}
                       </button>
                     </div>
                   )}
@@ -701,7 +714,7 @@ function ContributeDialog({ goal, sessions, locations, items, imageCache, onSave
             {/* Amount field */}
             <div className="form-field" style={{ marginTop: '14px' }}>
               <label className="form-label" htmlFor="fgoal-contribute-amount">
-                Prata a adicionar <span className="fgoal-required">*</span>
+                {t('goals.amountToAddLabel')} <span className="fgoal-required">{t('goals.required')}</span>
               </label>
               <div className="fgoal-amount-wrap">
                 <Coins size={15} className="fgoal-amount-icon" aria-hidden="true" />
@@ -710,21 +723,21 @@ function ContributeDialog({ goal, sessions, locations, items, imageCache, onSave
                   className="form-input fgoal-amount-input"
                   type="text"
                   inputMode="numeric"
-                  placeholder="Ex: 50000000"
-                  value={amount ? Number(amount).toLocaleString('pt-BR') : ''}
+                  placeholder={t('goals.amountPlaceholder')}
+                  value={amount ? Number(amount).toLocaleString() : ''}
                   onChange={e => handleAmountChange(e.target.value)}
                   autoComplete="off"
                 />
-                <span className="fgoal-amount-suffix">prata</span>
+                <span className="fgoal-amount-suffix">{t('common.silver')}</span>
               </div>
             </div>
             {error && <p className="form-error fgoal-dialog-error">{error}</p>}
             <div className="form-actions fgoal-dialog-actions">
               <button type="submit" className="btn btn-primary">
-                <Coins size={14} /> Adicionar
+                <Coins size={14} /> {t('goals.addToGoalBtn')}
               </button>
               <button type="button" className="btn btn-secondary" onClick={onClose}>
-                Cancelar
+                {t('goals.cancelBtn')}
               </button>
             </div>
           </form>
@@ -743,19 +756,20 @@ interface ConfirmDeleteProps {
 }
 
 function ConfirmDeleteDialog({ goal, onDelete, onClose }: ConfirmDeleteProps): React.ReactElement {
+  const { t } = useLanguage()
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Confirmar exclusão">
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={t('goals.deleteAria')}>
       <div className="modal-box confirm-box">
         <p className="confirm-message">
-          Excluir a meta <strong>"{goal.name}"</strong>?<br />
-          <span style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>Esta ação não pode ser desfeita.</span>
+          {t('goals.deleteConfigConfirm')} <strong>"{goal.name}"</strong>?<br />
+          <span style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>{t('goals.deleteConfigCannotUndo')}</span>
         </p>
         <div className="confirm-actions">
           <button className="btn btn-primary fgoal-delete-confirm-btn" onClick={onDelete}>
-            <Trash2 size={14} /> Excluir
+            <Trash2 size={14} /> {t('goals.deleteAria')}
           </button>
           <button className="btn btn-secondary" onClick={onClose}>
-            Cancelar
+            {t('goals.cancelBtn')}
           </button>
         </div>
       </div>
@@ -767,6 +781,7 @@ function ConfirmDeleteDialog({ goal, onDelete, onClose }: ConfirmDeleteProps): R
 
 export default function FarmGoalSection(): React.ReactElement {
   const { devMode } = useDevMode()
+  const { t } = useLanguage()
   const [goals,      setGoals]      = useState<FarmGoal[]>([])
   const [sessions,   setSessions]   = useState<FarmSession[]>([])
   const [locations,  setLocations]  = useState<FarmLocation[]>([])
@@ -909,33 +924,33 @@ export default function FarmGoalSection(): React.ReactElement {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <section className="fgoal-section" aria-label="Metas de Farm">
+    <section className="fgoal-section" aria-label={t('goals.sectionTitle')}>
       {/* Section heading */}
       <div className="fgoal-heading-row">
         <div className="fgoal-heading">
           <Target size={18} className="fgoal-heading-icon" aria-hidden="true" />
-          Metas de Farm
+          {t('goals.sectionTitle')}
         </div>
         <button
           className="btn btn-primary btn-sm"
           onClick={openCreate}
-          aria-label="Criar nova meta de farm"
+          aria-label={t('goals.createGoalTitle')}
         >
-          <Plus size={14} /> Criar Meta
+          <Plus size={14} /> {t('goals.newGoal')}
         </button>
       </div>
 
       {/* Content */}
       {!loaded ? (
-        <p className="loading-text">Carregando metas…</p>
+        <p className="loading-text">{t('common.loading')}</p>
       ) : goals.length === 0 ? (
         <div className="fgoal-empty">
           <X size={28} className="fgoal-empty-icon" aria-hidden="true" />
-          <p className="fgoal-empty-text">Nenhuma meta estabelecida</p>
-          <p className="fgoal-empty-hint">Crie uma meta para acompanhar seu progresso de prata.</p>
+          <p className="fgoal-empty-text">{t('goals.noGoals')}</p>
+          <p className="fgoal-empty-hint">{t('goals.noGoalsHint')}</p>
         </div>
       ) : (
-        <ul className="fgoal-list" aria-label="Lista de metas de farm">
+        <ul className="fgoal-list" aria-label={t('common.goalListAria')}>
           {goals.map(goal => (
             <li key={goal.id}>
               <GoalCard

@@ -4205,6 +4205,15 @@ input[type='date'].form-input {
 }
 
 /* ── Settings button ── */
+.language-select-row {
+  display: flex;
+  align-items: center;
+}
+
+.language-select {
+  max-width: 280px;
+}
+
 .dev-mode-toggle-btn {
   display: inline-flex;
   align-items: center;

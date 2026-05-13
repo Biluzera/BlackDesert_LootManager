@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Pencil, Trash2, Plus, Bell, Swords, FolderOpen, X, Check, Save, Calendar, Timer } from 'lucide-react'
 import { useDevMode } from '../context/DevModeContext'
 import { MOCK_BOSSES } from '../context/DevModeContext'
+import { useLanguage } from '../context/LanguageContext'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -48,9 +49,6 @@ interface OverlayNotif {
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
-
-const DAYS_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-const DAYS_FULL  = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
 const PRESET_COLORS = [
   '#e8a020', '#c83030', '#2060c8', '#20a060',
@@ -149,10 +147,10 @@ function formatCountdown(ms: number): string {
 }
 
 function fmtTime(d: Date): string {
-  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
 }
-function fmtDayTime(d: Date): string {
-  return `${DAYS_SHORT[d.getDay()]} ${fmtTime(d)}`
+function fmtDayTime(d: Date, daysShort: string[]): string {
+  return `${daysShort[d.getDay()] ?? ''} ${fmtTime(d)}`
 }
 
 function groupSpawns(spawns: SpawnEvent[]): SpawnGroup[] {
@@ -175,6 +173,9 @@ const MOCK_BOSS_3:  WorldBoss = { id: 'mock', name: 'Boss Teste', imageFile: nul
 
 function WorldBossPage(): React.ReactElement {
   const { devMode } = useDevMode()
+  const { t, tArr, locale } = useLanguage()
+  const daysShort = tArr('bosses.daysShort')
+  const daysFull  = tArr('bosses.daysFull')
   // ── Data ──────────────────────────────────────────────────────────────────
   const [bosses,     setBosses]     = useState<WorldBoss[]>([])
   const [imageCache, setImageCache] = useState<Record<string, string>>({})
@@ -307,8 +308,8 @@ function WorldBossPage(): React.ReactElement {
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault()
     const trimmed = formName.trim()
-    if (!trimmed) { setFormError('Nome do boss é obrigatório.'); return }
-    if (formSpawns.length === 0) { setFormError('Adicione pelo menos um horário.'); return }
+    if (!trimmed) { setFormError(t('bosses.nameRequired')); return }
+    if (formSpawns.length === 0) { setFormError(t('bosses.atLeastOneSpawn')); return }
     setFormError(null)
     setSaving(true)
     try {
@@ -334,7 +335,7 @@ function WorldBossPage(): React.ReactElement {
       }
       resetForm()
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Erro ao salvar.')
+      setFormError(err instanceof Error ? err.message : t('common.errorSaving'))
     } finally {
       setSaving(false)
     }
@@ -412,13 +413,13 @@ function WorldBossPage(): React.ReactElement {
                 ))}
               </span>
               <span className="boss-notif-sub">
-                {n.minutesLeft <= 1 ? 'Spawnando agora!' : `Spawna em ${n.minutesLeft} min — ${fmtDayTime(n.spawnAt)}`}
+                {n.minutesLeft <= 1 ? t('bosses.spawnNow') : t('bosses.spawnsIn', { n: n.minutesLeft, time: fmtDayTime(n.spawnAt, daysShort) })}
               </span>
             </div>
             <button
               className="boss-notif-close"
               onClick={() => setNotifs(prev => prev.filter(x => x.id !== n.id))}
-              aria-label="Fechar"
+              aria-label={t('common.close')}
             ><X size={12} aria-hidden="true" /></button>
           </div>
         ))}
@@ -426,7 +427,7 @@ function WorldBossPage(): React.ReactElement {
 
       <h2 className="page-title">
         <span className="page-title-icon" aria-hidden="true"><Swords size={20} /></span>
-        Bosses Mundiais
+        {t('bosses.pageTitle')}
       </h2>
 
       {/* ── Countdown section ── */}
@@ -434,10 +435,10 @@ function WorldBossPage(): React.ReactElement {
         {/* Clock + next boss */}
         <div className="boss-clock-row">
           <div className="boss-clock-now">
-            <span className="boss-clock-label">Horário atual</span>
-            <span className="boss-clock-time">{now.toLocaleTimeString('pt-BR')}</span>
+            <span className="boss-clock-label">{t('bosses.currentTimeLabel')}</span>
+            <span className="boss-clock-time">{now.toLocaleTimeString()}</span>
             <span className="boss-clock-date">
-              {now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+              {now.toLocaleDateString(locale, { weekday: 'long', day: '2-digit', month: 'long' })}
             </span>
           </div>
 
@@ -464,13 +465,13 @@ function WorldBossPage(): React.ReactElement {
                 ))}
               </div>
               <div className="boss-next-info">
-                <span className="boss-next-label">{nextGroup.spawns.length > 1 ? 'Próximos Bosses' : 'Próximo Boss'}</span>
+                <span className="boss-next-label">{nextGroup.spawns.length > 1 ? t('bosses.nextBosses') : t('bosses.nextBoss')}</span>
                 <div className="boss-next-names">
                   {nextGroup.spawns.map(({ boss }, i) => (
                     <span key={i} className="boss-next-name" style={{ color: boss.color }}>{boss.name}</span>
                   ))}
                 </div>
-                <span className="boss-next-when">{fmtDayTime(nextGroup.spawnAt)}</span>
+                <span className="boss-next-when">{fmtDayTime(nextGroup.spawnAt, daysShort)}</span>
               </div>
               <div className="boss-next-countdown">
                 {formatCountdown(nextGroup.spawnAt.getTime() - now.getTime())}
@@ -478,7 +479,7 @@ function WorldBossPage(): React.ReactElement {
             </div>
           ) : (
             <div className="boss-no-next">
-              <Swords size={16} aria-hidden="true" /> Nenhum boss registrado
+              <Swords size={16} aria-hidden="true" /> {t('bosses.noBossRegistered')}
             </div>
           )}
         </div>
@@ -515,7 +516,7 @@ function WorldBossPage(): React.ReactElement {
                     </React.Fragment>
                   ))}
                 </span>
-                <span className="boss-upcoming-when">{fmtDayTime(group.spawnAt)}</span>
+                <span className="boss-upcoming-when">{fmtDayTime(group.spawnAt, daysShort)}</span>
                 <span className="boss-upcoming-cd">
                   {formatCountdown(group.spawnAt.getTime() - now.getTime())}
                 </span>
@@ -530,7 +531,7 @@ function WorldBossPage(): React.ReactElement {
         <section className="wood-panel boss-calendar-section">
           <h3 className="panel-section-title">
             <Calendar size={15} style={{ verticalAlign: 'middle', marginRight: 6 }} aria-hidden="true" />
-            Calendário Semanal
+            {t('bosses.weeklyCalendar')}
           </h3>
           <div className="boss-cal-grid">
             {Array.from({ length: 7 }, (_, day) => {
@@ -538,7 +539,7 @@ function WorldBossPage(): React.ReactElement {
               const isToday   = day === todayDay
               return (
                 <div key={day} className={`boss-cal-col${isToday ? ' boss-cal-col-today' : ''}`}>
-                  <div className="boss-cal-col-header">{DAYS_SHORT[day]}</div>
+                  <div className="boss-cal-col-header">{daysShort[day]}</div>
                   <div className="boss-cal-col-body">
                     {daySpawns.length === 0
                       ? <span className="boss-cal-empty">—</span>
@@ -570,30 +571,30 @@ function WorldBossPage(): React.ReactElement {
       <section className="wood-panel boss-test-section">
         <h3 className="panel-section-title">
           <Bell size={15} aria-hidden="true" style={{ verticalAlign: 'middle', marginRight: 6 }} />
-          Testar Alertas
+            {t('bosses.testAlertsTitle')}
         </h3>
-        <p className="boss-test-hint">Clique para ouvir o alerta sonoro e ver a notificação de cada limiar.</p>
+        <p className="boss-test-hint">{t('bosses.testAlertsHint')}</p>
         <div className="boss-test-row">
           <button
             className="btn boss-test-btn boss-test-15"
             onClick={() => { playAlert('15min'); addNotif([{ boss: MOCK_BOSS_15, imageUrl: null }], 15, new Date(Date.now() + 15 * 60000)) }}
           >
             <Bell size={14} />
-            15 min — suave
+          {t('bosses.alert15min')}
           </button>
           <button
             className="btn boss-test-btn boss-test-5"
             onClick={() => { playAlert('5min'); addNotif([{ boss: MOCK_BOSS_5, imageUrl: null }], 5, new Date(Date.now() + 5 * 60000)) }}
           >
             <Bell size={14} />
-            5 min — médio
+          {t('bosses.alert5min')}
           </button>
           <button
             className="btn boss-test-btn boss-test-3"
             onClick={() => { playAlert('3min'); addNotif([{ boss: MOCK_BOSS_3, imageUrl: null }], 3, new Date(Date.now() + 3 * 60000)) }}
           >
             <Bell size={14} />
-            3 min — urgente
+          {t('bosses.alert3min')}
           </button>
         </div>
       </section>
@@ -601,7 +602,7 @@ function WorldBossPage(): React.ReactElement {
       {/* ── Boss management ── */}
       <section className="boss-mgmt-section">
         <div className="items-list-heading">
-          <span>Bosses Registrados</span>
+          <span>{t('bosses.registeredBosses')}</span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span className="items-count">{bosses.length}</span>
             <button
@@ -609,7 +610,7 @@ function WorldBossPage(): React.ReactElement {
               onClick={() => { if (showForm && !editingId) { resetForm() } else { resetForm(); setShowForm(true) } }}
             >
               <Plus size={13} />
-              {showForm && !editingId ? 'Cancelar' : 'Novo Boss'}
+              {showForm && !editingId ? t('bosses.cancelNewBoss') : t('bosses.newBoss')}
             </button>
           </div>
         </div>
@@ -619,8 +620,8 @@ function WorldBossPage(): React.ReactElement {
           <div className="wood-panel boss-form-panel">
             <h3 className="panel-section-title">
               {editingId
-              ? <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" /> Editar Boss</>
-              : '+ Novo Boss'
+              ? <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" /> {t('bosses.editBossTitle')}</>
+              : t('bosses.newBossTitle')
             }
             </h3>
             {formError && <p className="form-error" role="alert">{formError}</p>}
@@ -631,7 +632,7 @@ function WorldBossPage(): React.ReactElement {
                 {/* Name */}
                 <div className="form-field">
                   <label className="form-label" htmlFor="boss-name">
-                    Nome do Boss <span className="required-mark">*</span>
+                    {t('bosses.bossNameLabel')} <span className="required-mark">*</span>
                   </label>
                   <input
                     id="boss-name"
@@ -639,7 +640,7 @@ function WorldBossPage(): React.ReactElement {
                     type="text"
                     value={formName}
                     onChange={e => setFormName(e.target.value)}
-                    placeholder="Ex.: Kzarka"
+                    placeholder={t('bosses.bossNamePlaceholder')}
                     maxLength={80}
                     required
                     autoComplete="off"
@@ -648,7 +649,7 @@ function WorldBossPage(): React.ReactElement {
 
                 {/* Color */}
                 <div className="form-field">
-                  <span className="form-label">Cor de destaque</span>
+                  <span className="form-label">{t('bosses.highlightColor')}</span>
                   <div className="boss-color-row">
                     {PRESET_COLORS.map(c => (
                       <button
@@ -657,7 +658,7 @@ function WorldBossPage(): React.ReactElement {
                         className={`boss-color-swatch${formColor === c ? ' boss-color-swatch-active' : ''}`}
                         style={{ background: c }}
                         onClick={() => setFormColor(c)}
-                        aria-label={`Cor ${c}`}
+                        aria-label={`${t('common.remove')} ${c}`}
                       />
                     ))}
                     <input
@@ -665,34 +666,34 @@ function WorldBossPage(): React.ReactElement {
                       className="boss-color-custom"
                       value={formColor}
                       onChange={e => setFormColor(e.target.value)}
-                      title="Cor personalizada"
+                      title={t('common.customColorTitle')}
                     />
                   </div>
                 </div>
 
                 {/* Image */}
                 <div className="form-field">
-                  <span className="form-label">Imagem (PNG / WebP)</span>
+                  <span className="form-label">{t('bosses.imagePngWebp')}</span>
                   <div className="pick-image-row">
                     <button type="button" className="btn btn-secondary btn-sm" onClick={handlePickImage}>
-                      <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Selecionar
+                      <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> {t('common.selectImage')}
                     </button>
                     {formImage
-                      ? <span className="image-filename"><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />Imagem selecionada</span>
-                      : <span className="image-filename-empty">Nenhuma imagem</span>
+                      ? <span className="image-filename"><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />{t('common.imageSelected')}</span>
+                      : <span className="image-filename-empty">{t('common.noImageSelected')}</span>
                     }
                     {formImage && (
                       <button
                         type="button"
                         className="btn-icon-remove"
                         onClick={() => { setFormImage(null); setFormImageUrl(null) }}
-                        aria-label="Remover imagem"
+                        aria-label={t('common.remove')}
                       ><X size={12} aria-hidden="true" /></button>
                     )}
                   </div>
                   {formImageUrl && (
                     <div className="boss-img-preview" style={{ borderColor: formColor }}>
-                      <img src={formImageUrl} alt="Prévia" draggable={false} />
+                      <img src={formImageUrl} alt={t('common.preview')} draggable={false} />
                     </div>
                   )}
                 </div>
@@ -702,13 +703,13 @@ function WorldBossPage(): React.ReactElement {
               {/* Spawn schedule */}
               <div className="form-field" style={{ marginTop: 18 }}>
                 <div className="boss-spawns-header">
-                  <span className="form-label">Horários de Spawn</span>
+                  <span className="form-label">{t('bosses.spawnsTitle')}</span>
                   <button
                     type="button"
                     className="btn btn-secondary btn-sm"
                     onClick={() => setFormSpawns(prev => [...prev, { day: 1, time: '09:00' }])}
                   >
-                    <Plus size={12} /> Adicionar horário
+                    <Plus size={12} /> {t('bosses.addSpawn')}
                   </button>
                 </div>
 
@@ -719,9 +720,9 @@ function WorldBossPage(): React.ReactElement {
                         className="form-input boss-spawn-day"
                         value={slot.day}
                         onChange={e => handleSpawnChange(idx, 'day', e.target.value)}
-                        aria-label="Dia da semana"
+                        aria-label={t('bosses.dayLabel')}
                       >
-                        {DAYS_FULL.map((d, i) => (
+                        {daysFull.map((d, i) => (
                           <option key={i} value={i}>{d}</option>
                         ))}
                       </select>
@@ -731,7 +732,7 @@ function WorldBossPage(): React.ReactElement {
                         type="time"
                         value={slot.time}
                         onChange={e => handleSpawnChange(idx, 'time', e.target.value)}
-                        aria-label="Horário"
+                        aria-label={t('bosses.timeLabel')}
                       />
 
                       <button
@@ -739,7 +740,7 @@ function WorldBossPage(): React.ReactElement {
                         className="btn-icon-remove"
                         onClick={() => setFormSpawns(prev => prev.filter((_, i) => i !== idx))}
                         disabled={formSpawns.length <= 1}
-                        aria-label="Remover este horário"
+                        aria-label={t('bosses.removeSpawn')}
                       ><X size={12} aria-hidden="true" /></button>
                     </div>
                   ))}
@@ -753,14 +754,14 @@ function WorldBossPage(): React.ReactElement {
                   disabled={saving || !formName.trim()}
                 >
                   {saving
-                    ? 'Salvando…'
+                    ? t('common.saving')
                     : editingId
-                      ? <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Salvar Alterações</>
-                      : <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Cadastrar Boss</>
+                      ? <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> {t('common.saveChanges')}</>
+                      : <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> {t('bosses.saveBoss')}</>
                   }
                 </button>
                 <button type="button" className="btn btn-secondary" onClick={resetForm}>
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
               </div>
             </form>
@@ -769,11 +770,11 @@ function WorldBossPage(): React.ReactElement {
 
         {/* Boss list */}
         {!loaded ? (
-          <p className="loading-text">Carregando…</p>
+          <p className="loading-text">{t('common.loading')}</p>
         ) : bosses.length === 0 && !showForm ? (
           <div className="empty-state">
             <span className="empty-state-icon" aria-hidden="true"><Swords size={48} /></span>
-            <span className="empty-state-text">Nenhum boss registrado ainda. Clique em "Novo Boss" para começar.</span>
+            <span className="empty-state-text">{t('bosses.noBossRegistered')}</span>
           </div>
         ) : (
           <ul className="boss-list" role="list">
@@ -798,11 +799,13 @@ function WorldBossPage(): React.ReactElement {
                   <div className="boss-card-info">
                     <span className="boss-card-name">{boss.name}</span>
                     <span className="boss-card-spawns">
-                      {boss.spawns.length} horário{boss.spawns.length !== 1 ? 's' : ''} semanal{boss.spawns.length !== 1 ? 'is' : ''}
+                      {boss.spawns.length !== 1
+                        ? t('bosses.bossSpawnCount_other', { count: boss.spawns.length })
+                        : t('bosses.bossSpawnCount_one', { count: boss.spawns.length })}
                     </span>
                     {nextForBoss && (
                       <span className="boss-card-next">
-                        <Timer size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" /> Próximo: {fmtDayTime(nextForBoss.spawnAt)}
+                        <Timer size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" /> {t('bosses.nextBoss')}: {fmtDayTime(nextForBoss.spawnAt, daysShort)}
                         &ensp;({formatCountdown(nextForBoss.spawnAt.getTime() - now.getTime())})
                       </span>
                     )}
@@ -811,17 +814,17 @@ function WorldBossPage(): React.ReactElement {
                   <div className="item-row-actions">
                     <button
                       className="btn-labeled btn-labeled-edit"
-                      aria-label={`Editar ${boss.name}`}
+                      aria-label={`${t('common.edit')} ${boss.name}`}
                       onClick={() => handleEdit(boss)}
                     >
-                      <Pencil size={13} aria-hidden="true" /> Editar
+                      <Pencil size={13} aria-hidden="true" /> {t('common.edit')}
                     </button>
                     <button
                       className="btn-labeled btn-labeled-delete"
-                      aria-label={`Excluir ${boss.name}`}
+                      aria-label={`${t('common.delete')} ${boss.name}`}
                       onClick={() => handleDelete(boss.id)}
                     >
-                      <Trash2 size={13} aria-hidden="true" /> Excluir
+                      <Trash2 size={13} aria-hidden="true" /> {t('common.delete')}
                     </button>
                   </div>
                 </li>

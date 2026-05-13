@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useLanguage } from '../context/LanguageContext'
 
 // ── Farm Timer Widget ─────────────────────────────────────────────────────────
 // Standalone floating timer — start/pause/reset, no persistence needed.
@@ -15,6 +16,7 @@ function formatTime(totalSeconds: number): string {
 }
 
 export default function FarmTimer(): React.ReactElement {
+  const { t } = useLanguage()
   const [seconds,   setSeconds]   = useState(0)
   const [running,   setRunning]   = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -41,8 +43,8 @@ export default function FarmTimer(): React.ReactElement {
       <button
         className="farm-timer-toggle"
         onClick={() => setCollapsed(c => !c)}
-        aria-label={collapsed ? 'Expandir timer' : 'Recolher timer'}
-        title={collapsed ? 'Expandir' : 'Recolher'}
+        aria-label={collapsed ? t('timer.expand') : t('timer.collapse')}
+        title={collapsed ? t('timer.expand') : t('timer.collapse')}
       >
         ⏱
       </button>
@@ -54,7 +56,7 @@ export default function FarmTimer(): React.ReactElement {
             <button
               className={`farm-timer-btn${running ? ' farm-timer-btn-pause' : ' farm-timer-btn-start'}`}
               onClick={toggle}
-              aria-label={running ? 'Pausar timer' : 'Iniciar timer'}
+              aria-label={running ? t('timer.pause') : t('timer.start')}
             >
               {running ? '⏸' : '▶'}
             </button>
@@ -62,8 +64,8 @@ export default function FarmTimer(): React.ReactElement {
               className="farm-timer-btn farm-timer-btn-reset"
               onClick={reset}
               disabled={isZero}
-              aria-label="Zerar timer"
-              title="Zerar"
+              aria-label={t('timer.reset')}
+              title={t('timer.reset')}
             >
               ↺
             </button>

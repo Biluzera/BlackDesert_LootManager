@@ -15,6 +15,7 @@ import { DEFAULT_SETTINGS } from './pages/SettingsPage'
 import { DevModeProvider, useDevMode } from './context/DevModeContext'
 import { MarketProvider, useMarket } from './context/MarketContext'
 import { ComboProvider } from './context/ComboContext'
+import { LanguageProvider, useLanguage, type LanguageId } from './context/LanguageContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -52,6 +53,18 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
   const [settings,  setSettings]  = useState<AppSettings>(DEFAULT_SETTINGS)
   const { devMode } = useDevMode()
   const { setItems: setMarketItems } = useMarket()
+  const { t, setLanguage } = useLanguage()
+
+  const TABS: Tab[] = [
+    { id: 'home',      icon: <Home size={16} /> },
+    { id: 'items',     icon: <Gem size={16} /> },
+    { id: 'locations', icon: <Map size={16} /> },
+    { id: 'sessions',  icon: <ScrollText size={16} /> },
+    { id: 'stats',     icon: <BarChart2 size={16} /> },
+    { id: 'bosses',    icon: <Swords size={16} /> },
+    { id: 'combo',     icon: <Keyboard size={16} /> },
+    { id: 'settings',  icon: <Settings size={16} /> },
+  ]
 
   // Track when both startup loads complete (idempotent set to handle StrictMode)
   const readySet    = useRef(new Set<string>())
@@ -82,6 +95,7 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
         setSettings(data)
         document.documentElement.setAttribute('data-theme', data.theme)
         document.documentElement.setAttribute('data-font', data.font ?? 'classic')
+        if (data.language) setLanguage(data.language as LanguageId)
       }
       markReady('settings')
     }
@@ -116,13 +130,13 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
           <h1>BDO Loot Log</h1>
           <span className="title-ornament" aria-hidden="true"><Swords size={16} /></span>
         </div>
-        <p className="app-subtitle">Registro de Itens &amp; Sessões de Farm</p>
+        <p className="app-subtitle">{t('app.subtitle')}</p>
       </header>
 
       {/* ── Body: sidebar + content ── */}
       <div className="app-body">
         {/* ── Tab navigation ── */}
-        <nav className="tab-nav" aria-label="Navegação principal">
+        <nav className="tab-nav" aria-label={t('common.mainNavAria')}>
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -131,7 +145,7 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
               aria-current={activeTab === tab.id ? 'page' : undefined}
             >
               <span className="tab-icon" aria-hidden="true">{tab.icon}</span>
-              <span className="tab-label">{tab.label}</span>
+              <span className="tab-label">{t(`nav.${tab.id}`)}</span>
             </button>
           ))}
         </nav>
@@ -149,7 +163,7 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
       {devMode && (
         <div className="dev-mode-banner" role="status" aria-live="polite">
           <Wrench size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" />
-          Modo Desenvolvimento ativo — dados mockados, nada será salvo
+          {t('app.devBanner')}
         </div>
       )}
     </div>
@@ -161,21 +175,23 @@ function App(): React.ReactElement {
   const [loadingDone,  setLoadingDone]  = useState(false)
 
   return (
-    <DevModeProvider>
-      <MarketProvider>
-        <ComboProvider>
-          {/* App renders underneath; loading screen is fixed on top */}
-          <AppInner onDataReady={() => setDataReady(true)} />
+    <LanguageProvider>
+      <DevModeProvider>
+        <MarketProvider>
+          <ComboProvider>
+            {/* App renders underneath; loading screen is fixed on top */}
+            <AppInner onDataReady={() => setDataReady(true)} />
 
-          {!loadingDone && (
-            <LoadingScreen
-              dataReady={dataReady}
-              onComplete={() => setLoadingDone(true)}
-            />
-          )}
-        </ComboProvider>
-      </MarketProvider>
-    </DevModeProvider>
+            {!loadingDone && (
+              <LoadingScreen
+                dataReady={dataReady}
+                onComplete={() => setLoadingDone(true)}
+              />
+            )}
+          </ComboProvider>
+        </MarketProvider>
+      </DevModeProvider>
+    </LanguageProvider>
   )
 }
 

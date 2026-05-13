@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
+import { useLanguage } from '../context/LanguageContext'
 import ReactDOM from 'react-dom'
 import * as LucideIcons from 'lucide-react'
 import { Plus, Pencil, Trash2, Power, PowerOff, X, Check, GripVertical, Keyboard, Move, Save, RotateCcw, ImageIcon, Info } from 'lucide-react'
@@ -32,7 +33,7 @@ const VISUAL_DEFAULTS: WidgetVisualConfig = {
 
 const FONT_OPTIONS: { value: string; label: string }[] = [
   // ── Monospace ─────────────────────────────────────────────────────────────
-  { value: 'monospace',                           label: 'Padrão (monospace)' },
+  { value: 'monospace',                           label: 'Default (monospace)' },
   { value: "'Consolas', monospace",               label: 'Consolas' },
   { value: "'Courier New', monospace",            label: 'Courier New' },
   { value: "'Lucida Console', monospace",         label: 'Lucida Console' },
@@ -209,6 +210,7 @@ interface IconPickerProps {
 }
 
 function IconPicker({ value, onChange }: IconPickerProps): React.ReactElement {
+  const { t } = useLanguage()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [popupPos, setPopupPos] = useState({ top: 0, left: 0 })
@@ -253,7 +255,7 @@ function IconPicker({ value, onChange }: IconPickerProps): React.ReactElement {
     >
       <input
         className="icon-picker-search"
-        placeholder="Buscar ícone..."
+        placeholder={t('combo.iconPickerSearchPlaceholder')}
         value={search}
         onChange={e => setSearch(e.target.value)}
         autoFocus
@@ -282,7 +284,7 @@ function IconPicker({ value, onChange }: IconPickerProps): React.ReactElement {
         type="button"
         className={`icon-picker-btn ${value ? 'has-icon' : ''}`}
         onClick={openPopup}
-        title={value ? `Ícone: ${value}` : 'Adicionar ícone (opcional)'}
+        title={value ? t('combo.iconPickerCurrentTitle').replace('{name}', value) : t('combo.iconPickerAddTitle')}
       >
         {value
           ? <LucideIcon name={value} size={14} />
@@ -295,7 +297,7 @@ function IconPicker({ value, onChange }: IconPickerProps): React.ReactElement {
         className="icon-picker-clear"
         style={{ visibility: value ? 'visible' : 'hidden' }}
         onClick={() => onChange(undefined)}
-        title="Remover ícone"
+        title={t('combo.iconPickerRemoveTitle')}
       >
         <X size={10} />
       </button>
@@ -356,6 +358,7 @@ interface KeyCaptureInputProps {
 }
 
 function KeyCaptureInput({ value, onChange }: KeyCaptureInputProps): React.ReactElement {
+  const { t } = useLanguage()
   const [captureMode, setCaptureMode] = useState(false)
   const [liveCombo, setLiveCombo] = useState('')
   const pressedRef = useRef(new Set<string>())
@@ -464,20 +467,20 @@ function KeyCaptureInput({ value, onChange }: KeyCaptureInputProps): React.React
         role="button"
         tabIndex={0}
         onKeyDown={(e) => { if (e.code === 'Space' || e.code === 'Enter') startCapture() }}
-        aria-label="Clique para capturar teclas"
+        aria-label={t('combo.keyCaptureAria')}
       >
         <Keyboard size={13} className="key-capture-icon" aria-hidden="true" />
         <span className="key-capture-text">
           {captureMode
-            ? (liveCombo || 'Pressione as teclas...')
-            : (value || 'Clique aqui...')}
+            ? (liveCombo || t('combo.capturePressingKeys'))
+            : (value || t('combo.captureClickHere'))}
         </span>
         {captureMode && (
           <span className="key-capture-blink" aria-hidden="true" />
         )}
       </div>
       {captureMode && (
-        <button className="key-capture-cancel" onClick={cancel} type="button" aria-label="Cancelar captura">
+        <button className="key-capture-cancel" onClick={cancel} type="button" aria-label={t('combo.keyCaptureCancel')}>
           <X size={12} />
         </button>
       )}
@@ -486,7 +489,7 @@ function KeyCaptureInput({ value, onChange }: KeyCaptureInputProps): React.React
           className="key-capture-clear"
           onClick={(e) => { e.stopPropagation(); onChange('') }}
           type="button"
-          aria-label="Limpar teclas"
+          aria-label={t('combo.keyClearAria')}
         >
           <X size={12} />
         </button>
@@ -506,6 +509,7 @@ interface SkillRowProps {
 }
 
 function SkillRow({ skill, index, onChange, onRemove }: SkillRowProps): React.ReactElement {
+  const { t } = useLanguage()
   return (
     <div className="combo-skill-row">
       <span className="skill-drag-handle" aria-hidden="true">
@@ -515,7 +519,7 @@ function SkillRow({ skill, index, onChange, onRemove }: SkillRowProps): React.Re
 
       <input
         className="form-input skill-label-input"
-        placeholder="Nome (ex: Grab)"
+        placeholder={t('combo.skillNamePlaceholder')}
         value={skill.label}
         onChange={(e) => onChange({ ...skill, label: e.target.value })}
         maxLength={24}
@@ -530,18 +534,18 @@ function SkillRow({ skill, index, onChange, onRemove }: SkillRowProps): React.Re
       <div className="skill-texto-field">
         <input
           className="form-input skill-texto-input"
-          placeholder={skill.keys || 'Texto no widget'}
+          placeholder={skill.keys || t('combo.skillTextPlaceholder')}
           value={skill.displayText ?? ''}
           onChange={(e) => onChange({ ...skill, displayText: e.target.value || undefined })}
           maxLength={32}
-          title="Texto exibido no widget (padrão: igual às teclas)"
+          title={t('combo.skillTextTitle')}
         />
         <button
           type="button"
           className="btn-icon-sm"
           style={{ visibility: skill.displayText !== undefined ? 'visible' : 'hidden' }}
           onClick={() => onChange({ ...skill, displayText: undefined })}
-          title="Restaurar padrão (igual às teclas)"
+          title={t('combo.skillTextRestoreTitle')}
         >
           <RotateCcw size={11} />
         </button>
@@ -566,7 +570,7 @@ function SkillRow({ skill, index, onChange, onRemove }: SkillRowProps): React.Re
         <span className="skill-cd-unit">s</span>
       </div>
 
-      <button className="btn-icon-sm btn-danger" onClick={onRemove} type="button" aria-label="Remover habilidade">
+      <button className="btn-icon-sm btn-danger" onClick={onRemove} type="button" aria-label={t('combo.removeSkillAria')}>
         <X size={14} />
       </button>
     </div>
@@ -582,6 +586,7 @@ interface ConfigModalProps {
 }
 
 function ConfigModal({ initial, onSave, onClose }: ConfigModalProps): React.ReactElement {
+  const { t } = useLanguage()
   const [name, setName] = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [skills, setSkills] = useState<ComboSkill[]>(
@@ -614,12 +619,12 @@ function ConfigModal({ initial, onSave, onClose }: ConfigModalProps): React.Reac
   }, [onClose])
 
   return (
-    <div className="modal-backdrop" onClick={handleBackdropClick} role="dialog" aria-modal="true" aria-label="Configuração de combo">
+    <div className="modal-backdrop" onClick={handleBackdropClick} role="dialog" aria-modal="true" aria-label={t('combo.newConfigTitle')}>
       <div className="modal-box combo-config-modal">
         {/* Header */}
         <div className="modal-header">
           <span className="modal-title">
-            {initial ? 'Editar Configuração' : 'Nova Configuração'}
+            {initial ? t('combo.editConfigTitle') : t('combo.newConfigTitle')}
           </span>
           <button className="modal-close" onClick={onClose} type="button">ESC</button>
         </div>
@@ -628,10 +633,10 @@ function ConfigModal({ initial, onSave, onClose }: ConfigModalProps): React.Reac
         <div className="modal-body combo-modal-body">
           {/* Name */}
           <div className="form-group">
-            <label className="form-label">Nome *</label>
+            <label className="form-label">{t('combo.nameLabel')} *</label>
             <input
               className="form-input"
-              placeholder="Ex: Warrior Burst, Guardian PvP..."
+              placeholder={t('combo.namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={48}
@@ -641,10 +646,10 @@ function ConfigModal({ initial, onSave, onClose }: ConfigModalProps): React.Reac
 
           {/* Description */}
           <div className="form-group">
-            <label className="form-label">Descrição <span className="label-optional">(opcional)</span></label>
+            <label className="form-label">{t('combo.descriptionLabel')} <span className="label-optional">({t('goals.optional')})</span></label>
             <input
               className="form-input"
-              placeholder="Ex: Combo de burst para PvP"
+              placeholder={t('combo.descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={100}
@@ -653,22 +658,22 @@ function ConfigModal({ initial, onSave, onClose }: ConfigModalProps): React.Reac
 
           {/* Skills */}
           <div className="form-group">
-            <label className="form-label">Habilidades</label>
+            <label className="form-label">{t('combo.skillsLabel')}</label>
             <div className="combo-skills-col-labels" aria-hidden="true">
               <span className="cscl-handle" />
               <span className="cscl-index" />
-              <span className="cscl-nome">Nome <ColInfo tip={'Nome da habilidade exibido na lista. Ex: "Grab", "Burst", "Flash"'} /></span>
-              <span className="cscl-icone">Ícone <ColInfo tip={'Ícone visual exibido no widget da habilidade. Pesquise pelo nome em inglês. Ex: "Sword", "Zap", "Shield"'} /></span>
-              <span className="cscl-texto">Texto <ColInfo tip={'Texto mostrado no widget no lugar das teclas. Útil para abreviações. Ex: "GRB", "Q+E". Se vazio, usa as teclas capturadas.'} /></span>
-              <span className="cscl-teclas">Teclas <ColInfo tip={'Atalho de teclado ou mouse que aciona a habilidade. Clique no campo e pressione as teclas. Ex: "SHIFT+Q", "LMB", "F1"'} /></span>
-              <span className="cscl-cd">CD <ColInfo tip={'Tempo de recarga (cooldown) em segundos. Após pressionar as teclas, o widget entra em contagem regressiva. Ex: 10, 3.5, 0.5'} /></span>
+              <span className="cscl-nome">{t('combo.colName')} <ColInfo tip={t('combo.skillNameColTitle')} /></span>
+              <span className="cscl-icone">{t('combo.colIcon')} <ColInfo tip={t('combo.skillIconTitle')} /></span>
+              <span className="cscl-texto">{t('combo.colText')} <ColInfo tip={t('combo.skillTextTitle')} /></span>
+              <span className="cscl-teclas">{t('combo.colKeys')} <ColInfo tip={t('combo.skillKeysTitle')} /></span>
+              <span className="cscl-cd">{t('combo.colCD')} <ColInfo tip={t('combo.skillCdTitle')} /></span>
               <span className="cscl-del" />
             </div>
 
             <div className="combo-skills-list">
               {skills.length === 0 && (
                 <div className="combo-skills-empty">
-                  Nenhuma habilidade adicionada. Clique em "+ Habilidade" abaixo.
+                  {t('combo.noSkillsAdded')}
                 </div>
               )}
               {skills.map((skill, idx) => (
@@ -684,7 +689,7 @@ function ConfigModal({ initial, onSave, onClose }: ConfigModalProps): React.Reac
 
             <button className="btn-add-skill" onClick={addSkill} type="button">
               <Plus size={13} />
-              Habilidade
+              {t('combo.addSkillBtn')}
             </button>
           </div>
         </div>
@@ -692,7 +697,7 @@ function ConfigModal({ initial, onSave, onClose }: ConfigModalProps): React.Reac
         {/* Footer */}
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onClose} type="button">
-            Cancelar
+            {t('goals.cancelBtn')}
           </button>
           <button
             className="btn btn-primary"
@@ -701,7 +706,7 @@ function ConfigModal({ initial, onSave, onClose }: ConfigModalProps): React.Reac
             type="button"
           >
             <Check size={14} />
-            Salvar
+            {t('combo.saveBtn')}
           </button>
         </div>
       </div>
@@ -718,18 +723,19 @@ interface DeleteConfirmProps {
 }
 
 function DeleteConfirm({ name, onConfirm, onCancel }: DeleteConfirmProps): React.ReactElement {
+  const { t } = useLanguage()
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
       <div className="modal-box confirm-box">
         <p className="confirm-message">
-          Remover a configuração <strong style={{ color: 'var(--gold)' }}>{name}</strong>?
+          {t('combo.deleteConfigConfirm')} <strong style={{ color: 'var(--gold)' }}>{name}</strong>?
           <br />
-          <span style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>Esta ação não pode ser desfeita.</span>
+          <span style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>{t('combo.deleteConfigCannotUndo')}</span>
         </p>
         <div className="confirm-actions">
-          <button className="btn btn-secondary" onClick={onCancel} type="button">Cancelar</button>
+          <button className="btn btn-secondary" onClick={onCancel} type="button">{t('goals.cancelBtn')}</button>
           <button className="btn btn-danger" onClick={onConfirm} type="button">
-            <Trash2 size={13} /> Remover
+            <Trash2 size={13} /> {t('combo.removeBtn')}
           </button>
         </div>
       </div>
@@ -749,6 +755,7 @@ interface ConfigCardProps {
 }
 
 function ConfigCard({ config, isDragging, onEdit, onRemove, onToggle, onToggleDrag }: ConfigCardProps): React.ReactElement {
+  const { t } = useLanguage()
   return (
     <div className={`combo-config-card ${config.enabled ? 'card-enabled' : ''} ${isDragging ? 'card-dragging' : ''}`}>
       <div className="card-main">
@@ -766,7 +773,7 @@ function ConfigCard({ config, isDragging, onEdit, onRemove, onToggle, onToggleDr
               ))}
             </div>
           ) : (
-            <div className="card-no-skills">Nenhuma habilidade configurada</div>
+            <div className="card-no-skills">{t('combo.noSkillsConfigured')}</div>
           )}
         </div>
 
@@ -775,8 +782,8 @@ function ConfigCard({ config, isDragging, onEdit, onRemove, onToggle, onToggleDr
             className="btn-icon-sm"
             onClick={onEdit}
             type="button"
-            title="Editar configuração"
-            aria-label="Editar"
+            title={t('combo.editConfigAria')}
+            aria-label={t('combo.editConfigAria')}
           >
             <Pencil size={14} />
           </button>
@@ -784,8 +791,8 @@ function ConfigCard({ config, isDragging, onEdit, onRemove, onToggle, onToggleDr
             className="btn-icon-sm btn-danger"
             onClick={onRemove}
             type="button"
-            title="Remover configuração"
-            aria-label="Remover"
+            title={t('combo.removeConfigAria')}
+            aria-label={t('combo.removeConfigAria')}
           >
             <Trash2 size={14} />
           </button>
@@ -793,31 +800,33 @@ function ConfigCard({ config, isDragging, onEdit, onRemove, onToggle, onToggleDr
             className={`btn-toggle ${config.enabled ? 'toggle-on' : 'toggle-off'}`}
             onClick={onToggle}
             type="button"
-            title={config.enabled ? 'Desativar overlay' : 'Ativar overlay'}
-            aria-label={config.enabled ? 'Desativar' : 'Ativar'}
+            title={config.enabled ? t('combo.toggleActiveAria') : t('combo.toggleInactiveAria')}
+            aria-label={config.enabled ? t('combo.toggleActiveAria') : t('combo.toggleInactiveAria')}
             aria-pressed={config.enabled}
           >
             {config.enabled ? <Power size={14} /> : <PowerOff size={14} />}
-            {config.enabled ? 'Ativo' : 'Inativo'}
+            {config.enabled ? t('combo.activeLabel') : t('combo.inactiveLabel')}
           </button>
         </div>
       </div>
 
       {config.enabled && (
-        <div className="card-active-badge" aria-label="Overlay ativo">
+        <div className="card-active-badge" aria-label={t('combo.activeLabel')}>
           <span className="active-dot" aria-hidden="true" />
-          Overlay exibindo {config.skills.length} habilidade{config.skills.length !== 1 ? 's' : ''}
+          {config.skills.length !== 1
+            ? t('combo.overlayShowingSkills_other', { count: config.skills.length })
+            : t('combo.overlayShowingSkills_one',   { count: config.skills.length })}
 
           <button
             className={`btn-move-widgets ${isDragging ? 'move-active' : ''}`}
             onClick={onToggleDrag}
             type="button"
             disabled={config.skills.length === 0}
-            title={isDragging ? 'Clique para parar de mover os widgets' : 'Clique para mover os widgets na tela'}
+            title={isDragging ? t('combo.stopMovingTitle') : t('combo.moveWidgetsTitle')}
             aria-pressed={isDragging}
           >
             <Move size={12} />
-            {isDragging ? 'Parar de mover' : 'Mover widgets'}
+            {isDragging ? t('combo.stopMoving') : t('combo.moveWidgets')}
           </button>
         </div>
       )}
@@ -829,6 +838,7 @@ function ConfigCard({ config, isDragging, onEdit, onRemove, onToggle, onToggleDr
 
 export default function ComboOverlayPage(): React.ReactElement {
   const { configs, saveConfigs } = useCombo()
+  const { t } = useLanguage()
   const [modal, setModal] = useState<{ mode: 'create' | 'edit'; target?: ComboConfig } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ComboConfig | null>(null)
   const [draggingConfigId, setDraggingConfigId] = useState<string | null>(null)
@@ -944,23 +954,25 @@ export default function ComboOverlayPage(): React.ReactElement {
       {/* ── Page header ── */}
       <div className="page-header">
         <div className="page-title-row">
-          <h2 className="page-title">Overlay de Combo</h2>
+          <h2 className="page-title">{t('combo.pageTitle')}</h2>
           <button
             className="btn btn-primary"
             onClick={() => setModal({ mode: 'create' })}
             type="button"
           >
             <Plus size={14} />
-            Nova Configuração
+              {t('combo.newConfigBtn')}
           </button>
         </div>
         <p className="page-subtitle">
-          Configure habilidades com teclas e cooldowns. Ative o overlay para monitorar em tempo real durante o jogo.
+          {t('combo.pageSubtitle')}
         </p>
         {activeCount > 0 && (
           <div className="overlay-status-bar">
             <span className="status-dot active" aria-hidden="true" />
-            Overlay ativo com {activeCount} configuração{activeCount !== 1 ? 'ões' : ''} habilitada{activeCount !== 1 ? 's' : ''}
+            {activeCount !== 1
+              ? t('combo.overlayActiveCount_other', { count: activeCount })
+              : t('combo.overlayActiveCount_one',   { count: activeCount })}
           </div>
         )}
       </div>
@@ -968,14 +980,14 @@ export default function ComboOverlayPage(): React.ReactElement {
       {/* ── Visual config panel ── */}
       <div className="combo-visual-config-panel">
         <div className="visual-config-header">
-          <span className="visual-config-title">Configurações Visuais</span>
+          <span className="visual-config-title">{t('combo.visualConfigTitle')}</span>
           {isVisualDirty && (
             <div className="visual-config-actions">
               <button className="btn btn-secondary btn-sm" type="button" onClick={handleVisualDiscard}>
-                <RotateCcw size={13} /> Descartar
+                <RotateCcw size={13} /> {t('combo.discardBtn')}
               </button>
               <button className="btn btn-primary btn-sm" type="button" onClick={handleVisualSave}>
-                <Save size={13} /> Salvar
+                <Save size={13} /> {t('combo.saveBtn')}
               </button>
             </div>
           )}
@@ -984,7 +996,7 @@ export default function ComboOverlayPage(): React.ReactElement {
         <div className="visual-config-body">
           {/* Fonte */}
           <div className="visual-config-row">
-            <label className="visual-config-label" htmlFor="vc-font">Fonte</label>
+            <label className="visual-config-label" htmlFor="vc-font">{t('combo.fontLabel')}</label>
             <select
               id="vc-font"
               className="visual-config-select"
@@ -999,7 +1011,7 @@ export default function ComboOverlayPage(): React.ReactElement {
 
           {/* Font color */}
           <div className="visual-config-row">
-            <label className="visual-config-label" htmlFor="vc-font-color">Cor da fonte</label>
+            <label className="visual-config-label" htmlFor="vc-font-color">{t('combo.fontColorLabel')}</label>
             <input
               id="vc-font-color"
               type="color"
@@ -1012,7 +1024,7 @@ export default function ComboOverlayPage(): React.ReactElement {
 
           {/* Box colors */}
           <div className="visual-config-row">
-            <label className="visual-config-label" htmlFor="vc-color-ready">Cor da box (utilizável)</label>
+            <label className="visual-config-label" htmlFor="vc-color-ready">{t('combo.boxColorReadyLabel')}</label>
             <input
               id="vc-color-ready"
               type="color"
@@ -1024,7 +1036,7 @@ export default function ComboOverlayPage(): React.ReactElement {
           </div>
 
           <div className="visual-config-row">
-            <label className="visual-config-label" htmlFor="vc-color-cd">Cor da box (cooldown)</label>
+            <label className="visual-config-label" htmlFor="vc-color-cd">{t('combo.boxColorCdLabel')}</label>
             <input
               id="vc-color-cd"
               type="color"
@@ -1037,7 +1049,7 @@ export default function ComboOverlayPage(): React.ReactElement {
 
           {/* Border colors */}
           <div className="visual-config-row">
-            <label className="visual-config-label" htmlFor="vc-border-ready">Cor da borda (utilizável)</label>
+            <label className="visual-config-label" htmlFor="vc-border-ready">{t('combo.borderColorReadyLabel')}</label>
             <input
               id="vc-border-ready"
               type="color"
@@ -1049,7 +1061,7 @@ export default function ComboOverlayPage(): React.ReactElement {
           </div>
 
           <div className="visual-config-row">
-            <label className="visual-config-label" htmlFor="vc-border-cd">Cor da borda (cooldown)</label>
+            <label className="visual-config-label" htmlFor="vc-border-cd">{t('combo.borderColorCdLabel')}</label>
             <input
               id="vc-border-cd"
               type="color"
@@ -1070,7 +1082,7 @@ export default function ComboOverlayPage(): React.ReactElement {
                 checked={draftVisual.hideOnCooldown}
                 onChange={e => setDraftVisual(prev => ({ ...prev, hideOnCooldown: e.target.checked }))}
               />
-              Esconder widget enquanto estiver em cooldown
+              {t('combo.hideOnCooldownLabel')}
             </label>
           </div>
 
@@ -1084,7 +1096,7 @@ export default function ComboOverlayPage(): React.ReactElement {
                 checked={draftVisual.showTimer}
                 onChange={e => setDraftVisual(prev => ({ ...prev, showTimer: e.target.checked }))}
               />
-              Mostrar contador de tempo abaixo do widget
+              {t('combo.showTimerLabel')}
             </label>
           </div>
 
@@ -1098,17 +1110,17 @@ export default function ComboOverlayPage(): React.ReactElement {
                 checked={draftVisual.showProgressBar}
                 onChange={e => setDraftVisual(prev => ({ ...prev, showProgressBar: e.target.checked }))}
               />
-              Mostrar barra de progresso no widget
+              {t('combo.showProgressBarLabel')}
             </label>
           </div>
 
           {/* Preview */}
           <div className="visual-config-preview-section">
-            <span className="visual-config-preview-label">Exemplo:</span>
+            <span className="visual-config-preview-label">{t('combo.previewLabel')}</span>
             <div className="visual-config-preview-widgets">
               {/* Ready state */}
               <div className="vcpw-slot">
-                <span className="vcpw-label">Utilizável</span>
+                <span className="vcpw-label">{t('combo.previewReady')}</span>
                 <div className="visual-config-widget-preview" style={{
                   background: `${draftVisual.boxColorReady}e0`,
                   border: `1px solid ${draftVisual.borderColorReady}`,
@@ -1119,7 +1131,7 @@ export default function ComboOverlayPage(): React.ReactElement {
               </div>
               {/* Cooldown state */}
               <div className="vcpw-slot">
-                <span className="vcpw-label">Cooldown</span>
+                <span className="vcpw-label">{t('combo.previewCooldown')}</span>
                 <div className="visual-config-widget-preview" style={{
                   background: `${draftVisual.boxColorCooldown}e0`,
                   border: `1px solid ${draftVisual.borderColorCooldown}`,
@@ -1141,9 +1153,9 @@ export default function ComboOverlayPage(): React.ReactElement {
         {configs.length === 0 ? (
           <div className="combo-empty-state">
             <Keyboard size={48} className="empty-icon" aria-hidden="true" />
-            <p className="empty-title">Nenhuma configuração criada</p>
+            <p className="empty-title">{t('combo.emptyTitle')}</p>
             <p className="empty-subtitle">
-              Crie uma configuração com suas habilidades e teclas de atalho para monitorar os cooldowns em overlay durante o jogo.
+              {t('combo.emptySubtitle')}
             </p>
             <button
               className="btn btn-primary"
@@ -1151,7 +1163,7 @@ export default function ComboOverlayPage(): React.ReactElement {
               type="button"
             >
               <Plus size={14} />
-              Criar primeira configuração
+              {t('combo.createFirstBtn')}
             </button>
           </div>
         ) : (

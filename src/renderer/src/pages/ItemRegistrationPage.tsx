@@ -5,6 +5,7 @@ import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
 import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
 import { useMarket } from '../context/MarketContext'
+import { useLanguage } from '../context/LanguageContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -21,11 +22,11 @@ export interface Item {
 
 function formatPrice(p: number): string {
   if (p === 0) return '—'
-  return p.toLocaleString('pt-BR') + ' prata'
+  return p.toLocaleString()
 }
 
 function formatTime(d: Date): string {
-  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
 }
 
 function parsePrice(raw: string): number {
@@ -38,6 +39,7 @@ function parsePrice(raw: string): number {
 function ItemRegistrationPage(): React.ReactElement {
   const { devMode } = useDevMode()
   const { marketData, setItems: setMarketItems, loading: marketLoading, lastUpdated } = useMarket()
+  const { t } = useLanguage()
   const [items, setItems] = useState<Item[]>([])
   const [locations, setLocations] = useState<FarmLocation[]>([])
   const [sessions, setSessions] = useState<FarmSession[]>([])
@@ -137,7 +139,7 @@ function ItemRegistrationPage(): React.ReactElement {
         setImageCache(prev => ({ ...prev, [filename]: url }))
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao selecionar imagem.')
+      setError(e instanceof Error ? e.message : t('items.imageError'))
     }
   }
 
@@ -168,7 +170,7 @@ function ItemRegistrationPage(): React.ReactElement {
       }
       resetForm()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao salvar item.')
+      setError(e instanceof Error ? e.message : t('items.saveError'))
     } finally {
       setSaving(false)
     }
@@ -271,14 +273,14 @@ function ItemRegistrationPage(): React.ReactElement {
     <div className="page-container">
       <h2 className="page-title">
         <Gem size={20} className="page-title-icon" aria-hidden="true" />
-        Registro de Itens
+        {t('items.pageTitle')}
       </h2>
 
       {/* ── Form section ── */}
       <section className="form-section" ref={formSectionRef}>
         <div className="wood-panel">
           <h3 className="panel-section-title">
-            {isEditing ? <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Editar Item</> : '+ Novo Item'}
+            {isEditing ? <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> {t('items.editTitle')}</> : t('items.newTitle')}
           </h3>
 
           {error && (
@@ -295,7 +297,7 @@ function ItemRegistrationPage(): React.ReactElement {
                   {/* Name */}
                   <div className="form-field">
                     <label className="form-label" htmlFor="item-name">
-                      Nome do Item <span className="required-mark">*</span>
+                      {t('items.nameLabel')} <span className="required-mark">*</span>
                     </label>
                     <input
                       id="item-name"
@@ -303,7 +305,7 @@ function ItemRegistrationPage(): React.ReactElement {
                       type="text"
                       value={name}
                       onChange={e => setName(e.target.value)}
-                      placeholder="Ex.: Pena de Harpy"
+                      placeholder={t('items.namePlaceholder')}
                       maxLength={100}
                       required
                       autoComplete="off"
@@ -313,7 +315,7 @@ function ItemRegistrationPage(): React.ReactElement {
                   {/* Price */}
                   <div className="form-field">
                     <label className="form-label" htmlFor="item-price">
-                      Preço Manual (prata)
+                      {t('items.priceLabel')}
                     </label>
                     <input
                       id="item-price"
@@ -331,8 +333,8 @@ function ItemRegistrationPage(): React.ReactElement {
                 {/* Market ID */}
                 <div className="form-field">
                   <label className="form-label" htmlFor="item-market-id">
-                    ID de Mercado{' '}
-                    <span className="form-label-hint">(opcional — busca preço na API da arsha.io)</span>
+                    {t('items.marketIdLabel')}{' '}
+                    <span className="form-label-hint">{t('items.marketIdHint')}</span>
                   </label>
                   <input
                     id="item-market-id"
@@ -348,26 +350,26 @@ function ItemRegistrationPage(): React.ReactElement {
 
                 {/* Image picker */}
                 <div className="form-field">
-                  <span className="form-label">Imagem do Item (PNG / WebP opcional)</span>
+                  <span className="form-label">{t('items.imageLabel')}</span>
                   <div className="pick-image-row">
                     <button
                       type="button"
                       className="btn btn-secondary btn-sm"
                       onClick={handlePickImage}
                     >
-                    <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Selecionar PNG / WebP
+                    <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> {t('items.selectImageBtn')}
                     </button>
                     {imageFile
-                      ? <span className="image-filename" title={imageFile}><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />Imagem selecionada</span>
-                      : <span className="image-filename-empty">Nenhuma imagem selecionada</span>
+                      ? <span className="image-filename" title={imageFile ?? ''}><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />{t('items.imageSelected')}</span>
+                      : <span className="image-filename-empty">{t('items.noImageSelected')}</span>
                     }
                     {imageFile && (
                       <button
                         type="button"
                         className="btn-icon-remove"
-                        aria-label="Remover imagem"
+                        aria-label={t('items.removeImageAria')}
                         onClick={handleRemoveImage}
-                        title="Remover imagem"
+                        title={t('items.removeImageAria')}
                       >
                         <X size={12} aria-hidden="true" />
                       </button>
@@ -382,7 +384,7 @@ function ItemRegistrationPage(): React.ReactElement {
                     className="btn btn-primary"
                     disabled={saving || !name.trim()}
                   >
-                    {saving ? 'Salvando…' : isEditing ? <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Salvar Alterações</> : <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Cadastrar Item</>}
+                    {saving ? t('common.saving') : isEditing ? <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> {t('common.saveChanges')}</> : <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> {t('items.registerBtn')}</>}
                   </button>
                   {isEditing && (
                     <button
@@ -390,7 +392,7 @@ function ItemRegistrationPage(): React.ReactElement {
                       className="btn btn-secondary"
                       onClick={resetForm}
                     >
-                      Cancelar
+                      {t('common.cancel')}
                     </button>
                   )}
                 </div>
@@ -398,10 +400,10 @@ function ItemRegistrationPage(): React.ReactElement {
 
               {/* RIGHT: image preview */}
               <div className="image-preview-column">
-                <span className="form-label preview-label">Prévia</span>
+                <span className="form-label preview-label">{t('items.previewLabel')}</span>
                 <div className="image-preview-box">
                   {imageDataUrl
-                    ? <img src={imageDataUrl} alt="Prévia do item" draggable={false} />
+                    ? <img src={imageDataUrl} alt={t('items.previewAlt')} draggable={false} />
                     : <Gem size={32} className="image-preview-placeholder" aria-hidden="true" />
                   }
                 </div>
@@ -415,14 +417,14 @@ function ItemRegistrationPage(): React.ReactElement {
       {/* ── Items list ── */}
       <section>
         <div className="items-list-heading">
-          <span>Itens Cadastrados</span>
+          <span>{t('items.registeredItems')}</span>
           <span className="items-count">{items.length}</span>
           {items.some(i => i.marketId != null && String(i.marketId).trim() !== '') && (
-            <span className="market-status-label" title="Última atualização dos preços de mercado (arsha.io)">
+              <span className="market-status-label" title={t('items.marketUpdateTooltip')}>
               {marketLoading
-                ? <><RefreshCw size={11} className="market-status-spin" aria-hidden="true" /> Atualizando mercado…</>
+                ? <><RefreshCw size={11} className="market-status-spin" aria-hidden="true" /> {t('items.marketUpdating')}</>
                 : lastUpdated
-                  ? <><Clock size={11} aria-hidden="true" /> Mercado · {formatTime(lastUpdated)}</>
+                  ? <><Clock size={11} aria-hidden="true" /> {t('items.marketUpdated', { time: formatTime(lastUpdated) })}</>
                   : null
               }
             </span>
@@ -438,13 +440,13 @@ function ItemRegistrationPage(): React.ReactElement {
               <input
                 className="item-search-input"
                 type="text"
-                placeholder="Pesquisar item…"
+                placeholder={t('items.searchPlaceholder')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 autoComplete="off"
               />
               {searchQuery && (
-                <button className="item-search-clear" onClick={() => setSearchQuery('')} aria-label="Limpar pesquisa"><X size={12} aria-hidden="true" /></button>
+                <button className="item-search-clear" onClick={() => setSearchQuery('')} aria-label={t('items.clearSearchAria')}><X size={12} aria-hidden="true" /></button>
               )}
             </div>
 
@@ -454,9 +456,9 @@ function ItemRegistrationPage(): React.ReactElement {
                 className="item-toolbar-select"
                 value={filterLocId}
                 onChange={e => setFilterLocId(e.target.value)}
-                aria-label="Filtrar por local"
+                aria-label={t('items.filterByLocation')}
               >
-                <option value="all">Todos os locais</option>
+                <option value="all">{t('items.allLocations')}</option>
                 {locations.map(loc => (
                   <option key={loc.id} value={loc.id}>{loc.name}</option>
                 ))}
@@ -464,42 +466,42 @@ function ItemRegistrationPage(): React.ReactElement {
             </div>
 
             {/* Sort */}
-            <div className="item-sort-group" role="group" aria-label="Ordenar por">
+            <div className="item-sort-group" role="group" aria-label={t('items.sortAria')}>
               <button
                 className={`item-sort-btn${sortKey === 'name-asc'  ? ' item-sort-active' : ''}`}
                 onClick={() => setSortKey('name-asc')}
-                title="Nome A→Z"
-              ><ArrowDownAZ size={14} aria-hidden="true" />Nome A→Z</button>
+                title={t('items.sortNameAsc')}
+              ><ArrowDownAZ size={14} aria-hidden="true" />{t('items.sortNameAsc')}</button>
               <button
                 className={`item-sort-btn${sortKey === 'name-desc' ? ' item-sort-active' : ''}`}
                 onClick={() => setSortKey('name-desc')}
-                title="Nome Z→A"
-              ><ArrowUpAZ size={14} aria-hidden="true" />Nome Z→A</button>
+                title={t('items.sortNameDesc')}
+              ><ArrowUpAZ size={14} aria-hidden="true" />{t('items.sortNameDesc')}</button>
               <button
                 className={`item-sort-btn${sortKey === 'price-asc'  ? ' item-sort-active' : ''}`}
                 onClick={() => setSortKey('price-asc')}
-                title="Menor valor"
-              ><ArrowDown01 size={14} aria-hidden="true" />Valor ↑</button>
+                title={t('items.sortPriceAsc')}
+              ><ArrowDown01 size={14} aria-hidden="true" />{t('items.sortPriceAsc')}</button>
               <button
                 className={`item-sort-btn${sortKey === 'price-desc' ? ' item-sort-active' : ''}`}
                 onClick={() => setSortKey('price-desc')}
-                title="Maior valor"
-              ><ArrowUp01 size={14} aria-hidden="true" />Valor ↓</button>
+                title={t('items.sortPriceDesc')}
+              ><ArrowUp01 size={14} aria-hidden="true" />{t('items.sortPriceDesc')}</button>
             </div>
           </div>
         )}
 
         {!loaded ? (
-          <p className="loading-text">Carregando…</p>
+          <p className="loading-text">{t('common.loading')}</p>
         ) : items.length === 0 ? (
           <div className="empty-state">
             <Package size={48} className="empty-state-icon" aria-hidden="true" />
-            <span className="empty-state-text">Nenhum item cadastrado ainda.</span>
+            <span className="empty-state-text">{t('items.emptyState')}</span>
           </div>
         ) : visibleItems.length === 0 ? (
           <div className="empty-state">
             <Search size={48} className="empty-state-icon" aria-hidden="true" />
-            <span className="empty-state-text">Nenhum item encontrado para os filtros selecionados.</span>
+            <span className="empty-state-text">{t('items.emptyFilterState')}</span>
           </div>
         ) : (
           <ul className="item-list" role="list">
@@ -508,9 +510,9 @@ function ItemRegistrationPage(): React.ReactElement {
               const locNames = (itemLocationMap.get(item.id) ?? []).map(l => l.name)
               const rate     = itemDropRates.get(item.id)
               const rateLabel = rate?.qtyPerHour != null
-                ? `${rate.qtyPerHour.toLocaleString('pt-BR')}/h`
+                ? `${rate.qtyPerHour.toLocaleString()}/${t('locations.ratePerHour')}`
                 : rate?.qtyPerSess != null
-                  ? `~${rate.qtyPerSess.toLocaleString('pt-BR')}/sessão`
+                  ? `~${rate.qtyPerSess.toLocaleString()}/${t('locations.ratePerSession')}`
                   : null
               const marketEntry = item.marketId != null ? marketData.get(String(item.marketId).trim()) : undefined
               return (
@@ -532,18 +534,18 @@ function ItemRegistrationPage(): React.ReactElement {
                       <span className="item-row-name" title={item.name}>{item.name}</span>
                       {marketEntry
                         ? (
-                          <span className="item-row-price-badge item-price-market" title="Preço de mercado (arsha.io)">
-                            <Store size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} /> {marketEntry.basePrice.toLocaleString('pt-BR')} prata
+                          <span className="item-row-price-badge item-price-market" title={t('items.marketPriceTooltip')}>
+                            <Store size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} /> {marketEntry.basePrice.toLocaleString()} {t('common.silver')}
                           </span>
                         )
                         : item.price > 0 && (
-                          <span className="item-row-price-badge item-price-manual" title="Preço configurado manualmente">
+                          <span className="item-row-price-badge item-price-manual" title={t('items.manualPriceTooltip')}>
                             <Pencil size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} /> {formatPrice(item.price)}
                           </span>
                         )
                       }
                       {rateLabel && (
-                        <span className="item-drop-rate-badge" title="Drop rate médio em todas as sessões">
+                          <span className="item-drop-rate-badge" title={t('items.dropRateTooltip')}>
                           <Package size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} /> {rateLabel}
                         </span>
                       )}
@@ -552,16 +554,16 @@ function ItemRegistrationPage(): React.ReactElement {
                     {marketEntry && (
                       <div className="item-row-market-details">
                         <span className="market-detail-chip">
-                          <span className="market-detail-label">Estoque:</span>
-                          <span className="market-detail-value">{marketEntry.stock.toLocaleString('pt-BR')}</span>
+                          <span className="market-detail-label">{t('items.stockLabel')}</span>
+                          <span className="market-detail-value">{marketEntry.stock.toLocaleString()}</span>
                         </span>
                         <span className="market-detail-chip">
-                          <span className="market-detail-label">Preço base:</span>
-                          <span className="market-detail-value">{marketEntry.basePrice.toLocaleString('pt-BR')} prata</span>
+                          <span className="market-detail-label">{t('settings.basePriceLabel')}</span>
+                          <span className="market-detail-value">{marketEntry.basePrice.toLocaleString()} {t('common.silver')}</span>
                         </span>
                         {item.price > 0 && (
                           <span className="market-detail-chip market-detail-override-note">
-                            (preço manual ignorado: {item.price.toLocaleString('pt-BR')} prata)
+                              ({t('items.manualOverrideNote', { price: item.price.toLocaleString() })})
                           </span>
                         )}
                       </div>
@@ -569,7 +571,7 @@ function ItemRegistrationPage(): React.ReactElement {
                     {item.marketId != null && String(item.marketId).trim() !== '' && !marketEntry && (
                       <div className="item-row-market-details">
                         <span className="market-detail-chip market-detail-loading">
-                          <RefreshCw size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} /> ID de Mercado: {String(item.marketId)} — aguardando dados…
+                            <RefreshCw size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} /> {t('items.marketIdWaiting', { id: String(item.marketId) })}
                         </span>
                       </div>
                     )}
@@ -591,19 +593,19 @@ function ItemRegistrationPage(): React.ReactElement {
                   <div className="item-row-actions">
                     <button
                       className="btn-labeled btn-labeled-edit"
-                      aria-label={`Editar ${item.name}`}
+                      aria-label={t('items.editAria', { name: item.name })}
                       onClick={() => handleEdit(item)}
                     >
                       <Pencil size={13} aria-hidden="true" />
-                      Editar
+                      {t('common.edit')}
                     </button>
                     <button
                       className="btn-labeled btn-labeled-delete"
-                      aria-label={`Excluir ${item.name}`}
+                      aria-label={t('items.deleteAria', { name: item.name })}
                       onClick={() => handleDelete(item.id)}
                     >
                       <Trash2 size={13} aria-hidden="true" />
-                      Excluir
+                      {t('common.delete')}
                     </button>
                   </div>
                 </li>

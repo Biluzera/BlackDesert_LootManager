@@ -7,6 +7,7 @@ import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
 import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
 import FarmGoalSection from '../components/FarmGoalSection'
+import { useLanguage } from '../context/LanguageContext'
 
 interface HomePageProps {
   onNavigate: (tab: TabId) => void
@@ -33,6 +34,7 @@ function formatDate(iso: string): string {
 
 function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
   const { devMode } = useDevMode()
+  const { t } = useLanguage()
   const [sessions,   setSessions]   = useState<FarmSession[]>([])
   const [locations,  setLocations]  = useState<FarmLocation[]>([])
   const [allItems,   setAllItems]   = useState<Item[]>([])
@@ -116,10 +118,10 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
 
       {/* Stats section */}
       {loaded && stats && (
-        <section className="home-stats-section" aria-label="Estatísticas">
+        <section className="home-stats-section" aria-label={t('home.statsAria')}>
           <div className="home-stats-heading">
             <BarChart2 size={18} className="home-stats-heading-icon" aria-hidden="true" />
-            Estatísticas Gerais
+            {t('home.statsTitle')}
           </div>
 
           {/* Grand total + top location */}
@@ -127,8 +129,8 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
             <div className="home-highlight-card">
               <Coins size={22} className="home-highlight-icon" aria-hidden="true" />
               <div className="home-highlight-body">
-                <span className="home-highlight-value">{stats.grandTotal.toLocaleString('pt-BR')}</span>
-                <span className="home-highlight-label">prata total em todas as sessões</span>
+                <span className="home-highlight-value">{stats.grandTotal.toLocaleString()}</span>
+                <span className="home-highlight-label">{t('home.totalSilverLabel')}</span>
               </div>
             </div>
 
@@ -142,7 +144,7 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
                 </div>
                 <div className="home-highlight-body">
                   <span className="home-highlight-value">{stats.topLoc.name}</span>
-                  <span className="home-highlight-label">local mais usado · {stats.topLocCount} sessão{stats.topLocCount !== 1 ? 'ões' : ''}</span>
+                  <span className="home-highlight-label">{t('home.topLocationLabel', { count: stats.topLocCount })}</span>
                 </div>
               </div>
             )}
@@ -150,9 +152,9 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
 
           {/* Recent sessions */}
           <div className="home-recent-heading">
-            Últimas Sessões
+            {t('home.recentSessions')}
           </div>
-          <ul className="home-recent-list" aria-label="Sessões recentes">
+          <ul className="home-recent-list" aria-label={t('home.recentSessions')}>
             {stats.recent.map(({ session, location, total }) => (
               <li key={session.id} className="home-recent-row">
                 <div className="home-recent-loc-icon">
@@ -162,15 +164,15 @@ function HomePage({ onNavigate }: HomePageProps): React.ReactElement {
                   }
                 </div>
                 <div className="home-recent-info">
-                  <span className="home-recent-loc-name">{location?.name ?? 'Local desconhecido'}</span>
+                  <span className="home-recent-loc-name">{location?.name ?? t('home.unknownLocation')}</span>
                   <span className="home-recent-meta">
                     {formatDate(session.date)}
                     {session.duration ? ` · ${session.duration}` : ''}
                   </span>
                 </div>
                 <div className="home-recent-total">
-                  {total.toLocaleString('pt-BR')}
-                  <span className="home-recent-prata"> prata</span>
+                  {total.toLocaleString()}
+                  <span className="home-recent-prata"> {t('common.silver')}</span>
                 </div>
               </li>
             ))}

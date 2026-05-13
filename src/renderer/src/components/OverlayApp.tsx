@@ -232,7 +232,7 @@ function SkillWidget({
               borderBottom: `2px solid ${borderColor}`,
               borderRadius: '0 0 3px 0',
             }}
-            title="Redimensionar"
+            title="Resize"
           />
         )}
       </div>

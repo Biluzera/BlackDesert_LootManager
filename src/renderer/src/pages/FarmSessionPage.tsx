@@ -5,6 +5,7 @@ import type { FarmLocation } from './FarmLocationPage'
 import { useDevMode } from '../context/DevModeContext'
 import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
 import { useMarket } from '../context/MarketContext'
+import { useLanguage } from '../context/LanguageContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -36,13 +37,14 @@ interface ConfirmDialogProps {
 }
 
 function ConfirmDialog({ message, onConfirm, onCancel }: ConfirmDialogProps): React.ReactElement {
+  const { t } = useLanguage()
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
       <div className="modal-box confirm-box">
         <p className="confirm-message">{message}</p>
         <div className="confirm-actions">
-          <button className="btn btn-primary" onClick={onConfirm}>Confirmar</button>
-          <button className="btn btn-secondary" onClick={onCancel}>Cancelar</button>
+          <button className="btn btn-primary" onClick={onConfirm}>{t('common.confirm')}</button>
+          <button className="btn btn-secondary" onClick={onCancel}>{t('common.cancel')}</button>
         </div>
       </div>
     </div>
@@ -61,6 +63,7 @@ interface SessionStatsModalProps {
 }
 
 function SessionStatsModal({ session, sessionNumber, locationName, allItems, imageCache, onClose }: SessionStatsModalProps): React.ReactElement {
+  const { t } = useLanguage()
   const itemMap = useMemo(() => {
     const m = new Map<string, Item>()
     for (const i of allItems) m.set(i.id, i)
@@ -85,33 +88,33 @@ function SessionStatsModal({ session, sessionNumber, locationName, allItems, ima
   const grandTotal = rows.reduce((acc, r) => acc + r.total, 0)
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Estatísticas da sessão">
+      <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={t('sessions.statsAria')}>
       <div className="modal-box session-stats-modal">
         <div className="modal-header">
           <div className="stats-modal-header-content">
             <span className="modal-title">
               <BarChart2 size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} aria-hidden="true" />
-              Estatísticas · <span className="stats-modal-session-id">#{sessionNumber}</span>
+              {t('sessions.statsTitle')} · <span className="stats-modal-session-id">#{sessionNumber}</span>
             </span>
             <span className="stats-modal-subtitle">
               <MapPin size={11} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" /> {locationName} &bull; {formatDate(session.date)}
             </span>
           </div>
-          <button className="modal-close" aria-label="Fechar" onClick={onClose}><X size={12} aria-hidden="true" /></button>
+          <button className="modal-close" aria-label={t('common.closeAria')} onClick={onClose}><X size={12} aria-hidden="true" /></button>
         </div>
         <div className="modal-body">
           {rows.length === 0 ? (
-            <p className="loot-table-empty">Nenhum item obtido nesta sessão.</p>
+            <p className="loot-table-empty">{t('sessions.noLootObtained')}</p>
           ) : (
             <table className="session-stats-table">
               <thead>
                 <tr>
                   <th className="stats-col-rank">#</th>
-                  <th className="stats-col-item">Item</th>
-                  <th className="stats-col-qty">Qtd.</th>
-                  <th className="stats-col-unit">Valor Unit.</th>
-                  <th className="stats-col-total">Total</th>
-                  <th className="stats-col-pct">Participação</th>
+                  <th className="stats-col-item">{t('sessions.statColItem')}</th>
+                  <th className="stats-col-qty">{t('sessions.statColQty')}</th>
+                  <th className="stats-col-unit">{t('sessions.statColUnitPrice')}</th>
+                  <th className="stats-col-total">{t('sessions.statColTotal')}</th>
+                  <th className="stats-col-pct">{t('sessions.statColPct')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -131,12 +134,12 @@ function SessionStatsModal({ session, sessionNumber, locationName, allItems, ima
                           <span className="stats-item-name">{row.item.name}</span>
                         </div>
                       </td>
-                      <td className="stats-col-qty">{row.qty.toLocaleString('pt-BR')}</td>
+                      <td className="stats-col-qty">{row.qty.toLocaleString()}</td>
                       <td className="stats-col-unit">
-                        {row.unitPrice > 0 ? row.unitPrice.toLocaleString('pt-BR') + ' prata' : '—'}
+                        {row.unitPrice > 0 ? `${row.unitPrice.toLocaleString()} ${t('common.silver')}` : '—'}
                       </td>
                       <td className="stats-col-total">
-                        {row.total > 0 ? row.total.toLocaleString('pt-BR') + ' prata' : '—'}
+                        {row.total > 0 ? `${row.total.toLocaleString()} ${t('common.silver')}` : '—'}
                       </td>
                       <td className="stats-col-pct">
                         <div className="stats-pct-wrap">
@@ -152,8 +155,8 @@ function SessionStatsModal({ session, sessionNumber, locationName, allItems, ima
               </tbody>
               <tfoot>
                 <tr className="stats-total-row">
-                  <td colSpan={4} className="stats-total-label">Total da Sessão</td>
-                  <td className="stats-total-value">{grandTotal.toLocaleString('pt-BR')} prata</td>
+                  <td colSpan={4} className="stats-total-label">{t('sessions.sessionTotal')}</td>
+                  <td className="stats-total-value">{grandTotal.toLocaleString()} {t('common.silver')}</td>
                   <td className="stats-total-pct">100%</td>
                 </tr>
               </tfoot>
@@ -186,6 +189,7 @@ function SessionFormModal({
 }: SessionFormProps): React.ReactElement {
   const isNew = session === null
   const { getEffectivePrice } = useMarket()
+  const { t } = useLanguage()
 
   const defaultLocationId = session?.locationId ?? (locations[0]?.id ?? '')
 
@@ -272,16 +276,16 @@ function SessionFormModal({
   }
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={isNew ? 'Nova sessão' : 'Editar sessão'}>
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={isNew ? t('sessions.newSessionAria') : t('sessions.editSessionAria')}>
       <div className="modal-box session-modal">
 
         {/* Header */}
         <div className="modal-header">
           <span className="modal-title">{isNew
-            ? <><ScrollText size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} aria-hidden="true" /> Nova Sessão de Farm</>
-            : <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} aria-hidden="true" /> Editar Sessão</>}
+            ? <><ScrollText size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} aria-hidden="true" /> {t('sessions.newSessionTitle')}</>
+            : <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} aria-hidden="true" /> {t('sessions.editSessionTitle')}</>}
           </span>
-          <button className="modal-close" aria-label="Fechar" onClick={onCancel}><X size={12} aria-hidden="true" /></button>
+          <button className="modal-close" aria-label={t('common.closeAria')} onClick={onCancel}><X size={12} aria-hidden="true" /></button>
         </div>
 
         <div className="modal-body">
@@ -290,7 +294,7 @@ function SessionFormModal({
           <div className="session-meta-row">
             {/* Location */}
             <div className="form-field">
-              <label className="form-label" htmlFor="sess-loc">Local de Farm <span className="required-mark">*</span></label>
+              <label className="form-label" htmlFor="sess-loc">{t('sessions.farmLocationLabel')} <span className="required-mark">*</span></label>
               <select
                 id="sess-loc"
                 className="form-input form-select"
@@ -298,7 +302,7 @@ function SessionFormModal({
                 onChange={e => setLocationId(e.target.value)}
               >
                 {locations.length === 0
-                  ? <option value="">Nenhum local cadastrado</option>
+                  ? <option value="">{t('sessions.noLocationsOption')}</option>
                   : locations.map(l => (
                       <option key={l.id} value={l.id}>{l.name}</option>
                     ))
@@ -308,7 +312,7 @@ function SessionFormModal({
 
             {/* Date */}
             <div className="form-field">
-              <label className="form-label" htmlFor="sess-date">Data</label>
+              <label className="form-label" htmlFor="sess-date">{t('sessions.dateLabel')}</label>
               <input
                 id="sess-date"
                 className="form-input"
@@ -320,7 +324,7 @@ function SessionFormModal({
 
             {/* Duration */}
             <div className="form-field">
-              <label className="form-label">Duração</label>
+              <label className="form-label">{t('sessions.durationLabel')}</label>
               <div className="duration-inputs">
                 <input
                   className="form-input duration-input"
@@ -330,7 +334,7 @@ function SessionFormModal({
                   value={durHours}
                   onChange={e => setDurHours(e.target.value)}
                   placeholder="0"
-                  aria-label="Horas"
+                  aria-label={t('sessions.hoursAria')}
                 />
                 <span className="duration-sep">h</span>
                 <input
@@ -341,7 +345,7 @@ function SessionFormModal({
                   value={durMins}
                   onChange={e => setDurMins(e.target.value)}
                   placeholder="0"
-                  aria-label="Minutos"
+                  aria-label={t('sessions.minutesAria')}
                 />
                 <span className="duration-sep">min</span>
               </div>
@@ -350,13 +354,13 @@ function SessionFormModal({
 
           {/* Notes */}
           <div className="form-field" style={{ marginBottom: '18px' }}>
-            <label className="form-label" htmlFor="sess-notes">Observações</label>
+              <label className="form-label" htmlFor="sess-notes">{t('sessions.notesLabel')}</label>
             <textarea
               id="sess-notes"
               className="form-input form-textarea"
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="Anotações sobre a sessão…"
+              placeholder={t('sessions.notesPlaceholder')}
               rows={2}
               maxLength={500}
             />
@@ -365,7 +369,7 @@ function SessionFormModal({
           {/* ── Loot table ── */}
           <div className="loot-table-wrap">
             <div className="loot-table-heading">
-              <span>Itens da Sessão</span>
+              <span>{t('sessions.sessionItemsLabel')}</span>
               {location && (
                 <span className="loot-table-loc"><MapPinned size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" /> {location.name}</span>
               )}
@@ -374,8 +378,8 @@ function SessionFormModal({
             {locationItems.length === 0 ? (
               <p className="loot-table-empty">
                 {locations.length === 0
-                  ? 'Cadastre um local de farm para começar.'
-                  : 'Este local não possui itens configurados.'}
+                  ? t('sessions.noLocationCadastred')
+                  : t('sessions.locationNoItems')}
               </p>
             ) : (
               <ul className="loot-table" role="list">
@@ -401,12 +405,12 @@ function SessionFormModal({
                           <span className="loot-row-name">{item.name}</span>
                           <span
                             className={`loot-price-source-badge ${priceSource === 'market' ? 'loot-price-source-market' : 'loot-price-source-manual'}`}
-                            title={priceSource === 'market' ? 'Preço vindo da API de mercado (arsha.io)' : 'Preço configurado manualmente'}
+                            title={priceSource === 'market' ? t('sessions.marketPriceTooltip') : t('sessions.manualPriceTooltip')}
                           >
                             {priceSource === 'market'
-                              ? <><Store size={11} style={{ verticalAlign: 'middle', marginRight: 2 }} aria-hidden="true" /> Mercado</>
-                              : <><Hand size={11} style={{ verticalAlign: 'middle', marginRight: 2 }} aria-hidden="true" /> Manual</>}
-                            {' · '}{effectivePrice.toLocaleString('pt-BR')} prata
+                              ? <><Store size={11} style={{ verticalAlign: 'middle', marginRight: 2 }} aria-hidden="true" /> {t('sessions.marketSource')}</>
+                              : <><Hand size={11} style={{ verticalAlign: 'middle', marginRight: 2 }} aria-hidden="true" /> {t('sessions.manualSource')}</>}
+                            {' · '}{effectivePrice.toLocaleString()} {t('common.silver')}
                           </span>
                         </div>
                       </div>
@@ -414,7 +418,7 @@ function SessionFormModal({
                       {/* Quantity inputs */}
                       <div className="loot-row-inputs">
                         <label className="loot-qty-label">
-                          <span>QTD ANTES</span>
+                          <span>{t('sessions.qtyBefore')}</span>
                           <input
                             className="form-input loot-qty-input"
                             type="number"
@@ -426,7 +430,7 @@ function SessionFormModal({
                         </label>
                         <span className="loot-qty-arrow">→</span>
                         <label className="loot-qty-label">
-                          <span>QTD DEPOIS</span>
+                          <span>{t('sessions.qtyAfter')}</span>
                           <input
                             className="form-input loot-qty-input"
                             type="number"
@@ -445,7 +449,7 @@ function SessionFormModal({
                       <div className="loot-row-value">
                         {effectivePrice > 0
                           ? <span className={lineTotal > 0 ? 'loot-value-gold' : 'loot-value-zero'}>
-                              {lineTotal.toLocaleString('pt-BR')} prata
+                              {lineTotal.toLocaleString()} {t('common.silver')}
                             </span>
                           : <span className="loot-value-zero">—</span>
                         }
@@ -462,13 +466,13 @@ function SessionFormModal({
         <div className="modal-footer">
           <div className="session-total">
             <div className="session-total-row">
-              <span className="session-total-label">Total da Sessão</span>
-              <span className="session-total-value">{total.toLocaleString('pt-BR')} prata</span>
+              <span className="session-total-label">{t('sessions.sessionTotal')}</span>
+              <span className="session-total-value">{total.toLocaleString()} {t('common.silver')}</span>
             </div>
             {silverPerHour !== null && (
               <div className="session-total-row session-pph-row">
-                <span className="session-total-label">Média / hora</span>
-                <span className="session-pph-value">{silverPerHour.toLocaleString('pt-BR')} prata/h</span>
+                <span className="session-total-label">{t('sessions.avgPerHour')}</span>
+                <span className="session-pph-value">{silverPerHour.toLocaleString()} {t('sessions.silverPerHour')}</span>
               </div>
             )}
           </div>
@@ -478,9 +482,9 @@ function SessionFormModal({
               onClick={handleSave}
               disabled={!locationId}
             >
-              <Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> {isNew ? 'Registrar Sessão' : 'Salvar Alterações'}
+              <Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> {isNew ? t('sessions.registerBtn') : t('common.saveChanges')}
             </button>
-            <button className="btn btn-secondary" onClick={onCancel}>Cancelar</button>
+            <button className="btn btn-secondary" onClick={onCancel}>{t('common.cancel')}</button>
           </div>
         </div>
 
@@ -513,6 +517,7 @@ function formatDate(iso: string): string {
 
 function FarmSessionPage(): React.ReactElement {
   const { devMode } = useDevMode()
+  const { t } = useLanguage()
   const [sessions,   setSessions]   = useState<FarmSession[]>([])
   const [locations,  setLocations]  = useState<FarmLocation[]>([])
   const [allItems,   setAllItems]   = useState<Item[]>([])
@@ -592,8 +597,8 @@ function FarmSessionPage(): React.ReactElement {
   function handleSave(session: FarmSession): void {
     const isNew = !sessions.find(s => s.id === session.id)
     const msg   = isNew
-      ? `Registrar a sessão em "${locations.find(l => l.id === session.locationId)?.name ?? ''}"?`
-      : 'Salvar as alterações nesta sessão?'
+      ? t('sessions.confirmRegister', { name: locations.find(l => l.id === session.locationId)?.name ?? '' })
+      : t('sessions.confirmSaveChanges')
     askConfirm(msg, async () => {
       setConfirm(null)
       setModal(null)
@@ -607,7 +612,7 @@ function FarmSessionPage(): React.ReactElement {
   function handleDeleteRequest(session: FarmSession): void {
     const loc = locations.find(l => l.id === session.locationId)
     askConfirm(
-      `Excluir a sessão de "${loc?.name ?? '—'}" em ${formatDate(session.date)}? Esta ação não pode ser desfeita.`,
+      t('sessions.confirmDelete', { name: loc?.name ?? '—', date: formatDate(session.date) }),
       async () => {
         setConfirm(null)
         await persist(sessions.filter(s => s.id !== session.id))
@@ -628,7 +633,7 @@ function FarmSessionPage(): React.ReactElement {
   }
 
   function handleModalCancel(): void {
-    askConfirm('Descartar as alterações não salvas?', () => {
+    askConfirm(t('sessions.confirmDiscard'), () => {
       setConfirm(null)
       setModal(null)
     })
@@ -640,7 +645,7 @@ function FarmSessionPage(): React.ReactElement {
     <div className="page-container">
       <h2 className="page-title">
         <span className="page-title-icon" aria-hidden="true"><ScrollText size={20} /></span>
-        Sessões de Farm
+        {t('sessions.pageTitle')}
       </h2>
 
       {/* Add button */}
@@ -649,22 +654,22 @@ function FarmSessionPage(): React.ReactElement {
           className="btn btn-primary"
           onClick={handleAddRequest}
           disabled={locations.length === 0}
-          title={locations.length === 0 ? 'Cadastre um local de farm primeiro' : undefined}
+          title={locations.length === 0 ? t('sessions.noLocationsTip') : undefined}
         >
-          + Nova Sessão
+          {t('sessions.newSessionBtn')}
         </button>
         {locations.length === 0 && (
-          <span className="toolbar-hint">Cadastre um local de farm antes de registrar uma sessão.</span>
+          <span className="toolbar-hint">{t('sessions.registerLocationFirst')}</span>
         )}
       </div>
 
       {/* ── History list ── */}
       {!loaded ? (
-        <p className="loading-text">Carregando…</p>
+        <p className="loading-text">{t('common.loading')}</p>
       ) : sessions.length === 0 ? (
         <div className="empty-state" style={{ marginTop: 24 }}>
           <span className="empty-state-icon" aria-hidden="true"><ScrollText size={48} /></span>
-          <span className="empty-state-text">Nenhuma sessão registrada ainda.</span>
+          <span className="empty-state-text">{t('sessions.emptyState')}</span>
         </div>
       ) : (
         <ul className="session-list" role="list">
@@ -702,27 +707,27 @@ function FarmSessionPage(): React.ReactElement {
                   <div className="session-card-actions">
                     <button
                       className="btn-labeled btn-labeled-stats"
-                      aria-label="Estatísticas da sessão"
+                      aria-label={t('sessions.statsAria')}
                       onClick={() => handleStatsRequest(session)}
                     >
                       <BarChart2 size={13} aria-hidden="true" />
-                      Estatísticas
+                      {t('sessions.statsBtn')}
                     </button>
                     <button
                       className="btn-labeled btn-labeled-edit"
-                      aria-label="Editar sessão"
+                      aria-label={t('sessions.editAria')}
                       onClick={() => handleEditRequest(session)}
                     >
                       <Pencil size={13} aria-hidden="true" />
-                      Editar
+                      {t('common.edit')}
                     </button>
                     <button
                       className="btn-labeled btn-labeled-delete"
-                      aria-label="Excluir sessão"
+                      aria-label={t('sessions.deleteAria')}
                       onClick={() => handleDeleteRequest(session)}
                     >
                       <Trash2 size={13} aria-hidden="true" />
-                      Excluir
+                      {t('common.delete')}
                     </button>
                   </div>
                 </div>
@@ -734,7 +739,7 @@ function FarmSessionPage(): React.ReactElement {
                   const qty = Math.max(0, e.qtyAfter - e.qtyBefore)
                   return qty > 0
                 }) && (
-                  <ul className="session-card-loot" aria-label="Loot obtido">
+                  <ul className="session-card-loot" aria-label={t('sessions.lootObtainedAria')}>
                     {session.loot.map(e => {
                       const item = itemMap.get(e.itemId)
                       if (!item) return null
@@ -762,11 +767,11 @@ function FarmSessionPage(): React.ReactElement {
 
                 {/* Total */}
                 <div className="session-card-footer">
-                  <span className="session-card-total-label">Total:</span>
-                  <span className="session-card-total-value">{total.toLocaleString('pt-BR')} prata</span>
+                  <span className="session-card-total-label">{t('sessions.totalLabel')}</span>
+                  <span className="session-card-total-value">{total.toLocaleString()} {t('common.silver')}</span>
                   {silverPerHour !== null && (
                     <span className="session-card-pph">
-                      ≈ {silverPerHour.toLocaleString('pt-BR')} <span className="session-card-pph-unit">prata/h</span>
+                      ≈ {silverPerHour.toLocaleString()} <span className="session-card-pph-unit">{t('sessions.silverPerHour')}</span>
                     </span>
                   )}
                 </div>

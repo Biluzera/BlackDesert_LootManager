@@ -4,6 +4,7 @@ import type { Item } from './ItemRegistrationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
 import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
+import { useLanguage } from '../context/LanguageContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -22,6 +23,7 @@ export interface FarmLocation {
 
 function FarmLocationPage(): React.ReactElement {
   const { devMode } = useDevMode()
+  const { t } = useLanguage()
   const [locations, setLocations] = useState<FarmLocation[]>([])
   const [allItems, setAllItems]   = useState<Item[]>([])
   const [imageCache, setImageCache] = useState<Record<string, string>>({})
@@ -128,7 +130,7 @@ function FarmLocationPage(): React.ReactElement {
       setImageDataUrl(url)
       if (filename && url) setImageCache(prev => ({ ...prev, [filename]: url }))
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao selecionar imagem.')
+      setError(e instanceof Error ? e.message : t('locations.imageError'))
     }
   }
 
@@ -246,7 +248,7 @@ function FarmLocationPage(): React.ReactElement {
       }
       resetForm()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao salvar.')
+      setError(err instanceof Error ? err.message : t('common.saveError'))
     } finally {
       setSaving(false)
     }
@@ -281,7 +283,7 @@ function FarmLocationPage(): React.ReactElement {
     <div className="page-container">
       <h2 className="page-title">
         <span className="page-title-icon" aria-hidden="true"><MapIcon size={20} /></span>
-        Locais de Farm
+        {t('locations.pageTitle')}
       </h2>
 
       {/* ── Form ── */}
@@ -289,8 +291,8 @@ function FarmLocationPage(): React.ReactElement {
         <div className="wood-panel">
           <h3 className="panel-section-title">
             {isEditing
-              ? <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" /> Editar Local</>
-              : '+ Novo Local de Farm'
+              ? <><Pencil size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} aria-hidden="true" /> {t('locations.editTitle')}</>
+              : t('locations.newBtn')
             }
           </h3>
 
@@ -305,7 +307,7 @@ function FarmLocationPage(): React.ReactElement {
               {/* Name */}
               <div className="form-field">
                 <label className="form-label" htmlFor="loc-name">
-                  Nome do Local <span className="required-mark">*</span>
+                  {t('locations.nameLabel')} <span className="required-mark">*</span>
                 </label>
                 <input
                   id="loc-name"
@@ -313,7 +315,7 @@ function FarmLocationPage(): React.ReactElement {
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  placeholder="Ex.: Harpy Canyon"
+                  placeholder={t('locations.namePlaceholder')}
                   maxLength={100}
                   required
                   autoComplete="off"
@@ -323,7 +325,7 @@ function FarmLocationPage(): React.ReactElement {
               {/* Gear requirements */}
               <div className="loc-gear-row">
                 <div className="form-field">
-                  <label className="form-label" htmlFor="loc-ap-min">PA Mínimo</label>
+                  <label className="form-label" htmlFor="loc-ap-min">{t('locations.apMin')}</label>
                   <input
                     id="loc-ap-min"
                     className="form-input loc-gear-input"
@@ -336,7 +338,7 @@ function FarmLocationPage(): React.ReactElement {
                   />
                 </div>
                 <div className="form-field">
-                  <label className="form-label" htmlFor="loc-ap-max">PA Máximo (cap)</label>
+                  <label className="form-label" htmlFor="loc-ap-max">{t('locations.apMax')}</label>
                   <input
                     id="loc-ap-max"
                     className="form-input loc-gear-input"
@@ -349,7 +351,7 @@ function FarmLocationPage(): React.ReactElement {
                   />
                 </div>
                 <div className="form-field">
-                  <label className="form-label" htmlFor="loc-dp">PD Recomendado</label>
+                  <label className="form-label" htmlFor="loc-dp">{t('locations.dp')}</label>
                   <input
                     id="loc-dp"
                     className="form-input loc-gear-input"
@@ -365,24 +367,24 @@ function FarmLocationPage(): React.ReactElement {
 
                   {/* Image picker */}
                   <div className="form-field">
-                    <span className="form-label">Ícone do Local (PNG opcional)</span>
+                    <span className="form-label">{t('locations.iconLabel')}</span>
                     <div className="pick-image-row">
                       <button
                         type="button"
                         className="btn btn-secondary btn-sm"
                         onClick={handlePickImage}
                       >
-                      <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Selecionar PNG
+                      <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> {t('locations.selectPng')}
                       </button>
                       {imageFile
-                        ? <span className="image-filename"><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />Imagem selecionada</span>
-                        : <span className="image-filename-empty">Nenhuma imagem selecionada</span>
+                        ? <span className="image-filename"><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />{t('locations.imageSelected')}</span>
+                        : <span className="image-filename-empty">{t('locations.noImageSelected')}</span>
                       }
                       {imageFile && (
                         <button
                           type="button"
                           className="btn-icon-remove"
-                          aria-label="Remover imagem"
+                          aria-label={t('locations.removeImageAria')}
                           onClick={() => { setImageFile(null); setImageDataUrl(null) }}
                         ><X size={12} aria-hidden="true" /></button>
                       )}
@@ -393,10 +395,10 @@ function FarmLocationPage(): React.ReactElement {
 
                 {/* Right: image preview */}
                 <div className="image-preview-column">
-                  <span className="form-label preview-label">Prévia</span>
+                  <span className="form-label preview-label">{t('locations.previewLabel')}</span>
                   <div className="image-preview-box">
                     {imageDataUrl
-                      ? <img src={imageDataUrl} alt="Prévia do local" draggable={false} />
+                      ? <img src={imageDataUrl} alt={t('locations.previewAlt')} draggable={false} />
                       : <Mountain size={32} className="image-preview-placeholder" aria-hidden="true" />
                     }
                   </div>
@@ -406,11 +408,11 @@ function FarmLocationPage(): React.ReactElement {
 
               {/* Loot picker */}
               <div className="form-field">
-                <span className="form-label">Loots da Área</span>
+                <span className="form-label">{t('locations.lootsLabel')}</span>
 
                 {/* Selected loot tags */}
                 {selectedIds.length > 0 && (
-                  <ul className="loot-tags" aria-label="Loots selecionados">
+                  <ul className="loot-tags" aria-label={t('locations.lootsSelected')}>
                     {selectedIds.map(id => {
                       const item = itemById(id)
                       if (!item) return null
@@ -425,7 +427,7 @@ function FarmLocationPage(): React.ReactElement {
                           <button
                             type="button"
                             className="loot-tag-remove"
-                            aria-label={`Remover ${item.name}`}
+                            aria-label={t('locations.removeLootAria', { name: item.name })}
                             onClick={() => removeLoot(id)}
                           >
                             <X size={11} aria-hidden="true" />
@@ -441,7 +443,7 @@ function FarmLocationPage(): React.ReactElement {
                   <input
                     className="form-input loot-search-input"
                     type="text"
-                    placeholder={allItems.length === 0 ? 'Nenhum item cadastrado ainda…' : 'Pesquisar item…'}
+                    placeholder={allItems.length === 0 ? t('locations.noItemsPlaceholder') : t('locations.searchItemPlaceholder')}
                     value={searchQuery}
                     disabled={allItems.length === 0}
                     onChange={e => { setSearchQuery(e.target.value); setDropdownOpen(true) }}
@@ -450,7 +452,7 @@ function FarmLocationPage(): React.ReactElement {
                   />
 
                   {dropdownOpen && filteredItems.length > 0 && (
-                    <ul className="loot-dropdown" role="listbox" aria-label="Itens disponíveis">
+                      <ul className="loot-dropdown" role="listbox" aria-label={t('locations.availableItems')}>
                       {filteredItems.map(item => {
                         const img = item.imageFile ? imageCache[item.imageFile] : null
                         return (
@@ -470,7 +472,7 @@ function FarmLocationPage(): React.ReactElement {
                             <span className="loot-dropdown-name">{item.name}</span>
                             {item.price > 0 && (
                               <span className="loot-dropdown-price">
-                                {item.price.toLocaleString('pt-BR')} prata
+                                {item.price.toLocaleString()} {t('common.silver')}
                               </span>
                             )}
                           </li>
@@ -481,7 +483,7 @@ function FarmLocationPage(): React.ReactElement {
 
                   {dropdownOpen && searchQuery.trim() !== '' && filteredItems.length === 0 && (
                     <div className="loot-dropdown loot-dropdown-empty">
-                      Nenhum item encontrado.
+                      {t('locations.noItemsFound')}
                     </div>
                   )}
                 </div>
@@ -495,15 +497,15 @@ function FarmLocationPage(): React.ReactElement {
                   disabled={saving || !name.trim()}
                 >
                   {saving
-                    ? 'Salvando…'
+                    ? t('common.saving')
                     : isEditing
-                      ? <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Salvar Alterações</>
-                      : <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> Cadastrar Local</>
+                      ? <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> {t('common.saveChanges')}</>
+                      : <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> {t('locations.registerBtn')}</>
                   }
                 </button>
                 {isEditing && (
                   <button type="button" className="btn btn-secondary" onClick={resetForm}>
-                    Cancelar
+                    {t('common.cancel')}
                   </button>
                 )}
               </div>
@@ -516,16 +518,16 @@ function FarmLocationPage(): React.ReactElement {
       {/* ── List ── */}
       <section>
         <div className="items-list-heading">
-          <span>Locais Cadastrados</span>
+          <span>{t('locations.registeredLocations')}</span>
           <span className="items-count">{locations.length}</span>
         </div>
 
         {!loaded ? (
-          <p className="loading-text">Carregando…</p>
+          <p className="loading-text">{t('common.loading')}</p>
         ) : locations.length === 0 ? (
           <div className="empty-state">
             <span className="empty-state-icon" aria-hidden="true"><MapIcon size={48} /></span>
-            <span className="empty-state-text">Nenhum local cadastrado ainda.</span>
+            <span className="empty-state-text">{t('locations.emptyState')}</span>
           </div>
         ) : (
           <ul className="loc-list" role="list">
@@ -547,19 +549,19 @@ function FarmLocationPage(): React.ReactElement {
                   <div className="item-card-actions" style={{ border: 'none' }}>
                     <button
                       className="btn-labeled btn-labeled-edit"
-                      aria-label={`Editar ${loc.name}`}
+                      aria-label={t('locations.editAria', { name: loc.name })}
                       onClick={() => handleEdit(loc)}
                     >
                       <Pencil size={13} aria-hidden="true" />
-                      Editar
+                      {t('common.edit')}
                     </button>
                     <button
                       className="btn-labeled btn-labeled-delete"
-                      aria-label={`Excluir ${loc.name}`}
+                      aria-label={t('locations.deleteAria', { name: loc.name })}
                       onClick={() => handleDelete(loc.id)}
                     >
                       <Trash2 size={13} aria-hidden="true" />
-                      Excluir
+                      {t('common.delete')}
                     </button>
                   </div>
                 </div>
@@ -567,23 +569,23 @@ function FarmLocationPage(): React.ReactElement {
                 {(loc.apMin != null || loc.apMax != null || loc.dp != null) && (
                   <div className="loc-gear-req">
                     {loc.apMin != null && (
-                      <span className="loc-gear-badge loc-gear-ap-min" title="PA Mínimo">
+                      <span className="loc-gear-badge loc-gear-ap-min" title={t('locations.apMinTitle')}>
                         <Sword size={11} aria-hidden="true" className="loc-gear-icon" />
-                        <span className="loc-gear-key">PA min</span>
+                        <span className="loc-gear-key">{t('locations.apMinShort')}</span>
                         <span className="loc-gear-val">{loc.apMin}</span>
                       </span>
                     )}
                     {loc.apMax != null && (
-                      <span className="loc-gear-badge loc-gear-ap-max" title="PA Máximo (cap)">
+                      <span className="loc-gear-badge loc-gear-ap-max" title={t('locations.apMaxTitle')}>
                         <Swords size={11} aria-hidden="true" className="loc-gear-icon" />
-                        <span className="loc-gear-key">PA cap</span>
+                        <span className="loc-gear-key">{t('locations.apMaxShort')}</span>
                         <span className="loc-gear-val">{loc.apMax}</span>
                       </span>
                     )}
                     {loc.dp != null && (
-                      <span className="loc-gear-badge loc-gear-dp" title="PD Recomendado">
+                      <span className="loc-gear-badge loc-gear-dp" title={t('locations.dpTitle')}>
                         <Shield size={11} aria-hidden="true" className="loc-gear-icon" />
-                        <span className="loc-gear-key">PD rec.</span>
+                        <span className="loc-gear-key">{t('locations.dpShort')}</span>
                         <span className="loc-gear-val">{loc.dp}</span>
                       </span>
                     )}
@@ -597,44 +599,44 @@ function FarmLocationPage(): React.ReactElement {
                     <div className="loc-stats">
                       <div className="loc-stat-item">
                         <span className="loc-stat-value">{st.count}</span>
-                        <span className="loc-stat-label">Sessões</span>
+                        <span className="loc-stat-label">{t('locations.statSessions')}</span>
                       </div>
                       <div className="loc-stat-sep" aria-hidden="true" />
                       <div className="loc-stat-item">
-                        <span className="loc-stat-value">{st.avg.toLocaleString('pt-BR')}</span>
-                        <span className="loc-stat-label">Média / sessão</span>
+                        <span className="loc-stat-value">{st.avg.toLocaleString()}</span>
+                        <span className="loc-stat-label">{t('locations.statAvgPerSess')}</span>
                       </div>
                       {st.avgPph !== null && (
                         <>
                           <div className="loc-stat-sep" aria-hidden="true" />
                           <div className="loc-stat-item">
-                            <span className="loc-stat-value loc-stat-pph">{st.avgPph.toLocaleString('pt-BR')}</span>
-                            <span className="loc-stat-label">Média prata/h</span>
+                            <span className="loc-stat-value loc-stat-pph">{st.avgPph.toLocaleString()}</span>
+                            <span className="loc-stat-label">{t('locations.statAvgPph')}</span>
                           </div>
                         </>
                       )}
                       <div className="loc-stat-sep" aria-hidden="true" />
                       <div className="loc-stat-item">
-                        <span className="loc-stat-value">{st.total.toLocaleString('pt-BR')}</span>
-                        <span className="loc-stat-label">Total (prata)</span>
+                        <span className="loc-stat-value">{st.total.toLocaleString()}</span>
+                        <span className="loc-stat-label">{t('locations.statTotal')}</span>
                       </div>
                     </div>
                   )
                 })()}
 
                 {loc.lootIds.length === 0 ? (
-                  <p className="loc-no-loot">Nenhum loot configurado.</p>
+                  <p className="loc-no-loot">{t('locations.noLootConfigured')}</p>
                 ) : (
-                  <ul className="loc-loot-list" aria-label={`Loots de ${loc.name}`}>
+                  <ul className="loc-loot-list" aria-label={t('locations.lootsOfAria', { name: loc.name })}>
                     {loc.lootIds.map(id => {
                       const item = itemById(id)
                       if (!item) return null
                       const img  = item.imageFile ? imageCache[item.imageFile] : null
                       const rate = lootDropRates.get(loc.id)?.get(id)
                       const rateLabel = rate?.qtyPerHour != null
-                        ? `${rate.qtyPerHour.toLocaleString('pt-BR')}/h`
+                        ? `${rate.qtyPerHour.toLocaleString()}/${t('locations.ratePerHour')}`
                         : rate?.qtyPerSess != null
-                          ? `~${rate.qtyPerSess.toLocaleString('pt-BR')}/sessão`
+                          ? `~${rate.qtyPerSess.toLocaleString()}/${t('locations.ratePerSession')}`
                           : null
                       return (
                         <li key={id} className={`loc-loot-chip${rateLabel ? ' loc-loot-chip--has-rate' : ''}`}>
@@ -644,7 +646,7 @@ function FarmLocationPage(): React.ReactElement {
                           }
                           <span className="loc-loot-name">{item.name}</span>
                           {rateLabel && (
-                            <span className="loc-loot-rate" title="Drop rate médio neste local">
+                            <span className="loc-loot-rate" title={t('locations.dropRateTooltip')}>
                               {rateLabel}
                             </span>
                           )}

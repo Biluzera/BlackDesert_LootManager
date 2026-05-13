@@ -9,6 +9,7 @@ import type { FarmLocation } from './FarmLocationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
 import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
+import { useLanguage } from '../context/LanguageContext'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -45,30 +46,32 @@ interface TooltipPayload {
 }
 
 function SilverTooltip({ active, payload, label }: { active?: boolean; payload?: TooltipPayload[]; label?: string }): React.ReactElement | null {
+  const { t } = useLanguage()
   if (!active || !payload || payload.length === 0) return null
   const val = payload[0].value
   const extra = payload[0].payload
   return (
     <div className="chart-tooltip">
       {label && <div className="chart-tooltip-label">{label}</div>}
-      <div className="chart-tooltip-value">{val.toLocaleString('pt-BR')} prata</div>
+      <div className="chart-tooltip-value">{val.toLocaleString()} {t('common.silver')}</div>
       {extra.pph != null && extra.pph > 0 && (
-        <div className="chart-tooltip-sub">{extra.pph.toLocaleString('pt-BR')} prata/h</div>
+        <div className="chart-tooltip-sub">{extra.pph.toLocaleString()} {t('stats.pphTooltipSuffix')}</div>
       )}
       {extra.sessions != null && (
-        <div className="chart-tooltip-sub">{extra.sessions} sessão(ões)</div>
+        <div className="chart-tooltip-sub">{extra.sessions} {t('stats.sessionCountTooltip')}</div>
       )}
     </div>
   )
 }
 
 function PphTooltip({ active, payload, label }: { active?: boolean; payload?: TooltipPayload[]; label?: string }): React.ReactElement | null {
+  const { t } = useLanguage()
   if (!active || !payload || payload.length === 0) return null
   const val = payload[0].value
   return (
     <div className="chart-tooltip">
       {label && <div className="chart-tooltip-label">{label}</div>}
-      <div className="chart-tooltip-value">{val.toLocaleString('pt-BR')} prata/h</div>
+      <div className="chart-tooltip-value">{val.toLocaleString()} {t('stats.pphTooltipSuffix')}</div>
     </div>
   )
 }
@@ -77,6 +80,7 @@ function PphTooltip({ active, payload, label }: { active?: boolean; payload?: To
 
 export default function StatsPage(): React.ReactElement {
   const { devMode } = useDevMode()
+  const { t } = useLanguage()
   const [sessions,  setSessions]  = useState<FarmSession[]>([])
   const [locations, setLocations] = useState<FarmLocation[]>([])
   const [allItems,  setAllItems]  = useState<Item[]>([])
@@ -170,7 +174,7 @@ export default function StatsPage(): React.ReactElement {
     }
     return Array.from(map.entries())
       .map(([locId, data]) => ({
-        name:     locMap.get(locId)?.name ?? 'Desconhecido',
+        name:     locMap.get(locId)?.name ?? t('stats.unknownLocation'),
         pph:      data.mins > 0 ? Math.round(data.total / (data.mins / 60)) : 0,
         silver:   data.total,
         sessions: data.sessions
@@ -189,7 +193,7 @@ export default function StatsPage(): React.ReactElement {
     }
     return Array.from(map.entries())
       .map(([locId, silver]) => ({
-        name:   locMap.get(locId)?.name ?? 'Desconhecido',
+        name:   locMap.get(locId)?.name ?? t('stats.unknown'),
         silver
       }))
       .sort((a, b) => b.silver - a.silver)
@@ -202,18 +206,18 @@ export default function StatsPage(): React.ReactElement {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  if (!loaded) return <div className="page-container"><p className="loading-text">Carregando…</p></div>
+  if (!loaded) return <div className="page-container"><p className="loading-text">{t('common.loading')}</p></div>
 
   if (sessions.length === 0) {
     return (
       <div className="page-container">
         <h2 className="page-title">
           <BarChart2 size={20} className="page-title-icon" aria-hidden="true" />
-          Estatísticas
+          {t('stats.pageTitle')}
         </h2>
         <div className="empty-state" style={{ marginTop: 32 }}>
           <BarChart2 size={48} className="empty-state-icon" aria-hidden="true" />
-          <span className="empty-state-text">Nenhuma sessão registrada ainda. Comece a farmar!</span>
+          <span className="empty-state-text">{t('stats.noSessionsYet')}</span>
         </div>
       </div>
     )
@@ -223,7 +227,7 @@ export default function StatsPage(): React.ReactElement {
     <div className="page-container">
       <h2 className="page-title">
         <BarChart2 size={20} className="page-title-icon" aria-hidden="true" />
-        Estatísticas
+        {t('stats.pageTitle')}
       </h2>
 
       {/* ── Summary cards ── */}
@@ -232,30 +236,30 @@ export default function StatsPage(): React.ReactElement {
           <div className="stats-summary-card">
             <Coins size={22} className="stats-summary-icon" />
             <span className="stats-summary-value">{shortNum(summary.grandTotal)}</span>
-            <span className="stats-summary-label">prata total</span>
+            <span className="stats-summary-label">{t('stats.totalSilverLabel')}</span>
           </div>
           <div className="stats-summary-card">
             <ScrollText size={22} className="stats-summary-icon" />
             <span className="stats-summary-value">{summary.count}</span>
-            <span className="stats-summary-label">sessões</span>
+            <span className="stats-summary-label">{t('stats.sessionsLabel')}</span>
           </div>
           <div className="stats-summary-card">
             <Trophy size={22} className="stats-summary-icon" />
             <span className="stats-summary-value">{shortNum(summary.best)}</span>
-            <span className="stats-summary-label">melhor sessão</span>
+            <span className="stats-summary-label">{t('stats.bestSessionLabel')}</span>
           </div>
           {summary.avgPph !== null && (
             <div className="stats-summary-card">
               <Zap size={22} className="stats-summary-icon" />
               <span className="stats-summary-value">{shortNum(summary.avgPph)}</span>
-              <span className="stats-summary-label">média prata/h</span>
+              <span className="stats-summary-label">{t('stats.avgSilverPerHour')}</span>
             </div>
           )}
           {summary.bestPph !== null && (
             <div className="stats-summary-card">
               <Flame size={22} className="stats-summary-icon" />
               <span className="stats-summary-value">{shortNum(summary.bestPph)}</span>
-              <span className="stats-summary-label">melhor prata/h</span>
+              <span className="stats-summary-label">{t('stats.bestSilverPerHour')}</span>
             </div>
           )}
         </div>
@@ -265,7 +269,7 @@ export default function StatsPage(): React.ReactElement {
       {lineData.length > 1 && (
         <section className="stats-section">
           <div className="stats-section-title">
-            <TrendingUp size={16} aria-hidden="true" /> Prata por Sessão
+            <TrendingUp size={16} aria-hidden="true" /> {t('stats.silverPerSession')}
           </div>
           <div className="stats-chart-box">
             <ResponsiveContainer width="100%" height={220}>
@@ -303,7 +307,7 @@ export default function StatsPage(): React.ReactElement {
       {locBarData.length > 0 && (
         <section className="stats-section">
           <div className="stats-section-title">
-            <Zap size={16} aria-hidden="true" /> Prata/Hora por Local
+            <Zap size={16} aria-hidden="true" /> {t('stats.silverPerHourByLocation')}
           </div>
           <div className="stats-chart-box">
             <ResponsiveContainer width="100%" height={220}>
@@ -338,7 +342,7 @@ export default function StatsPage(): React.ReactElement {
       {locTotalData.length > 0 && (
         <section className="stats-section">
           <div className="stats-section-title">
-            <Coins size={16} aria-hidden="true" /> Prata Total por Local
+            <Coins size={16} aria-hidden="true" /> {t('stats.totalSilverByLocation')}
           </div>
           <div className="stats-chart-box">
             <ResponsiveContainer width="100%" height={220}>

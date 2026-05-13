@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useRef, useState } from 'react'
+import { useLanguage } from '../context/LanguageContext'
 
 // -- Types -------------------------------------------------------------------
 
@@ -37,11 +38,11 @@ function newDust(w: number, h: number): Dust {
 
 // -- Constants ---------------------------------------------------------------
 
-const CREDITS = 'Made by Biluzera'
-
 // -- Component ---------------------------------------------------------------
 
 export default function LoadingScreen({ dataReady, onComplete }: LoadingScreenProps): React.ReactElement {
+  const { t } = useLanguage()
+  const CREDITS = t('loading.credits')
   const canvasRef  = useRef<HTMLCanvasElement>(null)
   const animRef    = useRef<number>(0)
   const dustRef    = useRef<Dust[]>([])
