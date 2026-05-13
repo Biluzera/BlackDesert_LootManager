@@ -57,6 +57,7 @@ function ItemRegistrationPage(): React.ReactElement {
   const [dbDropdownOpen, setDbDropdownOpen] = useState(false)
   const [autoFetchingPrice, setAutoFetchingPrice] = useState(false)
   const [autoFetchingIcon, setAutoFetchingIcon] = useState(false)
+  const [priceFromMarket, setPriceFromMarket] = useState(false)
   const [price, setPrice] = useState('')
   const [imageFile, setImageFile] = useState<string | null>(null)
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
@@ -69,6 +70,11 @@ function ItemRegistrationPage(): React.ReactElement {
 
   const formSectionRef = useRef<HTMLElement>(null)
   const nameSearchRef   = useRef<HTMLDivElement>(null)
+  const priceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ── Dropdown price cache ───────────────────────────────────────────────────
+  // Map<itemId string, basePrice number> — populated by debounced batch fetch
+  const [dropdownPrices, setDropdownPrices] = useState<Map<string, number>>(() => new Map())
 
   // ── Filter / sort state ────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('')
@@ -140,6 +146,7 @@ function ItemRegistrationPage(): React.ReactElement {
     setDbDropdownOpen(false)
     setAutoFetchingPrice(false)
     setAutoFetchingIcon(false)
+    setPriceFromMarket(false)
     setPrice('')
     setImageFile(null)
     setImageDataUrl(null)
@@ -162,34 +169,51 @@ function ItemRegistrationPage(): React.ReactElement {
     setName(dbItem.name)
     setDbDropdownOpen(false)
     setError(null)
-    setPrice('')
-    setAutoFetchingPrice(true)
-    setAutoFetchingIcon(true)
 
-    await Promise.all([
-      // Auto-fetch market price
+    // Use cached price from dropdown immediately — skip network call if already known
+    const cachedPrice = dropdownPrices.get(String(dbItem.id))
+    if (cachedPrice != null && cachedPrice > 0) {
+      setPrice(String(cachedPrice))
+      setPriceFromMarket(true)
+      setAutoFetchingPrice(false)
+    } else {
+      setPrice('')
+      setPriceFromMarket(false)
+      setAutoFetchingPrice(true)
       fetchMarketPrices([String(dbItem.id)])
         .then(result => {
           const entry = result?.get(String(dbItem.id))
-          if (entry && entry.basePrice > 0) setPrice(String(entry.basePrice))
+          if (entry && entry.basePrice > 0) {
+            setPrice(String(entry.basePrice))
+            setPriceFromMarket(true)
+            setDropdownPrices(prev => new Map(prev).set(String(dbItem.id), entry.basePrice))
+          }
         })
         .catch(() => {})
-        .finally(() => setAutoFetchingPrice(false)),
+        .finally(() => setAutoFetchingPrice(false))
+    }
 
-      // Auto-fetch icon from Pearl CDN — uses dedicated handler that returns null silently on 403/404
-      window.api
-        .fetchItemIcon(dbItem.id)
-        .then(async filename => {
-          if (!filename) return
-          const url = await window.api.getImageDataUrl(filename)
-          setImageFile(filename)
+    // Show CDN preview immediately — no IPC needed for display
+    const cdnUrl = `https://s1.pearlcdn.com/SA/TradeMarket/Common/img/BDO/item/${dbItem.id}.png`
+    setImageDataUrl(cdnUrl)
+    setImageFile(null)
+    setAutoFetchingIcon(true)
+
+    // Save locally in background so the item has a persistent copy
+    window.api
+      .fetchItemIcon(dbItem.id)
+      .then(async filename => {
+        if (!filename) return
+        const url = await window.api.getImageDataUrl(filename)
+        setImageFile(filename)
+        if (url) {
           setImageDataUrl(url)
-          if (filename && url) setImageCache(prev => ({ ...prev, [filename]: url }))
-        })
-        .catch(() => {})
-        .finally(() => setAutoFetchingIcon(false)),
-    ])
-  }, [])
+          setImageCache(prev => ({ ...prev, [filename]: url }))
+        }
+      })
+      .catch(() => {})
+      .finally(() => setAutoFetchingIcon(false))
+  }, [dropdownPrices])
 
   function handleClearDbSelection(): void {
     setSelectedDbItem(null)
@@ -247,7 +271,7 @@ function ItemRegistrationPage(): React.ReactElement {
       if (editingId !== null) {
         const updated = items.map(item =>
           item.id === editingId
-            ? { ...item, name: trimmedName, price: parsePrice(price), marketId: selectedDbItem ? String(selectedDbItem.id) : undefined, imageFile }
+            ? { ...item, name: trimmedName, price: parsePrice(price), marketId: (selectedDbItem && priceFromMarket) ? String(selectedDbItem.id) : undefined, imageFile }
             : item
         )
         await persistItems(updated)
@@ -256,7 +280,7 @@ function ItemRegistrationPage(): React.ReactElement {
           id: `item_${Date.now()}`,
           name: trimmedName,
           price: parsePrice(price),
-          marketId: selectedDbItem ? String(selectedDbItem.id) : undefined,
+          marketId: (selectedDbItem && priceFromMarket) ? String(selectedDbItem.id) : undefined,
           imageFile,
           createdAt: new Date().toISOString()
         }
@@ -342,6 +366,27 @@ function ItemRegistrationPage(): React.ReactElement {
     if (!q || !dbLoaded || itemDb.length === 0) return []
     return itemDb.filter(i => i.name.toLowerCase().includes(q)).slice(0, 20)
   }, [name, itemDb, dbLoaded])
+
+  // When dbResults changes, debounce 400ms then batch-fetch prices for all visible IDs
+  useEffect(() => {
+    if (priceDebounceRef.current) clearTimeout(priceDebounceRef.current)
+    if (dbResults.length === 0) return
+    priceDebounceRef.current = setTimeout(async () => {
+      const ids = dbResults.map(i => String(i.id))
+      try {
+        const result = await fetchMarketPrices(ids)
+        if (!result) return
+        setDropdownPrices(prev => {
+          const next = new Map(prev)
+          for (const [id, entry] of result) {
+            if (entry.basePrice > 0) next.set(id, entry.basePrice)
+          }
+          return next
+        })
+      } catch { /* network error — silently ignore */ }
+    }, 400)
+    return () => { if (priceDebounceRef.current) clearTimeout(priceDebounceRef.current) }
+  }, [dbResults])
 
   // Filtered + sorted list
   const visibleItems = useMemo(() => {
@@ -435,16 +480,30 @@ function ItemRegistrationPage(): React.ReactElement {
                       {dbDropdownOpen && name.trim() !== '' && (
                         <ul className="item-db-dropdown" role="listbox">
                           {dbResults.length > 0
-                            ? dbResults.map(dbItem => (
-                              <li
-                                key={dbItem.id}
-                                className="item-db-dropdown-option"
-                                role="option"
-                                onMouseDown={() => void handleSelectDbItem(dbItem)}
-                              >
-                                {dbItem.name}
-                              </li>
-                            ))
+                            ? dbResults.map(dbItem => {
+                              const cdnIcon = `https://s1.pearlcdn.com/SA/TradeMarket/Common/img/BDO/item/${dbItem.id}.png`
+                              const cachedPrice = dropdownPrices.get(String(dbItem.id))
+                              return (
+                                <li
+                                  key={dbItem.id}
+                                  className="item-db-dropdown-option"
+                                  role="option"
+                                  onMouseDown={() => void handleSelectDbItem(dbItem)}
+                                >
+                                  <img
+                                    src={cdnIcon}
+                                    className="item-db-dropdown-icon"
+                                    alt=""
+                                    aria-hidden="true"
+                                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                                  />
+                                  <span className="item-db-dropdown-name">{dbItem.name}</span>
+                                  {cachedPrice != null && (
+                                    <span className="item-db-dropdown-price">{cachedPrice.toLocaleString()}</span>
+                                  )}
+                                </li>
+                              )
+                            })
                             : <li className="item-db-dropdown-empty">{t('items.dbSearchNoResults')}</li>
                           }
                         </ul>
