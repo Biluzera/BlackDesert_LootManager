@@ -21,11 +21,20 @@ export default function FarmTimer(): React.ReactElement {
   const [running,   setRunning]   = useState(false)
   const [collapsed, setCollapsed] = useState(false)
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const intervalRef  = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Stores the wall-clock origin so elapsed time is always accurate,
+  // even when the interval is throttled by Chromium while the window
+  // is in the background (e.g. while the game is focused).
+  const startEpochRef = useRef<number>(0)
 
   useEffect(() => {
     if (running) {
-      intervalRef.current = setInterval(() => setSeconds(s => s + 1), 1000)
+      // Recalculate the origin from the current accumulated seconds so that
+      // pausing and resuming keeps the count continuous.
+      startEpochRef.current = Date.now() - seconds * 1000
+      intervalRef.current = setInterval(() => {
+        setSeconds(Math.floor((Date.now() - startEpochRef.current) / 1000))
+      }, 500)
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
