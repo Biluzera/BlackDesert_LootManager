@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Pencil, Trash2, Map as MapIcon, Mountain, FolderOpen, Gem, Search, Save, X, Check, Sword, Swords, Shield } from 'lucide-react'
+import { Pencil, Trash2, Map as MapIcon, Mountain, Gem, Save, X, Sword, Swords, Shield } from 'lucide-react'
 import type { Item } from './ItemRegistrationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
@@ -12,6 +12,7 @@ export interface FarmLocation {
   id: string
   name: string
   imageFile: string | null
+  iconItemId?: string
   lootIds: string[]   // references to Item.id
   apMin?: number
   apMax?: number
@@ -41,6 +42,12 @@ function FarmLocationPage(): React.ReactElement {
   const [apMin, setApMin]           = useState('')
   const [apMax, setApMax]           = useState('')
   const [dp, setDp]                 = useState('')
+
+  // Icon item picker
+  const [iconItemId, setIconItemId]         = useState<string | null>(null)
+  const [iconSearchQuery, setIconSearchQuery] = useState('')
+  const [iconDropdownOpen, setIconDropdownOpen] = useState(false)
+  const iconSearchRef = useRef<HTMLDivElement>(null)
 
   // Loot search dropdown
   const [searchQuery, setSearchQuery]   = useState('')
@@ -88,11 +95,14 @@ function FarmLocationPage(): React.ReactElement {
     load()
   }, [devMode])
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     function onPointerDown(e: MouseEvent): void {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setDropdownOpen(false)
+      }
+      if (iconSearchRef.current && !iconSearchRef.current.contains(e.target as Node)) {
+        setIconDropdownOpen(false)
       }
     }
     document.addEventListener('pointerdown', onPointerDown)
@@ -118,25 +128,20 @@ function FarmLocationPage(): React.ReactElement {
     setApMin('')
     setApMax('')
     setDp('')
-  }
-
-  async function handlePickImage(): Promise<void> {
-    setError(null)
-    try {
-      const filename = await window.api.pickImage()
-      if (!filename) return
-      const url = await window.api.getImageDataUrl(filename)
-      setImageFile(filename)
-      setImageDataUrl(url)
-      if (filename && url) setImageCache(prev => ({ ...prev, [filename]: url }))
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t('locations.imageError'))
-    }
+    setIconItemId(null)
+    setIconSearchQuery('')
+    setIconDropdownOpen(false)
   }
 
   function itemById(id: string): Item | undefined {
     return allItems.find(i => i.id === id)
   }
+
+  // Items visible in the icon picker dropdown
+  const filteredIconItems = allItems.filter(item => {
+    if (!iconSearchQuery.trim()) return true
+    return item.name.toLowerCase().includes(iconSearchQuery.toLowerCase())
+  })
 
   // Items visible in the dropdown (not yet selected, match query)
   const filteredItems = allItems.filter(item => {
@@ -226,7 +231,8 @@ function FarmLocationPage(): React.ReactElement {
       if (editingId !== null) {
         const updated = locations.map(loc =>
           loc.id === editingId
-            ? { ...loc, name: trimmed, imageFile, lootIds: selectedIds,
+            ? { ...loc, name: trimmed, imageFile, iconItemId: iconItemId ?? undefined,
+                lootIds: selectedIds,
                 apMin: apMin ? Number(apMin) : undefined,
                 apMax: apMax ? Number(apMax) : undefined,
                 dp:    dp    ? Number(dp)    : undefined }
@@ -238,6 +244,7 @@ function FarmLocationPage(): React.ReactElement {
           id: `loc_${Date.now()}`,
           name: trimmed,
           imageFile,
+          iconItemId: iconItemId ?? undefined,
           lootIds: selectedIds,
           apMin: apMin ? Number(apMin) : undefined,
           apMax: apMax ? Number(apMax) : undefined,
@@ -266,6 +273,9 @@ function FarmLocationPage(): React.ReactElement {
     setApMin(loc.apMin != null ? String(loc.apMin) : '')
     setApMax(loc.apMax != null ? String(loc.apMax) : '')
     setDp(loc.dp != null ? String(loc.dp) : '')
+    setIconItemId(loc.iconItemId ?? null)
+    setIconSearchQuery('')
+    setIconDropdownOpen(false)
     const area = document.querySelector('.content-area')
     if (area) area.scrollTop = 0
   }
@@ -365,28 +375,77 @@ function FarmLocationPage(): React.ReactElement {
                 </div>
               </div>
 
-                  {/* Image picker */}
+                  {/* Icon item picker */}
                   <div className="form-field">
                     <span className="form-label">{t('locations.iconLabel')}</span>
-                    <div className="pick-image-row">
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        onClick={handlePickImage}
-                      >
-                      <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" /> {t('locations.selectPng')}
-                      </button>
-                      {imageFile
-                        ? <span className="image-filename"><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />{t('locations.imageSelected')}</span>
-                        : <span className="image-filename-empty">{t('locations.noImageSelected')}</span>
-                      }
-                      {imageFile && (
-                        <button
-                          type="button"
-                          className="btn-icon-remove"
-                          aria-label={t('locations.removeImageAria')}
-                          onClick={() => { setImageFile(null); setImageDataUrl(null) }}
-                        ><X size={12} aria-hidden="true" /></button>
+                    {iconItemId && (() => {
+                      const iconItem = itemById(iconItemId)
+                      if (!iconItem) return null
+                      const img = iconItem.imageFile ? imageCache[iconItem.imageFile] : null
+                      return (
+                        <ul className="loot-tags" aria-label={t('locations.iconSelectedAria')} style={{ marginBottom: 6 }}>
+                          <li className="loot-tag">
+                            {img
+                              ? <img src={img} alt="" className="loot-tag-img" draggable={false} />
+                              : <Gem size={14} className="loot-tag-icon" aria-hidden="true" />
+                            }
+                            <span className="loot-tag-name">{iconItem.name}</span>
+                            <button
+                              type="button"
+                              className="loot-tag-remove"
+                              aria-label={t('locations.removeIconItemAria')}
+                              onClick={() => { setIconItemId(null); setImageFile(null); setImageDataUrl(null) }}
+                            ><X size={11} aria-hidden="true" /></button>
+                          </li>
+                        </ul>
+                      )
+                    })()}
+                    <div className="loot-search-wrap" ref={iconSearchRef}>
+                      <input
+                        className="form-input loot-search-input"
+                        type="text"
+                        placeholder={allItems.length === 0 ? t('locations.noItemsPlaceholder') : t('locations.iconItemPlaceholder')}
+                        value={iconSearchQuery}
+                        disabled={allItems.length === 0}
+                        onChange={e => { setIconSearchQuery(e.target.value); setIconDropdownOpen(true) }}
+                        onFocus={() => setIconDropdownOpen(true)}
+                        autoComplete="off"
+                      />
+                      {iconDropdownOpen && filteredIconItems.length > 0 && (
+                        <ul className="loot-dropdown" role="listbox" aria-label={t('locations.availableItems')}>
+                          {filteredIconItems.map(item => {
+                            const img = item.imageFile ? imageCache[item.imageFile] : null
+                            return (
+                              <li
+                                key={item.id}
+                                role="option"
+                                aria-selected={iconItemId === item.id}
+                                className={`loot-dropdown-item${iconItemId === item.id ? ' loot-dropdown-item--selected' : ''}`}
+                                onPointerDown={e => {
+                                  e.preventDefault()
+                                  setIconItemId(item.id)
+                                  setImageFile(item.imageFile ?? null)
+                                  setImageDataUrl(item.imageFile ? (imageCache[item.imageFile] ?? null) : null)
+                                  setIconSearchQuery('')
+                                  setIconDropdownOpen(false)
+                                }}
+                              >
+                                <div className="loot-dropdown-img">
+                                  {img
+                                    ? <img src={img} alt="" draggable={false} />
+                                    : <Gem size={16} aria-hidden="true" />
+                                  }
+                                </div>
+                                <span className="loot-dropdown-name">{item.name}</span>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      )}
+                      {iconDropdownOpen && iconSearchQuery.trim() !== '' && filteredIconItems.length === 0 && (
+                        <div className="loot-dropdown loot-dropdown-empty">
+                          {t('locations.noItemsFound')}
+                        </div>
                       )}
                     </div>
                   </div>
