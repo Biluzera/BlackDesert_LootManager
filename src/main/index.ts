@@ -787,21 +787,44 @@ ipcMain.handle('fetch-item-db', async () => {
 
 // Silently fetches an item icon from the Pearl CDN — returns null on any failure (no throw)
 ipcMain.handle('fetch-item-icon', async (_event, id: number) => {
-  try {
-    const url = `https://s1.pearlcdn.com/SA/TradeMarket/Common/img/BDO/item/${id}.png`
-    const res = await net.fetch(url)
-    if (!res.ok) return null
-    const arrayBuffer = await res.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-    if (buffer.length < 4) return null
-    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47
-    if (!isPng) return null
-    const filename = `${randomUUID()}.png`
-    fs.writeFileSync(path.join(getImagesDir(), filename), buffer)
-    return filename
-  } catch {
-    return null
+  async function tryFetchIcon(url: string, ext: 'png' | 'webp'): Promise<string | null> {
+    try {
+      const res = await net.fetch(url)
+      if (!res.ok) return null
+      const arrayBuffer = await res.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      if (ext === 'png') {
+        if (buffer.length < 4) return null
+        const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47
+        if (!isPng) return null
+      } else {
+        // WEBP: RIFF....WEBP
+        if (buffer.length < 12) return null
+        const isWebp = buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46
+          && buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50
+        if (!isWebp) return null
+      }
+      const filename = `${randomUUID()}.${ext}`
+      fs.writeFileSync(path.join(getImagesDir(), filename), buffer)
+      return filename
+    } catch {
+      return null
+    }
   }
+
+  // 1. Try Pearl CDN (PNG — only for market-tradeable items)
+  const pearlResult = await tryFetchIcon(
+    `https://s1.pearlcdn.com/SA/TradeMarket/Common/img/BDO/item/${id}.png`,
+    'png'
+  )
+  if (pearlResult) return pearlResult
+
+  // 2. Fallback: garmoth assets (WEBP — covers non-tradeable items)
+  const paddedId = String(id).padStart(8, '0')
+  return tryFetchIcon(
+    `https://assets.garmoth.com/img/new_icon/03_etc/04_dropitem/${paddedId}.webp`,
+    'webp'
+  )
 })
 
 ipcMain.handle('open-external', (_event, url: string) => {
