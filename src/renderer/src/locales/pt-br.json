@@ -127,8 +127,15 @@
     "editAria": "Editar {name}",
     "deleteAria": "Excluir {name}",
     "manualOverrideNote": "ajuste manual: {price}",
-    "marketIdWaiting": "Buscando preço do mercado para ID {id}…"
+    "marketIdWaiting": "Buscando preço do mercado para ID {id}…",
+    "sourceFile": "Arquivo",
+    "sourceUrl": "Link",
+    "urlPlaceholder": "https://exemplo.com/imagem.png",
+    "downloadBtn": "Baixar",
+    "downloading": "Baixando…",
+    "urlError": "Erro ao baixar imagem."
   },
+
   "locations": {
     "pageTitle": "Locais de Farm",
     "newLocation": "+ Novo Local de Farm",

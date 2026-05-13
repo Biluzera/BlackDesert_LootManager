@@ -13,6 +13,9 @@ contextBridge.exposeInMainWorld('api', {
   getImageDataUrl: (filename: string): Promise<string | null> =>
     ipcRenderer.invoke('get-image-data-url', filename),
 
+  downloadImageFromUrl: (url: string): Promise<string | null> =>
+    ipcRenderer.invoke('download-image-from-url', url),
+
   exportData: (scope?: string): Promise<{ success: boolean; reason?: string }> =>
     ipcRenderer.invoke('export-data', scope ?? 'all'),
 

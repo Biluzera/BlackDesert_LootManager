@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { Pencil, Trash2, MapPin, Search, ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01, Gem, Package, FolderOpen, Save, RefreshCw, Store, Clock, Check, X } from 'lucide-react'
+import { Pencil, Trash2, MapPin, Search, ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01, Gem, Package, FolderOpen, Save, RefreshCw, Store, Clock, Check, X, Link, Download } from 'lucide-react'
 import type { FarmLocation } from './FarmLocationPage'
 import type { FarmSession } from './FarmSessionPage'
 import { useDevMode } from '../context/DevModeContext'
@@ -53,6 +53,10 @@ function ItemRegistrationPage(): React.ReactElement {
   const [marketId, setMarketId] = useState('')
   const [imageFile, setImageFile] = useState<string | null>(null)
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
+  const [imageUrl, setImageUrl] = useState('')
+  const [downloadingUrl, setDownloadingUrl] = useState(false)
+  type ImageSource = 'file' | 'url'
+  const [imageSource, setImageSource] = useState<ImageSource>('file')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -116,6 +120,8 @@ function ItemRegistrationPage(): React.ReactElement {
     setMarketId('')
     setImageFile(null)
     setImageDataUrl(null)
+    setImageUrl('')
+    setImageSource('file')
     setError(null)
   }
 
@@ -140,6 +146,27 @@ function ItemRegistrationPage(): React.ReactElement {
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : t('items.imageError'))
+    }
+  }
+
+  async function handleDownloadUrl(): Promise<void> {
+    const trimmedUrl = imageUrl.trim()
+    if (!trimmedUrl) return
+    setError(null)
+    setDownloadingUrl(true)
+    try {
+      const filename = await window.api.downloadImageFromUrl(trimmedUrl)
+      if (!filename) return
+      const url = await window.api.getImageDataUrl(filename)
+      setImageFile(filename)
+      setImageDataUrl(url)
+      if (filename && url) {
+        setImageCache(prev => ({ ...prev, [filename]: url }))
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('items.urlError'))
+    } finally {
+      setDownloadingUrl(false)
     }
   }
 
@@ -183,6 +210,8 @@ function ItemRegistrationPage(): React.ReactElement {
     setMarketId(item.marketId != null ? String(item.marketId) : '')
     setImageFile(item.imageFile)
     setImageDataUrl(item.imageFile ? (imageCache[item.imageFile] ?? null) : null)
+    setImageUrl('')
+    setImageSource(item.imageFile ? 'file' : 'file')
     setError(null)
     scrollToForm()
   }
@@ -351,30 +380,92 @@ function ItemRegistrationPage(): React.ReactElement {
                 {/* Image picker */}
                 <div className="form-field">
                   <span className="form-label">{t('items.imageLabel')}</span>
-                  <div className="pick-image-row">
+
+                  {/* Source type tabs */}
+                  <div className="image-source-tabs">
                     <button
                       type="button"
-                      className="btn btn-secondary btn-sm"
-                      onClick={handlePickImage}
+                      className={`image-source-tab${imageSource === 'file' ? ' image-source-tab-active' : ''}`}
+                      onClick={() => setImageSource('file')}
                     >
-                    <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> {t('items.selectImageBtn')}
+                      <FolderOpen size={13} aria-hidden="true" /> {t('items.sourceFile')}
                     </button>
-                    {imageFile
-                      ? <span className="image-filename" title={imageFile ?? ''}><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />{t('items.imageSelected')}</span>
-                      : <span className="image-filename-empty">{t('items.noImageSelected')}</span>
-                    }
-                    {imageFile && (
+                    <button
+                      type="button"
+                      className={`image-source-tab${imageSource === 'url' ? ' image-source-tab-active' : ''}`}
+                      onClick={() => setImageSource('url')}
+                    >
+                      <Link size={13} aria-hidden="true" /> {t('items.sourceUrl')}
+                    </button>
+                  </div>
+
+                  {/* File tab */}
+                  {imageSource === 'file' && (
+                    <div className="pick-image-row">
                       <button
                         type="button"
-                        className="btn-icon-remove"
-                        aria-label={t('items.removeImageAria')}
-                        onClick={handleRemoveImage}
-                        title={t('items.removeImageAria')}
+                        className="btn btn-secondary btn-sm"
+                        onClick={handlePickImage}
                       >
-                        <X size={12} aria-hidden="true" />
+                        <FolderOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> {t('items.selectImageBtn')}
                       </button>
-                    )}
-                  </div>
+                      {imageFile
+                        ? <span className="image-filename"><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />{t('items.imageSelected')}</span>
+                        : <span className="image-filename-empty">{t('items.noImageSelected')}</span>
+                      }
+                      {imageFile && (
+                        <button
+                          type="button"
+                          className="btn-icon-remove"
+                          aria-label={t('items.removeImageAria')}
+                          onClick={handleRemoveImage}
+                          title={t('items.removeImageAria')}
+                        >
+                          <X size={12} aria-hidden="true" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* URL tab */}
+                  {imageSource === 'url' && (
+                    <div className="image-url-row">
+                      <input
+                        className="image-url-input"
+                        type="url"
+                        placeholder={t('items.urlPlaceholder')}
+                        value={imageUrl}
+                        onChange={e => setImageUrl(e.target.value)}
+                        autoComplete="off"
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void handleDownloadUrl() } }}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => void handleDownloadUrl()}
+                        disabled={!imageUrl.trim() || downloadingUrl}
+                      >
+                        {downloadingUrl
+                          ? <><RefreshCw size={14} className="market-status-spin" style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" />{t('items.downloading')}</>
+                          : <><Download size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} aria-hidden="true" />{t('items.downloadBtn')}</>
+                        }
+                      </button>
+                      {imageFile && (
+                        <>
+                          <span className="image-filename"><Check size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} aria-hidden="true" />{t('items.imageSelected')}</span>
+                          <button
+                            type="button"
+                            className="btn-icon-remove"
+                            aria-label={t('items.removeImageAria')}
+                            onClick={handleRemoveImage}
+                            title={t('items.removeImageAria')}
+                          >
+                            <X size={12} aria-hidden="true" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}

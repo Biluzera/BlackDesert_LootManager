@@ -127,7 +127,13 @@
     "editAria": "Edit {name}",
     "deleteAria": "Delete {name}",
     "manualOverrideNote": "manual override: {price}",
-    "marketIdWaiting": "Fetching market price for ID {id}…"
+    "marketIdWaiting": "Fetching market price for ID {id}\u2026",
+    "sourceFile": "File",
+    "sourceUrl": "URL",
+    "urlPlaceholder": "https://example.com/image.png",
+    "downloadBtn": "Download",
+    "downloading": "Downloading\u2026",
+    "urlError": "Error downloading image."
   },
   "locations": {
     "pageTitle": "Farm Locations",

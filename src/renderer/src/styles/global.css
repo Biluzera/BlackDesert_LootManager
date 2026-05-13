@@ -955,6 +955,69 @@ body {
   background: rgba(139, 26, 26, 0.12);
 }
 
+/* ── Image source tabs ───────────────────────────────────────── */
+.image-source-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.image-source-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 8px;
+  background: var(--bg-dark-wood);
+  border: 1px solid var(--border-wood);
+  border-radius: 3px;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  -webkit-app-region: no-drag;
+}
+.image-source-tab:hover {
+  color: var(--text-primary);
+  border-color: var(--border-gold);
+}
+.image-source-tab-active {
+  background: rgba(201, 160, 48, 0.12);
+  border-color: var(--gold-mid);
+  color: var(--gold);
+}
+
+/* ── URL download row ────────────────────────────────────────── */
+.image-url-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.image-url-input {
+  flex: 1;
+  min-width: 160px;
+  background: var(--bg-dark-wood);
+  border: 1px solid var(--border-wood);
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  padding: 7px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-app-region: no-drag;
+}
+.image-url-input:focus {
+  border-color: var(--gold-mid);
+}
+.image-url-input::placeholder {
+  color: var(--text-muted);
+}
+
 /* ── Toggle switch ───────────────────────────────────────────── */
 .toggle-wrapper {
   display: inline-flex;

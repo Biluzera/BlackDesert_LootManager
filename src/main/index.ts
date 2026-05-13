@@ -381,14 +381,17 @@ function getImagesDir(): string {
   return dir
 }
 
-/** Validates a UUID-based .png or .webp filename to prevent path traversal. */
+/** Validates a UUID-based .png, .webp or .jpg filename to prevent path traversal. */
 function isValidImageFilename(filename: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|webp)$/i.test(filename)
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|webp|jpg)$/i.test(filename)
 }
 
 /** Returns the MIME type for a supported image filename. */
 function imageMime(filename: string): string {
-  return filename.toLowerCase().endsWith('.webp') ? 'image/webp' : 'image/png'
+  const ext = filename.toLowerCase().split('.').pop()
+  if (ext === 'webp') return 'image/webp'
+  if (ext === 'jpg')  return 'image/jpeg'
+  return 'image/png'
 }
 
 // ── IPC handlers ──────────────────────────────────────────────────────────────
@@ -451,6 +454,52 @@ ipcMain.handle('get-image-data-url', (_event, filename: string) => {
   if (!fs.existsSync(filePath)) return null
   const buffer = fs.readFileSync(filePath)
   return `data:${imageMime(filename)};base64,${buffer.toString('base64')}`
+})
+
+ipcMain.handle('download-image-from-url', async (_event, rawUrl: string) => {
+  // ── Validate URL protocol ─────────────────────────────────────────────────
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(rawUrl)
+  } catch {
+    throw new Error('URL inválida.')
+  }
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    throw new Error('Apenas URLs HTTP/HTTPS são permitidas.')
+  }
+
+  // ── Download ──────────────────────────────────────────────────────────────
+  let res: Response
+  try {
+    res = await net.fetch(rawUrl)
+  } catch {
+    throw new Error('Falha ao conectar. Verifique o link e tente novamente.')
+  }
+  if (!res.ok) throw new Error(`Falha ao baixar imagem: HTTP ${res.status}`)
+
+  const arrayBuffer = await res.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+
+  // ── Size limit (4 MB) ─────────────────────────────────────────────────────
+  if (buffer.length > 4 * 1024 * 1024) {
+    throw new Error('Imagem muito grande (máximo 4 MB).')
+  }
+  if (buffer.length < 8) throw new Error('Arquivo inválido.')
+
+  // ── Validate magic bytes ──────────────────────────────────────────────────
+  const isPng  = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47
+  const isWebp = buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+                 buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50
+  const isJpeg = buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF
+
+  if (!isPng && !isWebp && !isJpeg) {
+    throw new Error('Formato não suportado. Use PNG, WebP ou JPEG.')
+  }
+
+  const ext      = isPng ? 'png' : isWebp ? 'webp' : 'jpg'
+  const filename = `${randomUUID()}.${ext}`
+  fs.writeFileSync(path.join(getImagesDir(), filename), buffer)
+  return filename
 })
 
 ipcMain.handle('export-data', async (_event, scope: string = 'all') => {
