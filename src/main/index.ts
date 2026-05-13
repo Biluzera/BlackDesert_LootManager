@@ -453,11 +453,11 @@ ipcMain.handle('get-image-data-url', (_event, filename: string) => {
   return `data:${imageMime(filename)};base64,${buffer.toString('base64')}`
 })
 
-ipcMain.handle('export-data', async () => {
+ipcMain.handle('export-data', async (_event, scope: string = 'all') => {
   const [win] = BrowserWindow.getAllWindows()
   const result = await dialog.showSaveDialog(win, {
     title: 'Exportar dados — BDO Loot Log',
-    defaultPath: `bdo-lootlog-${new Date().toISOString().split('T')[0]}.json`,
+    defaultPath: `bdo-lootlog-${scope}-${new Date().toISOString().split('T')[0]}.json`,
     filters: [{ name: 'BDO Loot Log Export', extensions: ['json'] }]
   })
   if (result.canceled || !result.filePath) return { success: false, reason: 'cancelled' }
@@ -465,17 +465,27 @@ ipcMain.handle('export-data', async () => {
   const dataDir   = getDataDir()
   const imagesDir = getImagesDir()
 
-  const readOptional = (filename: string): unknown => {
+  const readJsonFile = (filename: string): unknown => {
     const p = path.join(dataDir, filename)
-    if (!fs.existsSync(p)) return []
-    return JSON.parse(fs.readFileSync(p, 'utf-8'))
+    if (!fs.existsSync(p)) return null
+    try { return JSON.parse(fs.readFileSync(p, 'utf-8')) } catch { return null }
   }
 
-  const items     = readOptional('items.json')
-  const locations = readOptional('locations.json')
-  const bosses    = readOptional('bosses.json')
+  const includeAll       = scope === 'all'
+  const includeItems     = includeAll || scope === 'items'
+  const includeLocations = includeAll || scope === 'locations'
+  const includeSessions  = includeAll || scope === 'sessions'
+  const includeBosses    = includeAll || scope === 'bosses'
+  const includeSettings  = includeAll || scope === 'settings'
+  const includeCombo     = includeAll || scope === 'combo'
+  const includeGoals     = includeAll || scope === 'goals'
 
-  // Collect all PNG filenames referenced by items, locations and bosses
+  const payload: Record<string, unknown> = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    scope,
+  }
+
   const imageFiles = new Set<string>()
   const collectImage = (obj: unknown): void => {
     if (obj && typeof obj === 'object' && 'imageFile' in obj) {
@@ -483,9 +493,36 @@ ipcMain.handle('export-data', async () => {
       if (typeof f === 'string' && isValidImageFilename(f)) imageFiles.add(f)
     }
   }
-  if (Array.isArray(items))     items.forEach(collectImage)
-  if (Array.isArray(locations)) locations.forEach(collectImage)
-  if (Array.isArray(bosses))    bosses.forEach(collectImage)
+
+  if (includeItems) {
+    const items = readJsonFile('items.json')
+    payload.items = items
+    if (Array.isArray(items)) items.forEach(collectImage)
+  }
+  if (includeLocations) {
+    const locations = readJsonFile('locations.json')
+    payload.locations = locations
+    if (Array.isArray(locations)) locations.forEach(collectImage)
+  }
+  if (includeSessions) {
+    payload.sessions = readJsonFile('sessions.json')
+  }
+  if (includeBosses) {
+    const bosses = readJsonFile('bosses.json')
+    payload.bosses = bosses
+    if (Array.isArray(bosses)) bosses.forEach(collectImage)
+  }
+  if (includeSettings) {
+    payload.settings = readJsonFile('settings.json')
+  }
+  if (includeCombo) {
+    payload.comboConfigs      = readJsonFile('combo-configs.json')
+    payload.comboPositions    = readJsonFile('combo-positions.json')
+    payload.comboVisualConfig = readJsonFile('combo-visual-config.json')
+  }
+  if (includeGoals) {
+    payload.goals = readJsonFile('goals.json')
+  }
 
   const images: Record<string, string> = {}
   for (const filename of imageFiles) {
@@ -494,8 +531,8 @@ ipcMain.handle('export-data', async () => {
       images[filename] = fs.readFileSync(imgPath).toString('base64')
     }
   }
+  payload.images = images
 
-  const payload = { version: 1, exportedAt: new Date().toISOString(), items, locations, bosses, images }
   fs.writeFileSync(result.filePath, JSON.stringify(payload, null, 2), 'utf-8')
   return { success: true }
 })
@@ -526,7 +563,11 @@ ipcMain.handle('import-data', async () => {
     return { success: false, reason: 'invalid' }
   }
 
-  const { items, locations, bosses, images } = payload as Record<string, unknown>
+  const {
+    items, locations, bosses, sessions, settings,
+    comboConfigs, comboPositions, comboVisualConfig, goals,
+    images
+  } = payload as Record<string, unknown>
 
   const dataDir   = getDataDir()
   const imagesDir = getImagesDir()
@@ -539,6 +580,24 @@ ipcMain.handle('import-data', async () => {
   }
   if (Array.isArray(bosses)) {
     fs.writeFileSync(path.join(dataDir, 'bosses.json'), JSON.stringify(bosses, null, 2), 'utf-8')
+  }
+  if (Array.isArray(sessions)) {
+    fs.writeFileSync(path.join(dataDir, 'sessions.json'), JSON.stringify(sessions, null, 2), 'utf-8')
+  }
+  if (settings !== null && settings !== undefined && typeof settings === 'object' && !Array.isArray(settings)) {
+    fs.writeFileSync(path.join(dataDir, 'settings.json'), JSON.stringify(settings, null, 2), 'utf-8')
+  }
+  if (Array.isArray(comboConfigs)) {
+    fs.writeFileSync(path.join(dataDir, 'combo-configs.json'), JSON.stringify(comboConfigs, null, 2), 'utf-8')
+  }
+  if (comboPositions !== null && comboPositions !== undefined && typeof comboPositions === 'object' && !Array.isArray(comboPositions)) {
+    fs.writeFileSync(path.join(dataDir, 'combo-positions.json'), JSON.stringify(comboPositions, null, 2), 'utf-8')
+  }
+  if (comboVisualConfig !== null && comboVisualConfig !== undefined && typeof comboVisualConfig === 'object' && !Array.isArray(comboVisualConfig)) {
+    fs.writeFileSync(path.join(dataDir, 'combo-visual-config.json'), JSON.stringify(comboVisualConfig, null, 2), 'utf-8')
+  }
+  if (Array.isArray(goals)) {
+    fs.writeFileSync(path.join(dataDir, 'goals.json'), JSON.stringify(goals, null, 2), 'utf-8')
   }
 
   // Restore images — validate magic bytes before writing

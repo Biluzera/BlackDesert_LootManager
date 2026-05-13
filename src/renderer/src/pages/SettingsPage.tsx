@@ -58,6 +58,12 @@ export const FONTS: FontDef[] = [
   { id: 'typewriter', displayFamily: "'Special Elite', cursive",     sample: 'Abc — BDO Loot Log' },
 ]
 
+// ── Export scope ─────────────────────────────────────────────────────────────
+
+export type ExportScope =
+  | 'all' | 'items' | 'locations' | 'sessions'
+  | 'bosses' | 'settings' | 'combo' | 'goals'
+
 // ── Props ──────────────────────────────────────────────────────────────────────
 
 interface SettingsPageProps {
@@ -74,12 +80,13 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
 
   const [transferBusy,    setTransferBusy]    = useState(false)
   const [transferMessage, setTransferMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [exportScope, setExportScope] = useState<ExportScope>('all')
 
   async function handleExport(): Promise<void> {
     setTransferBusy(true)
     setTransferMessage(null)
     try {
-      const res = await window.api.exportData()
+      const res = await window.api.exportData(exportScope)
       if (res.success) {
         setTransferMessage({ type: 'ok', text: t('settings.exportSuccess') })
       } else if (res.reason !== 'cancelled') {
@@ -411,6 +418,25 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
             <div className="home-transfer-card-body">
               <span className="home-transfer-card-title">{t('settings.exportTitle')}</span>
               <span className="home-transfer-card-desc">{t('settings.exportDesc')}</span>
+              <label className="transfer-scope-label" htmlFor="export-scope-select">
+                {t('settings.exportScopeLabel')}
+              </label>
+              <select
+                id="export-scope-select"
+                className="form-input form-select transfer-scope-select"
+                value={exportScope}
+                onChange={e => setExportScope(e.target.value as ExportScope)}
+                disabled={transferBusy}
+              >
+                <option value="all">{t('settings.scopeAll')}</option>
+                <option value="items">{t('settings.scopeItems')}</option>
+                <option value="locations">{t('settings.scopeLocations')}</option>
+                <option value="sessions">{t('settings.scopeSessions')}</option>
+                <option value="bosses">{t('settings.scopeBosses')}</option>
+                <option value="settings">{t('settings.scopeSettings')}</option>
+                <option value="combo">{t('settings.scopeCombo')}</option>
+                <option value="goals">{t('settings.scopeGoals')}</option>
+              </select>
             </div>
             <button
               className="btn btn-secondary"

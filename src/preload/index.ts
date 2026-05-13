@@ -13,8 +13,8 @@ contextBridge.exposeInMainWorld('api', {
   getImageDataUrl: (filename: string): Promise<string | null> =>
     ipcRenderer.invoke('get-image-data-url', filename),
 
-  exportData: (): Promise<{ success: boolean; reason?: string }> =>
-    ipcRenderer.invoke('export-data'),
+  exportData: (scope?: string): Promise<{ success: boolean; reason?: string }> =>
+    ipcRenderer.invoke('export-data', scope ?? 'all'),
 
   importData: (): Promise<{ success: boolean; reason?: string }> =>
     ipcRenderer.invoke('import-data'),
