@@ -42,7 +42,7 @@ function parsePrice(raw: string): number {
 function ItemRegistrationPage(): React.ReactElement {
   const { devMode } = useDevMode()
   const { marketData, setItems: setMarketItems, loading: marketLoading, lastUpdated } = useMarket()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const { itemDb, dbLoaded } = useItemDb()
   const [items, setItems] = useState<Item[]>([])
   const [locations, setLocations] = useState<FarmLocation[]>([])
@@ -546,22 +546,26 @@ function ItemRegistrationPage(): React.ReactElement {
                 {/* Image picker */}
                 <div className="form-field">
                   {/* Not-tradeable warning: item selected, both fetches done, nothing found */}
-                  {selectedDbItem !== null && !autoFetchingIcon && !autoFetchingPrice && !priceFromMarket && imageFile === null && (
-                    <div className="item-not-tradeable-warning">
-                      <span>
-                        {t('items.notTradeableWarning')}{' '}
-                        <a
-                          href="https://bdocodex.com/pt/search/"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="item-not-tradeable-link"
-                          onClick={e => { e.preventDefault(); void window.api.openExternal('https://bdocodex.com/pt/search/') }}
-                        >
-                          bdocodex.com
-                        </a>
-                      </span>
-                    </div>
-                  )}
+                  {selectedDbItem !== null && !autoFetchingIcon && !autoFetchingPrice && !priceFromMarket && imageFile === null && (()=> {
+                    const bdoLang = language === 'pt-br' ? 'pt' : language
+                    const bdoUrl = `https://bdocodex.com/${bdoLang}/item/${selectedDbItem.id}/`
+                    return (
+                      <div className="item-not-tradeable-warning">
+                        <span>
+                          {t('items.notTradeableWarning')}{' '}
+                          <a
+                            href={bdoUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="item-not-tradeable-link"
+                            onClick={e => { e.preventDefault(); void window.api.openExternal(bdoUrl) }}
+                          >
+                            bdocodex.com
+                          </a>
+                        </span>
+                      </div>
+                    )
+                  })()}
                   <span className="form-label">{t('items.imageLabel')}</span>
 
                   {/* Source type tabs */}
