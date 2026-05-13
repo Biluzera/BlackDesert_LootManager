@@ -533,7 +533,9 @@
     "previewCooldown": "Cooldown",
     "emptyTitle": "Nenhuma configuração criada",
     "emptySubtitle": "Crie uma configuração com suas habilidades e teclas de atalho para monitorar os cooldowns em overlay durante o jogo.",
-    "createFirstBtn": "Criar primeira configuração"
+    "createFirstBtn": "Criar primeira configuração",
+    "opacityLabel": "Opacidade dos widgets",
+    "onlyShowOnBdoFocusLabel": "Exibir widgets apenas com a janela do BDO em foco"
   },
   "themes": {
     "medieval":   { "label": "Medieval Dourado",        "description": "O tema clássico — madeira escura e ouro antigo." },

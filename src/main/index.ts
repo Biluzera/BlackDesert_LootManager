@@ -125,6 +125,20 @@ function isComboActive(pressed: Set<number>, groups: number[][]): boolean {
   return groups.every(g => g.some(c => pressed.has(c)))
 }
 
+/**
+ * Exact match: combo fires only when ALL its groups are satisfied AND
+ * no other registered key (from any combo) is pressed outside this combo's keys.
+ * This prevents e.g. combo "F" from firing when "SHIFT+F" is pressed.
+ */
+function isExactComboMatch(pressed: Set<number>, groups: number[][], allRegistered: Set<number>): boolean {
+  if (!isComboActive(pressed, groups)) return false
+  const comboCodeSet = new Set(groups.flat())
+  for (const code of pressed) {
+    if (allRegistered.has(code) && !comboCodeSet.has(code)) return false
+  }
+  return true
+}
+
 // ── Combo state ───────────────────────────────────────────────────────────────
 
 interface ActiveSkillEntry {
@@ -135,9 +149,88 @@ interface ActiveSkillEntry {
 }
 
 let activeSkills: ActiveSkillEntry[] = []
+let allRegisteredCodes = new Set<number>()
 let overlayWin: BrowserWindow | null = null
 let mainWin:    BrowserWindow | null = null
 let activeDragConfigId: string | null = null  // track drag mode in main process
+
+// ── BDO focus filter ──────────────────────────────────────────────────────────
+let bdoFocusFilter = false
+let bdoIsFocused   = false
+let focusWatcher:  ReturnType<typeof import('child_process').spawn> | null = null
+
+const PS_SCRIPT = `
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public class BdoFocusWatcher {
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
+    public static string GetTitle() {
+        IntPtr h = GetForegroundWindow();
+        var sb = new System.Text.StringBuilder(512);
+        GetWindowText(h, sb, 512);
+        return sb.ToString();
+    }
+}
+'@ -Language CSharp -ErrorAction SilentlyContinue
+$prev = ""
+while ($true) {
+    $t = [BdoFocusWatcher]::GetTitle()
+    if ($t -ne $prev) {
+        $prev = $t
+        [Console]::Out.WriteLine($t)
+        [Console]::Out.Flush()
+    }
+    [System.Threading.Thread]::Sleep(300)
+}
+`.trim()
+
+function startFocusWatcher(): void {
+  if (focusWatcher) return
+  if (process.platform !== 'win32') return
+  const tmpScript = path.join(os.tmpdir(), 'bdo-lootlog-focus-watcher.ps1')
+  fs.writeFileSync(tmpScript, PS_SCRIPT, 'utf-8')
+  focusWatcher = spawn('powershell', [
+    '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', tmpScript
+  ], { stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true })
+
+  let buf = ''
+  focusWatcher.stdout?.on('data', (chunk: Buffer) => {
+    buf += chunk.toString()
+    let nl: number
+    while ((nl = buf.indexOf('\n')) !== -1) {
+      const title = buf.slice(0, nl).replace(/\r/g, '').trim()
+      buf = buf.slice(nl + 1)
+      const nowFocused = title.toLowerCase().includes('black desert')
+      if (nowFocused !== bdoIsFocused) {
+        bdoIsFocused = nowFocused
+        updateOverlayVisibility()
+      }
+    }
+  })
+
+  focusWatcher.on('exit', () => { focusWatcher = null })
+}
+
+function stopFocusWatcher(): void {
+  focusWatcher?.kill()
+  focusWatcher = null
+}
+
+function updateOverlayVisibility(): void {
+  const hasEnabled = _lastConfigs.some(c => c.enabled && c.skills.length > 0)
+  if (!hasEnabled) {
+    if (overlayWin && !overlayWin.isDestroyed()) overlayWin.hide()
+    return
+  }
+  const shouldShow = !bdoFocusFilter || bdoIsFocused
+  if (shouldShow) {
+    if (overlayWin && !overlayWin.isDestroyed() && !overlayWin.isVisible()) overlayWin.show()
+  } else {
+    if (overlayWin && !overlayWin.isDestroyed()) overlayWin.hide()
+  }
+}
 
 const pressedKeys     = new Set<number>()
 const triggeredCombos = new Set<string>() // skill IDs currently held/triggered
@@ -218,6 +311,14 @@ function applyConfigs(configs: ComboConfig[]): void {
   const entries = buildActiveSkills(configs)
   activeSkills = entries.map(e => e.entry)
 
+  // Rebuild the flat set of all registered key codes (used for exact-match detection)
+  allRegisteredCodes = new Set()
+  for (const entry of activeSkills) {
+    for (const group of entry.keyGroups) {
+      for (const code of group) allRegisteredCodes.add(code)
+    }
+  }
+
   // Clear cooldown state for skills that are no longer active
   const activeIds = new Set(activeSkills.map(e => e.skillId))
   for (const id of cooldownEnds.keys()) {
@@ -228,10 +329,10 @@ function applyConfigs(configs: ComboConfig[]): void {
 
   if (hasEnabled) {
     const win = getOrCreateOverlayWin()
-    if (win.isVisible() === false) win.show()
     // Push updated skill list to overlay
     const skills = entries.map(({ skill, configId }) => ({ ...skill, configId }))
     win.webContents.send('combo:init', skills)
+    updateOverlayVisibility()
   } else {
     // Hide but don't destroy so it loads fast next time
     if (overlayWin && !overlayWin.isDestroyed()) overlayWin.hide()
@@ -255,7 +356,7 @@ function checkAndFireTriggers(): void {
     // Block re-trigger while previous cooldown has not expired
     const cdEnd = cooldownEnds.get(entry.skillId)
     if (cdEnd !== undefined && Date.now() < cdEnd) continue
-    if (isComboActive(pressedKeys, entry.keyGroups)) {
+    if (isExactComboMatch(pressedKeys, entry.keyGroups, allRegisteredCodes)) {
       triggeredCombos.add(entry.skillId)
       if (entry.cooldownMs > 0) {
         cooldownEnds.set(entry.skillId, Date.now() + entry.cooldownMs)
@@ -729,6 +830,21 @@ ipcMain.on('combo:set-visual-config', (_event, config: unknown) => {
   }
 })
 
+/** Renderer enables/disables the BDO window focus filter */
+ipcMain.on('combo:set-bdo-focus-filter', (_event, enabled: boolean) => {
+  const newFilter = enabled === true
+  if (newFilter === bdoFocusFilter) return
+  bdoFocusFilter = newFilter
+  if (newFilter) {
+    startFocusWatcher()
+    updateOverlayVisibility()
+  } else {
+    stopFocusWatcher()
+    bdoIsFocused = false
+    updateOverlayVisibility()
+  }
+})
+
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
@@ -761,6 +877,18 @@ app.whenReady().then(() => {
   setupKeyListener()
   createWindow()
 
+  // Load visual config to init focus filter on startup
+  try {
+    const vcPath = path.join(getDataDir(), 'combo-visual-config.json')
+    if (fs.existsSync(vcPath)) {
+      const vc = JSON.parse(fs.readFileSync(vcPath, 'utf-8')) as { onlyShowOnBdoFocus?: boolean }
+      if (vc.onlyShowOnBdoFocus === true) {
+        bdoFocusFilter = true
+        startFocusWatcher()
+      }
+    }
+  } catch { /* ignore — non-critical startup */ }
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
@@ -768,6 +896,7 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   try { uIOhook?.stop() } catch { /* ignore */ }
+  stopFocusWatcher()
 })
 
 app.on('window-all-closed', () => {

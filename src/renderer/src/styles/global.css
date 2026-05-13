@@ -5845,6 +5845,15 @@ input[type='date'].form-input {
   accent-color: var(--gold, #c9a030);
 }
 
+.visual-config-range {
+  flex: 1;
+  min-width: 100px;
+  max-width: 200px;
+  cursor: pointer;
+  accent-color: var(--gold, #c9a030);
+  height: 4px;
+}
+
 /* ── Visual config preview section ─────────────────────────── */
 .visual-config-preview-section {
   display: flex;
@@ -6100,6 +6109,17 @@ input[type='date'].form-input {
   border: 1px solid var(--border-stone);
   border-radius: 3px;
   padding: 6px 8px;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.combo-skill-row[draggable="true"] {
+  cursor: default;
+}
+
+.skill-row-drag-target {
+  border-color: var(--gold-mid) !important;
+  background: rgba(201, 160, 48, 0.1) !important;
+  box-shadow: 0 0 0 2px rgba(201, 160, 48, 0.25);
 }
 
 .skill-drag-handle {

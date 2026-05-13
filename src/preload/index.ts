@@ -81,6 +81,11 @@ contextBridge.exposeInMainWorld('comboApi', {
     const handler = (_: Electron.IpcRendererEvent, config: unknown): void => cb(config)
     ipcRenderer.on('combo:visual-config', handler)
     return () => ipcRenderer.off('combo:visual-config', handler)
+  },
+
+  /** Tell main process to enable/disable the BDO window focus filter */
+  setBdoFocusFilter: (enabled: boolean): void => {
+    ipcRenderer.send('combo:set-bdo-focus-filter', enabled)
   }
 })
 

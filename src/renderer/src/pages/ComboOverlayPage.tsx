@@ -29,6 +29,8 @@ const VISUAL_DEFAULTS: WidgetVisualConfig = {
   hideOnCooldown: false,
   showTimer: true,
   showProgressBar: true,
+  opacity: 1,
+  onlyShowOnBdoFocus: false,
 }
 
 const FONT_OPTIONS: { value: string; label: string }[] = [
@@ -506,13 +508,37 @@ interface SkillRowProps {
   index: number
   onChange: (updated: ComboSkill) => void
   onRemove: () => void
+  // DnD
+  onDragStart: (e: React.DragEvent, idx: number) => void
+  onDragOver: (e: React.DragEvent, idx: number) => void
+  onDrop: (idx: number) => void
+  onDragEnd: () => void
+  isDragTarget: boolean
 }
 
-function SkillRow({ skill, index, onChange, onRemove }: SkillRowProps): React.ReactElement {
+function SkillRow({ skill, index, onChange, onRemove, onDragStart, onDragOver, onDrop, onDragEnd, isDragTarget }: SkillRowProps): React.ReactElement {
   const { t } = useLanguage()
+  const allowDragRef = useRef(false)
+
   return (
-    <div className="combo-skill-row">
-      <span className="skill-drag-handle" aria-hidden="true">
+    <div
+      className={`combo-skill-row${isDragTarget ? ' skill-row-drag-target' : ''}`}
+      draggable
+      onDragStart={(e) => {
+        if (!allowDragRef.current) { e.preventDefault(); return }
+        e.dataTransfer.effectAllowed = 'move'
+        onDragStart(e, index)
+      }}
+      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; onDragOver(e, index) }}
+      onDrop={(e) => { e.preventDefault(); onDrop(index) }}
+      onDragEnd={() => { allowDragRef.current = false; onDragEnd() }}
+    >
+      <span
+        className="skill-drag-handle"
+        aria-hidden="true"
+        onMouseDown={() => { allowDragRef.current = true }}
+        onMouseUp={() => { allowDragRef.current = false }}
+      >
         <GripVertical size={14} />
       </span>
       <span className="skill-index">{index + 1}</span>
@@ -608,6 +634,37 @@ function ConfigModal({ initial, onSave, onClose }: ConfigModalProps): React.Reac
     setSkills(prev => prev.filter((_, i) => i !== idx))
   }, [])
 
+  // ── Drag-and-drop reorder ──
+  const [dragSrcIdx, setDragSrcIdx] = useState<number | null>(null)
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
+
+  const handleDragStart = useCallback((_e: React.DragEvent, idx: number) => {
+    setDragSrcIdx(idx)
+  }, [])
+
+  const handleDragOver = useCallback((_e: React.DragEvent, idx: number) => {
+    setDragOverIdx(idx)
+  }, [])
+
+  const handleDrop = useCallback((idx: number) => {
+    setDragSrcIdx(src => {
+      if (src === null || src === idx) return null
+      setSkills(prev => {
+        const next = [...prev]
+        const [item] = next.splice(src, 1)
+        next.splice(idx, 0, item)
+        return next
+      })
+      return null
+    })
+    setDragOverIdx(null)
+  }, [])
+
+  const handleDragEnd = useCallback(() => {
+    setDragSrcIdx(null)
+    setDragOverIdx(null)
+  }, [])
+
   const handleSave = useCallback(() => {
     const trimmed = name.trim()
     if (!trimmed) return
@@ -683,6 +740,11 @@ function ConfigModal({ initial, onSave, onClose }: ConfigModalProps): React.Reac
                   index={idx}
                   onChange={(updated) => updateSkill(idx, updated)}
                   onRemove={() => removeSkill(idx)}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                  isDragTarget={dragOverIdx === idx && dragSrcIdx !== idx}
                 />
               ))}
             </div>
@@ -935,6 +997,9 @@ export default function ComboOverlayPage(): React.ReactElement {
         const loaded = { ...VISUAL_DEFAULTS, ...(raw as Partial<WidgetVisualConfig>) }
         setSavedVisual(loaded)
         setDraftVisual(loaded)
+        // Sync to main process so it can apply focus filter and other settings on startup
+        window.comboApi.setVisualConfig(loaded)
+        window.comboApi.setBdoFocusFilter(loaded.onlyShowOnBdoFocus ?? false)
       }
     })
   }, [])
@@ -942,6 +1007,7 @@ export default function ComboOverlayPage(): React.ReactElement {
   const handleVisualSave = useCallback(() => {
     void window.api.writeJson('combo-visual-config.json', draftVisual)
     window.comboApi.setVisualConfig(draftVisual)
+    window.comboApi.setBdoFocusFilter(draftVisual.onlyShowOnBdoFocus ?? false)
     setSavedVisual(draftVisual)
   }, [draftVisual])
 
@@ -1111,6 +1177,37 @@ export default function ComboOverlayPage(): React.ReactElement {
                 onChange={e => setDraftVisual(prev => ({ ...prev, showProgressBar: e.target.checked }))}
               />
               {t('combo.showProgressBarLabel')}
+            </label>
+          </div>
+
+          {/* Opacity */}
+          <div className="visual-config-row">
+            <label className="visual-config-label" htmlFor="vc-opacity">
+              {t('combo.opacityLabel')} — {Math.round((draftVisual.opacity ?? 1) * 100)}%
+            </label>
+            <input
+              id="vc-opacity"
+              type="range"
+              className="visual-config-range"
+              min={0.1}
+              max={1}
+              step={0.05}
+              value={draftVisual.opacity ?? 1}
+              onChange={e => setDraftVisual(prev => ({ ...prev, opacity: parseFloat(e.target.value) }))}
+            />
+          </div>
+
+          {/* BDO focus filter */}
+          <div className="visual-config-row">
+            <label className="visual-config-label visual-config-label-check" htmlFor="vc-bdo-focus">
+              <input
+                id="vc-bdo-focus"
+                type="checkbox"
+                className="visual-config-check"
+                checked={draftVisual.onlyShowOnBdoFocus ?? false}
+                onChange={e => setDraftVisual(prev => ({ ...prev, onlyShowOnBdoFocus: e.target.checked }))}
+              />
+              {t('combo.onlyShowOnBdoFocusLabel')}
             </label>
           </div>
 

@@ -10,6 +10,8 @@ export interface WidgetVisualConfig {
   hideOnCooldown: boolean
   showTimer: boolean
   showProgressBar: boolean
+  opacity: number
+  onlyShowOnBdoFocus: boolean
 }
 
 declare global {
@@ -35,6 +37,7 @@ declare global {
       onDragMode: (cb: (configId: string | null) => void) => () => void
       setVisualConfig: (config: WidgetVisualConfig) => void
       onVisualConfig: (cb: (config: WidgetVisualConfig) => void) => () => void
+      setBdoFocusFilter: (enabled: boolean) => void
     }
   }
 }

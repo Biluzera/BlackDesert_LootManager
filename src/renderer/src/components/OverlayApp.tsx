@@ -14,6 +14,8 @@ const VISUAL_DEFAULTS: WidgetVisualConfig = {
   hideOnCooldown: false,
   showTimer: true,
   showProgressBar: true,
+  opacity: 1,
+  onlyShowOnBdoFocus: false,
 }
 
 interface OverlaySkill {
@@ -155,18 +157,19 @@ function SkillWidget({
         cursor: draggable ? 'grab' : 'default',
         transformOrigin: 'top left',
         transform: scale !== 1 ? `scale(${scale})` : undefined,
+        opacity: visualConfig.opacity ?? 1,
       }}
       onMouseDown={onMouseDown}
     >
       {/* Box — icon + keys + progress bar */}
       <div style={{
         position: 'relative',
-        minWidth: 80,
+        minWidth: 'fit-content',
         maxWidth: 180,
         background: bgColor,
         border: draggable ? `1px dashed ${borderColor}` : `1px solid ${borderColor}`,
         borderRadius: 5,
-        padding: '5px 10px',
+        padding: draggable ? '5px 22px 5px 10px' : '5px 10px',
         backdropFilter: 'blur(6px)',
         boxShadow: draggable
           ? `0 0 12px ${borderColor}60, 0 2px 16px rgba(0,0,0,0.8)`

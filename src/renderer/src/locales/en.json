@@ -532,7 +532,9 @@
     "previewCooldown": "Cooldown",
     "emptyTitle": "No configurations created",
     "emptySubtitle": "Create a configuration with your skills and shortcut keys to monitor cooldowns in overlay during gameplay.",
-    "createFirstBtn": "Create first configuration"
+    "createFirstBtn": "Create first configuration",
+    "opacityLabel": "Widget opacity",
+    "onlyShowOnBdoFocusLabel": "Only show widgets when BDO window is focused"
   },
   "themes": {
     "medieval":   { "label": "Golden Medieval",            "description": "The classic theme — dark wood and ancient gold." },
