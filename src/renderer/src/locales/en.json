@@ -140,7 +140,8 @@
     "changeItem": "Change item",
     "autoFetchingPrice": "Fetching price…",
     "autoFetchingIcon": "Fetching icon…",
-    "autoFetchingBoth": "Fetching price and icon…"
+    "autoFetchingBoth": "Fetching price and icon…",
+    "notTradeableWarning": "The selected item is not listed on the marketplace, so no image or price could be found automatically. You will need to add them manually. Icons for all in-game items can be found at"
   },
   "locations": {
     "pageTitle": "Farm Locations",

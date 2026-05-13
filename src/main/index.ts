@@ -804,6 +804,12 @@ ipcMain.handle('fetch-item-icon', async (_event, id: number) => {
   }
 })
 
+ipcMain.handle('open-external', (_event, url: string) => {
+  const allowed = /^https:\/\//i
+  if (!allowed.test(url)) return
+  void shell.openExternal(url)
+})
+
 ipcMain.handle('market-search', async (_event, ids: string[]) => {
   try {
     const url = `https://api.arsha.io/v1/sa/search?ids=${ids.join(',')}`

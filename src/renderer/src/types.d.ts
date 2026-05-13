@@ -28,6 +28,7 @@ declare global {
       marketPriceDetail: (id: string) => Promise<unknown>
       fetchItemDb: () => Promise<unknown>
       fetchItemIcon: (id: number) => Promise<string | null>
+      openExternal: (url: string) => Promise<void>
     }
     comboApi: {
       setConfigs: (configs: unknown) => Promise<void>

@@ -32,7 +32,10 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('fetch-item-db'),
 
   fetchItemIcon: (id: number): Promise<string | null> =>
-    ipcRenderer.invoke('fetch-item-icon', id)
+    ipcRenderer.invoke('fetch-item-icon', id),
+
+  openExternal: (url: string): Promise<void> =>
+    ipcRenderer.invoke('open-external', url)
 })
 
 // ── Combo overlay API ─────────────────────────────────────────────────────────

@@ -1029,6 +1029,28 @@ body {
 }
 
 /* ── Image picker row ────────────────────────────────────────── */
+.item-not-tradeable-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: rgba(180, 100, 30, 0.15);
+  border: 1px solid rgba(201, 140, 48, 0.45);
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.item-not-tradeable-link {
+  color: var(--gold);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.item-not-tradeable-link:hover { color: var(--gold-hi); }
+
 .pick-image-row {
   display: flex;
   align-items: center;

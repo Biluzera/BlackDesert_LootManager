@@ -140,7 +140,8 @@
     "changeItem": "Alterar item",
     "autoFetchingPrice": "Buscando preço…",
     "autoFetchingIcon": "Buscando ícone…",
-    "autoFetchingBoth": "Buscando preço e ícone…"
+    "autoFetchingBoth": "Buscando preço e ícone…",
+    "notTradeableWarning": "O item selecionado não é registrável no mercado, portanto não foi possível encontrar imagem e preço. Você terá que adicionar manualmente. Os ícones de todos os itens do jogo podem ser encontrados em"
   },
 
   "locations": {

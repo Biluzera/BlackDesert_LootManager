@@ -203,7 +203,10 @@ function ItemRegistrationPage(): React.ReactElement {
     window.api
       .fetchItemIcon(dbItem.id)
       .then(async filename => {
-        if (!filename) return
+        if (!filename) {
+          setImageDataUrl(null)
+          return
+        }
         const url = await window.api.getImageDataUrl(filename)
         setImageFile(filename)
         if (url) {
@@ -542,6 +545,23 @@ function ItemRegistrationPage(): React.ReactElement {
 
                 {/* Image picker */}
                 <div className="form-field">
+                  {/* Not-tradeable warning: item selected, both fetches done, nothing found */}
+                  {selectedDbItem !== null && !autoFetchingIcon && !autoFetchingPrice && !priceFromMarket && imageFile === null && (
+                    <div className="item-not-tradeable-warning">
+                      <span>
+                        {t('items.notTradeableWarning')}{' '}
+                        <a
+                          href="https://bdocodex.com/pt/search/"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="item-not-tradeable-link"
+                          onClick={e => { e.preventDefault(); void window.api.openExternal('https://bdocodex.com/pt/search/') }}
+                        >
+                          bdocodex.com
+                        </a>
+                      </span>
+                    </div>
+                  )}
                   <span className="form-label">{t('items.imageLabel')}</span>
 
                   {/* Source type tabs */}
