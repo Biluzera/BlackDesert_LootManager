@@ -16,6 +16,7 @@ import { DevModeProvider, useDevMode } from './context/DevModeContext'
 import { MarketProvider, useMarket } from './context/MarketContext'
 import { ComboProvider } from './context/ComboContext'
 import { LanguageProvider, useLanguage, type LanguageId } from './context/LanguageContext'
+import { ItemDbProvider } from './context/ItemDbContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -178,17 +179,19 @@ function App(): React.ReactElement {
     <LanguageProvider>
       <DevModeProvider>
         <MarketProvider>
-          <ComboProvider>
-            {/* App renders underneath; loading screen is fixed on top */}
-            <AppInner onDataReady={() => setDataReady(true)} />
+          <ItemDbProvider>
+            <ComboProvider>
+              {/* App renders underneath; loading screen is fixed on top */}
+              <AppInner onDataReady={() => setDataReady(true)} />
 
-            {!loadingDone && (
-              <LoadingScreen
-                dataReady={dataReady}
-                onComplete={() => setLoadingDone(true)}
-              />
-            )}
-          </ComboProvider>
+              {!loadingDone && (
+                <LoadingScreen
+                  dataReady={dataReady}
+                  onComplete={() => setLoadingDone(true)}
+                />
+              )}
+            </ComboProvider>
+          </ItemDbProvider>
         </MarketProvider>
       </DevModeProvider>
     </LanguageProvider>

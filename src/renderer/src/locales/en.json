@@ -133,7 +133,14 @@
     "urlPlaceholder": "https://example.com/image.png",
     "downloadBtn": "Download",
     "downloading": "Downloading\u2026",
-    "urlError": "Error downloading image."
+    "urlError": "Error downloading image.",
+    "dbSearchPlaceholder": "Search item in database…",
+    "dbLoading": "Loading item database…",
+    "dbSearchNoResults": "No item found.",
+    "changeItem": "Change item",
+    "autoFetchingPrice": "Fetching price…",
+    "autoFetchingIcon": "Fetching icon…",
+    "autoFetchingBoth": "Fetching price and icon…"
   },
   "locations": {
     "pageTitle": "Farm Locations",

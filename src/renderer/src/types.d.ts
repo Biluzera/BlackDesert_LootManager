@@ -26,6 +26,8 @@ declare global {
       importData: () => Promise<{ success: boolean; reason?: string }>
       marketSearch: (ids: string[]) => Promise<unknown>
       marketPriceDetail: (id: string) => Promise<unknown>
+      fetchItemDb: () => Promise<unknown>
+      fetchItemIcon: (id: number) => Promise<string | null>
     }
     comboApi: {
       setConfigs: (configs: unknown) => Promise<void>

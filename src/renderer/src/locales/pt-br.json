@@ -133,7 +133,14 @@
     "urlPlaceholder": "https://exemplo.com/imagem.png",
     "downloadBtn": "Baixar",
     "downloading": "Baixando…",
-    "urlError": "Erro ao baixar imagem."
+    "urlError": "Erro ao baixar imagem.",
+    "dbSearchPlaceholder": "Buscar item no banco de dados…",
+    "dbLoading": "Carregando banco de itens…",
+    "dbSearchNoResults": "Nenhum item encontrado.",
+    "changeItem": "Alterar item",
+    "autoFetchingPrice": "Buscando preço…",
+    "autoFetchingIcon": "Buscando ícone…",
+    "autoFetchingBoth": "Buscando preço e ícone…"
   },
 
   "locations": {

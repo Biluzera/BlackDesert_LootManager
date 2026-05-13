@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Pencil, Trash2, MapPin, Search, ArrowDownAZ, ArrowUpAZ, ArrowDown01, ArrowUp01, Gem, Package, FolderOpen, Save, RefreshCw, Store, Clock, Check, X, Link, Download } from 'lucide-react'
 import type { FarmLocation } from './FarmLocationPage'
 import type { FarmSession } from './FarmSessionPage'
@@ -6,6 +6,9 @@ import { useDevMode } from '../context/DevModeContext'
 import { MOCK_ITEMS, MOCK_LOCATIONS, MOCK_SESSIONS } from '../context/DevModeContext'
 import { useMarket } from '../context/MarketContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useItemDb } from '../context/ItemDbContext'
+import type { BdoDbItem } from '../context/ItemDbContext'
+import { fetchMarketPrices } from '../services/marketApi'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -40,6 +43,7 @@ function ItemRegistrationPage(): React.ReactElement {
   const { devMode } = useDevMode()
   const { marketData, setItems: setMarketItems, loading: marketLoading, lastUpdated } = useMarket()
   const { t } = useLanguage()
+  const { itemDb, dbLoaded } = useItemDb()
   const [items, setItems] = useState<Item[]>([])
   const [locations, setLocations] = useState<FarmLocation[]>([])
   const [sessions, setSessions] = useState<FarmSession[]>([])
@@ -49,8 +53,11 @@ function ItemRegistrationPage(): React.ReactElement {
   // Form state
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
+  const [selectedDbItem, setSelectedDbItem] = useState<BdoDbItem | null>(null)
+  const [dbDropdownOpen, setDbDropdownOpen] = useState(false)
+  const [autoFetchingPrice, setAutoFetchingPrice] = useState(false)
+  const [autoFetchingIcon, setAutoFetchingIcon] = useState(false)
   const [price, setPrice] = useState('')
-  const [marketId, setMarketId] = useState('')
   const [imageFile, setImageFile] = useState<string | null>(null)
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
   const [imageUrl, setImageUrl] = useState('')
@@ -61,6 +68,7 @@ function ItemRegistrationPage(): React.ReactElement {
   const [error, setError] = useState<string | null>(null)
 
   const formSectionRef = useRef<HTMLElement>(null)
+  const nameSearchRef   = useRef<HTMLDivElement>(null)
 
   // ── Filter / sort state ────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('')
@@ -105,6 +113,18 @@ function ItemRegistrationPage(): React.ReactElement {
     load()
   }, [devMode])
 
+  // ── Close dropdown on outside click ───────────────────────────────────────
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent): void {
+      if (nameSearchRef.current && !nameSearchRef.current.contains(e.target as Node)) {
+        setDbDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [])
+
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   async function persistItems(list: Item[]): Promise<void> {
@@ -116,8 +136,11 @@ function ItemRegistrationPage(): React.ReactElement {
   function resetForm(): void {
     setEditingId(null)
     setName('')
+    setSelectedDbItem(null)
+    setDbDropdownOpen(false)
+    setAutoFetchingPrice(false)
+    setAutoFetchingIcon(false)
     setPrice('')
-    setMarketId('')
     setImageFile(null)
     setImageDataUrl(null)
     setImageUrl('')
@@ -132,6 +155,50 @@ function ItemRegistrationPage(): React.ReactElement {
   }
 
   // ── Handlers ──────────────────────────────────────────────────────────────
+
+  /** Called when user selects an item from the DB dropdown */
+  const handleSelectDbItem = useCallback(async (dbItem: BdoDbItem): Promise<void> => {
+    setSelectedDbItem(dbItem)
+    setName(dbItem.name)
+    setDbDropdownOpen(false)
+    setError(null)
+    setPrice('')
+    setAutoFetchingPrice(true)
+    setAutoFetchingIcon(true)
+
+    await Promise.all([
+      // Auto-fetch market price
+      fetchMarketPrices([String(dbItem.id)])
+        .then(result => {
+          const entry = result?.get(String(dbItem.id))
+          if (entry && entry.basePrice > 0) setPrice(String(entry.basePrice))
+        })
+        .catch(() => {})
+        .finally(() => setAutoFetchingPrice(false)),
+
+      // Auto-fetch icon from Pearl CDN — uses dedicated handler that returns null silently on 403/404
+      window.api
+        .fetchItemIcon(dbItem.id)
+        .then(async filename => {
+          if (!filename) return
+          const url = await window.api.getImageDataUrl(filename)
+          setImageFile(filename)
+          setImageDataUrl(url)
+          if (filename && url) setImageCache(prev => ({ ...prev, [filename]: url }))
+        })
+        .catch(() => {})
+        .finally(() => setAutoFetchingIcon(false)),
+    ])
+  }, [])
+
+  function handleClearDbSelection(): void {
+    setSelectedDbItem(null)
+    setName('')
+    setPrice('')
+    setImageFile(null)
+    setImageDataUrl(null)
+    setDbDropdownOpen(true)
+  }
 
   async function handlePickImage(): Promise<void> {
     setError(null)
@@ -180,7 +247,7 @@ function ItemRegistrationPage(): React.ReactElement {
       if (editingId !== null) {
         const updated = items.map(item =>
           item.id === editingId
-            ? { ...item, name: trimmedName, price: parsePrice(price), marketId: String(marketId).trim() || undefined, imageFile }
+            ? { ...item, name: trimmedName, price: parsePrice(price), marketId: selectedDbItem ? String(selectedDbItem.id) : undefined, imageFile }
             : item
         )
         await persistItems(updated)
@@ -189,7 +256,7 @@ function ItemRegistrationPage(): React.ReactElement {
           id: `item_${Date.now()}`,
           name: trimmedName,
           price: parsePrice(price),
-          marketId: String(marketId).trim() || undefined,
+          marketId: selectedDbItem ? String(selectedDbItem.id) : undefined,
           imageFile,
           createdAt: new Date().toISOString()
         }
@@ -207,7 +274,9 @@ function ItemRegistrationPage(): React.ReactElement {
     setEditingId(item.id)
     setName(item.name)
     setPrice(item.price > 0 ? String(item.price) : '')
-    setMarketId(item.marketId != null ? String(item.marketId) : '')
+    const dbItem = item.marketId != null ? (itemDb.find(d => d.id === Number(item.marketId)) ?? null) : null
+    setSelectedDbItem(dbItem)
+    setDbDropdownOpen(false)
     setImageFile(item.imageFile)
     setImageDataUrl(item.imageFile ? (imageCache[item.imageFile] ?? null) : null)
     setImageUrl('')
@@ -267,6 +336,13 @@ function ItemRegistrationPage(): React.ReactElement {
     return result
   }, [sessions])
 
+  // Filtered DB search results
+  const dbResults = useMemo(() => {
+    const q = name.trim().toLowerCase()
+    if (!q || !dbLoaded || itemDb.length === 0) return []
+    return itemDb.filter(i => i.name.toLowerCase().includes(q)).slice(0, 20)
+  }, [name, itemDb, dbLoaded])
+
   // Filtered + sorted list
   const visibleItems = useMemo(() => {
     // Helper: resolve the effective price for sorting (market > manual > 0)
@@ -322,58 +398,86 @@ function ItemRegistrationPage(): React.ReactElement {
               {/* LEFT: fields */}
               <div className="item-form-fields">
 
-                <div className="form-row-two">
-                  {/* Name */}
-                  <div className="form-field">
-                    <label className="form-label" htmlFor="item-name">
-                      {t('items.nameLabel')} <span className="required-mark">*</span>
-                    </label>
-                    <input
-                      id="item-name"
-                      className="form-input"
-                      type="text"
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      placeholder={t('items.namePlaceholder')}
-                      maxLength={100}
-                      required
-                      autoComplete="off"
-                    />
-                  </div>
-
-                  {/* Price */}
-                  <div className="form-field">
-                    <label className="form-label" htmlFor="item-price">
-                      {t('items.priceLabel')}
-                    </label>
-                    <input
-                      id="item-price"
-                      className="form-input"
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={price}
-                      onChange={e => setPrice(e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
+                {/* DB item search / selected display */}
+                <div className="form-field" ref={nameSearchRef}>
+                  <label className="form-label" htmlFor="item-name">
+                    {t('items.nameLabel')} <span className="required-mark">*</span>
+                  </label>
+                  {selectedDbItem ? (
+                    <div className="item-db-selected">
+                      <span className="item-db-selected-name">{name}</span>
+                      <button
+                        type="button"
+                        className="btn-icon-remove"
+                        onClick={handleClearDbSelection}
+                        title={t('items.changeItem')}
+                        aria-label={t('items.changeItem')}
+                      >
+                        <X size={12} aria-hidden="true" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="item-db-search-wrap">
+                      <Search size={14} className="item-db-search-icon" aria-hidden="true" />
+                      <input
+                        id="item-name"
+                        className="form-input item-db-search-input"
+                        type="text"
+                        value={name}
+                        onChange={e => { setName(e.target.value); setDbDropdownOpen(true) }}
+                        onFocus={() => setDbDropdownOpen(true)}
+                        placeholder={dbLoaded ? t('items.dbSearchPlaceholder') : t('items.dbLoading')}
+                        disabled={!dbLoaded}
+                        autoComplete="off"
+                        aria-autocomplete="list"
+                        aria-expanded={dbDropdownOpen}
+                      />
+                      {dbDropdownOpen && name.trim() !== '' && (
+                        <ul className="item-db-dropdown" role="listbox">
+                          {dbResults.length > 0
+                            ? dbResults.map(dbItem => (
+                              <li
+                                key={dbItem.id}
+                                className="item-db-dropdown-option"
+                                role="option"
+                                onMouseDown={() => void handleSelectDbItem(dbItem)}
+                              >
+                                {dbItem.name}
+                              </li>
+                            ))
+                            : <li className="item-db-dropdown-empty">{t('items.dbSearchNoResults')}</li>
+                          }
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                  {(autoFetchingPrice || autoFetchingIcon) && (
+                    <span className="item-db-autofetch-hint">
+                      <RefreshCw size={12} className="market-status-spin" aria-hidden="true" />
+                      {' '}{autoFetchingPrice && autoFetchingIcon
+                        ? t('items.autoFetchingBoth')
+                        : autoFetchingPrice
+                          ? t('items.autoFetchingPrice')
+                          : t('items.autoFetchingIcon')}
+                    </span>
+                  )}
                 </div>
 
-                {/* Market ID */}
+                {/* Price */}
                 <div className="form-field">
-                  <label className="form-label" htmlFor="item-market-id">
-                    {t('items.marketIdLabel')}{' '}
-                    <span className="form-label-hint">{t('items.marketIdHint')}</span>
+                  <label className="form-label" htmlFor="item-price">
+                    {t('items.priceLabel')}
                   </label>
                   <input
-                    id="item-market-id"
+                    id="item-price"
                     className="form-input"
-                    type="text"
-                    value={marketId}
-                    onChange={e => setMarketId(e.target.value)}
-                    placeholder="Ex.: 721003"
-                    maxLength={20}
-                    autoComplete="off"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={price}
+                    onChange={e => setPrice(e.target.value)}
+                    placeholder="0"
+                    disabled={autoFetchingPrice}
                   />
                 </div>
 
@@ -473,7 +577,7 @@ function ItemRegistrationPage(): React.ReactElement {
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={saving || !name.trim()}
+                    disabled={saving || !name.trim() || (!isEditing && itemDb.length > 0 && !selectedDbItem)}
                   >
                     {saving ? t('common.saving') : isEditing ? <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> {t('common.saveChanges')}</> : <><Save size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} /> {t('items.registerBtn')}</>}
                   </button>

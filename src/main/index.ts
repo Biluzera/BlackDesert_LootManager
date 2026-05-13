@@ -769,6 +769,41 @@ ipcMain.handle('import-data', async () => {
 
 // ── Market API (bypasses CORS — runs in main process via net.fetch) ───────────
 
+// In-memory cache for the BDO item DB (fetched once per session)
+let itemDbCache: unknown = null
+
+ipcMain.handle('fetch-item-db', async () => {
+  if (itemDbCache) return itemDbCache
+  try {
+    const res = await net.fetch('https://api.arsha.io/util/db?lang=pt')
+    if (!res.ok) return null
+    const data = await res.json()
+    itemDbCache = data
+    return data
+  } catch {
+    return null
+  }
+})
+
+// Silently fetches an item icon from the Pearl CDN — returns null on any failure (no throw)
+ipcMain.handle('fetch-item-icon', async (_event, id: number) => {
+  try {
+    const url = `https://s1.pearlcdn.com/SA/TradeMarket/Common/img/BDO/item/${id}.png`
+    const res = await net.fetch(url)
+    if (!res.ok) return null
+    const arrayBuffer = await res.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    if (buffer.length < 4) return null
+    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47
+    if (!isPng) return null
+    const filename = `${randomUUID()}.png`
+    fs.writeFileSync(path.join(getImagesDir(), filename), buffer)
+    return filename
+  } catch {
+    return null
+  }
+})
+
 ipcMain.handle('market-search', async (_event, ids: string[]) => {
   try {
     const url = `https://api.arsha.io/v1/sa/search?ids=${ids.join(',')}`

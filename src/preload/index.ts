@@ -26,7 +26,13 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('market-search', ids),
 
   marketPriceDetail: (id: string): Promise<unknown> =>
-    ipcRenderer.invoke('market-price-detail', id)
+    ipcRenderer.invoke('market-price-detail', id),
+
+  fetchItemDb: (): Promise<unknown> =>
+    ipcRenderer.invoke('fetch-item-db'),
+
+  fetchItemIcon: (id: number): Promise<string | null> =>
+    ipcRenderer.invoke('fetch-item-icon', id)
 })
 
 // ── Combo overlay API ─────────────────────────────────────────────────────────
