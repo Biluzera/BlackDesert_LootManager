@@ -172,6 +172,10 @@ Generates the `.exe` installer in the `dist/` folder. The process compiles the p
 **Build requirements:**
 - Run the terminal as **Administrator**, or enable **Developer Mode** in Windows (Settings → System → For Developers).
 
+**Why administrator privileges are required:**
+
+The application requests administrator privileges because the **Combo Overlay** feature uses [`uiohook-napi`](https://github.com/nicovank/uiohook-napi) — a native library that installs a **global system keyboard hook**. This hook must intercept keystrokes at the OS level to detect skill combinations even when a game window (or any other application) has focus. On Windows, registering a low-level keyboard hook from a process without elevated permissions is blocked or silently ignored by the OS in certain security configurations, causing the combo detection to fail. Requesting `requireAdministrator` in the app manifest guarantees the hook is always registered successfully.
+
 **Application icon:**
 
 Place an `icon.ico` file at `resources/icon.ico` to customize the executable and installer icon. Recommended size: 256×256 px.
@@ -366,6 +370,10 @@ Gera o instalador `.exe` na pasta `dist/`. O processo compila o projeto via `ele
 
 **Requisitos para o build:**
 - Rode o terminal como **Administrador**, ou ative o **Modo Desenvolvedor** do Windows (Configurações → Sistema → Para desenvolvedores).
+
+**Por que o sistema precisa de permissão de Administrador:**
+
+O aplicativo solicita privilégios de administrador porque o **Overlay de Combo** utiliza [`uiohook-napi`](https://github.com/nicovank/uiohook-napi) — uma biblioteca nativa que instala um **hook global de teclado no sistema operacional**. Esse hook precisa interceptar teclas pressionadas em nível de SO para detectar combinações de habilidades mesmo quando outra janela (como a do jogo) está em foco. No Windows, registrar um hook de teclado de baixo nível a partir de um processo sem elevação de privilégios é bloqueado ou ignorado silenciosamente pelo sistema em certas configurações de segurança, fazendo com que a detecção de combos falhe. Ao declarar `requireAdministrator` no manifesto do aplicativo, o hook é sempre registrado com sucesso.
 
 **Ícone do aplicativo:**
 
