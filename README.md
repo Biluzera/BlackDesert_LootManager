@@ -28,7 +28,10 @@ Desktop application to track farm sessions, register items, and monitor statisti
 
 ### 💎 Item Registration
 - Register items with name, manual silver price, and a custom image.
+- **BDO Item Database**: typing an item name searches the built-in BDO item database via an autocomplete dropdown. Selecting a result auto-fills the name, downloads and saves the official icon from the CDN, and pre-fetches the current market price. Live prices are shown inline next to each dropdown result (debounced batch fetch).
 - **Market ID** (optional): link the item's ID from [arsha.io](https://arsha.io) to automatically fetch the real-time market price via API. The market price takes priority over the manual price while available.
+- **Image from URL**: in addition to selecting a local file, images can be downloaded by providing a direct internet URL.
+- **Non-tradeable notice**: if a database item has no market data and no icon is found, a warning is shown with a direct link to bdocodex.com.
 - Filter by name and by associated farm location.
 - Sort by name (A-Z / Z-A) and by price (ascending / descending) — the effective price (market or manual) is used for sorting.
 - Edit and delete existing items.
@@ -36,6 +39,7 @@ Desktop application to track farm sessions, register items, and monitor statisti
 
 ### 🗺️ Farm Locations
 - Register locations with name, image, and a list of items dropped there.
+- **Icon item** (optional): link a registered item to serve as the location's display icon in the interface.
 - **Gear Requirements** (optional): set the recommended minimum AP, maximum AP, and DP for the location.
 - Search items by name via dropdown when linking items to a location.
 - Direct association between items and locations to streamline session registration.
@@ -63,12 +67,16 @@ Desktop application to track farm sessions, register items, and monitor statisti
 
 - Register bosses with name, image, and a highlight color (preset palette or custom color).
 - Define multiple spawn schedules per day of the week.
-- Real-time countdown to the next spawn (updated every second).
+- **Live clock**: displays the current time, date, and weekday.
+- **Next boss card**: highlighted card showing the upcoming boss(es), their scheduled spawn time, and the real-time countdown (updated every second).
+- **Upcoming spawns list**: shows the next 7 spawn groups after the immediate next one, each with boss names, scheduled time, and countdown.
+- **Weekly calendar view**: a 7-column grid showing all registered bosses and their spawn times for each day of the week, with today's column highlighted.
 - **Sound alerts at 3 levels**:
   - **15 minutes before** — soft double beep (440 Hz)
   - **5 minutes before** — medium triple beep (660 Hz)
   - **3 minutes before** — urgent ascending burst (880 → 1100 Hz)
 - **Visual notification overlay**: a banner appears on screen with the boss name and image, the time remaining, and the exact spawn time.
+- **Test alerts**: dedicated buttons to manually trigger each of the 3 alert levels — plays the sound and displays a mock notification banner — without waiting for a real spawn.
 - Grouping of bosses that spawn at the same time.
 
 ### 🎮 Combo Overlay
@@ -80,6 +88,7 @@ Desktop application to track farm sessions, register items, and monitor statisti
   - **Custom text** — replaces the key display in the widget when filled in.
   - **Keys** — combination captured directly from the keyboard in an interactive capture mode (supports Ctrl, Alt, Shift modifiers and mouse buttons LMB/RMB).
   - **Cooldown** — time in seconds; the widget starts a countdown when the key combination is detected via a global system hook (`uiohook-napi`).
+- Skills can be reordered within a configuration via drag-and-drop using the grip handle.
 - Enable/disable each configuration individually — only enabled ones display widgets in the transparent window overlaid on top of the game.
 - **Repositioning mode**: drag each widget freely across the screen while drag mode is active; a corner resize handle allows scaling each widget from 0.6× to 3.0×. Press Enter to exit drag mode.
 - **Visual overlay customization** (applied globally to all widgets):
@@ -92,6 +101,8 @@ Desktop application to track farm sessions, register items, and monitor statisti
   - Hide widget during cooldown
   - Show cooldown timer below the widget
   - Show cooldown progress bar at the bottom of the widget
+  - **Widget opacity**: global slider to adjust the transparency of all widgets (10%–100%)
+  - **Show only when BDO is focused**: when enabled, all overlay widgets are automatically hidden while Black Desert Online is not the active window
   - **Live preview** of visual settings before saving.
 
 ### ⚙️ Settings
@@ -107,7 +118,7 @@ Desktop application to track farm sessions, register items, and monitor statisti
   - **Adventurer's Diary** — Special Elite + Courier Prime, typewriter style
 - The selected font is applied globally across all pages.
 - **Language**: choose between English and Portuguese (pt-BR). The entire interface — including texts, labels, tooltips, and messages — updates immediately when switching.
-- **Data Transfer**: exports all registered items, locations, and images into a single compressed file for sharing with friends or backup; imports a previously exported file, replacing current data.
+- **Data Transfer**: exports data into a single compressed file for sharing with friends or backup. The export scope can be selected: All, Items, Locations, Sessions, Bosses, Settings, Combo Configurations, or Goals. Imports a previously exported file, replacing current data.
 - **Developer Mode**: fills all tabs with mock data for UI testing without saving anything — deactivating it restores all real data.
 - **Market Debug** (visible only in Developer Mode): queries any item's data from the arsha.io API by ID, displaying base price, stock, and price details.
 
@@ -227,7 +238,10 @@ Aplicativo desktop para rastrear sessões de farm, registrar itens e acompanhar 
 
 ### 💎 Registro de Itens
 - Cadastro de itens com nome, preço manual em prata e imagem personalizada.
+- **Banco de Dados BDO**: ao digitar o nome de um item, um dropdown de autocomplete pesquisa no banco de dados BDO embutido. Ao selecionar um resultado, o nome é preenchido automaticamente, o ícone oficial é baixado do CDN e o preço de mercado atual é pré-buscado. Os preços em tempo real são exibidos ao lado de cada resultado do dropdown (busca em lote com debounce).
 - **ID de Mercado** (opcional): vincule o ID do item na [arsha.io](https://arsha.io) para buscar automaticamente o preço de mercado em tempo real via API. O preço de mercado tem prioridade sobre o preço manual enquanto estiver disponível.
+- **Imagem por URL**: além de selecionar um arquivo local, a imagem pode ser baixada fornecendo uma URL direta da internet.
+- **Aviso de item não comercializável**: caso um item do banco de dados não tenha dados de mercado nem ícone disponível, um aviso é exibido com link direto para o bdocodex.com.
 - Filtro por nome e por local de farm associado.
 - Ordenação por nome (A-Z / Z-A) e por preço (crescente / decrescente) — o preço considerado na ordenação é o preço efetivo (mercado ou manual).
 - Edição e remoção de itens existentes.
@@ -235,6 +249,7 @@ Aplicativo desktop para rastrear sessões de farm, registrar itens e acompanhar 
 
 ### 🗺️ Locais de Farm
 - Registro de locais com nome, imagem e lista de itens obtidos naquele local.
+- **Item de ícone** (opcional): vincule um item cadastrado para ser usado como ícone visual do local na interface.
 - **Requisitos de Gear** (opcional): defina AP mínimo, AP máximo e DP recomendados para o local.
 - Busca de itens por nome via dropdown ao vincular itens a um local.
 - Associação direta entre itens e locais para facilitar o registro de sessões.
@@ -262,12 +277,16 @@ Aplicativo desktop para rastrear sessões de farm, registrar itens e acompanhar 
 
 - Cadastro de bosses com nome, imagem e cor de destaque (paleta de cores predefinidas ou cor customizada).
 - Definição de múltiplos horários de spawn por dia da semana.
-- Contagem regressiva em tempo real até o próximo spawn (atualizada a cada segundo).
+- **Relógio em tempo real**: exibe a hora atual, data completa e dia da semana.
+- **Card do próximo boss**: card em destaque com o(s) boss(es) seguintes, horário de spawn agendado e contagem regressiva em tempo real (atualizada a cada segundo).
+- **Lista de spawns futuros**: exibe os próximos 7 grupos de spawn após o imediato, com nomes, horários e contagem regressiva.
+- **Calendário semanal**: grade de 7 colunas com todos os bosses cadastrados e seus horários de spawn por dia da semana, com a coluna de hoje destacada.
 - **Alertas sonoros em 3 níveis**:
   - **15 minutos antes** — bipe duplo suave (440 Hz)
   - **5 minutos antes** — bipe triplo médio (660 Hz)
   - **3 minutos antes** — sequência urgente ascendente (880 → 1100 Hz)
 - **Overlay de notificação visual**: um banner aparece na tela com o nome e imagem do boss, o tempo restante e o horário exato de spawn.
+- **Testar alertas**: botões dedicados para disparar manualmente cada um dos 3 níveis de alerta — toca o som e exibe uma notificação de prévia — sem aguardar um spawn real.
 - Agrupamento de bosses que spawnizam no mesmo horário.
 
 ### 🎮 Overlay de Combo
@@ -279,6 +298,7 @@ Aplicativo desktop para rastrear sessões de farm, registrar itens e acompanhar 
   - **Texto personalizado** — substitui a exibição das teclas no widget quando preenchido.
   - **Teclas** — combinação capturada diretamente pelo teclado em modo de captura interativo (suporta modificadores Ctrl, Alt, Shift e teclas de mouse LMB/RMB).
   - **Cooldown** — tempo em segundos; o widget entra em contagem regressiva ao detectar a tecla pressionada via hook global do sistema (`uiohook-napi`).
+- As habilidades podem ser reordenadas dentro de uma configuração via arrastar e soltar pela alça de grip.
 - Ativar/desativar cada configuração individualmente — apenas as ativas exibem widgets na janela transparente sobreposta ao jogo.
 - **Modo de reposicionamento**: mova cada widget livremente pela tela enquanto o modo de arraste estiver ativo; um redimensionador de canto permite escalar cada widget de 0.6× a 3.0×. Pressione Enter para encerrar o modo de arraste.
 - **Customização visual do overlay** (aplicada globalmente a todos os widgets):
@@ -291,6 +311,8 @@ Aplicativo desktop para rastrear sessões de farm, registrar itens e acompanhar 
   - Ocultar widget durante o cooldown
   - Exibir temporizador de cooldown abaixo do widget
   - Exibir barra de progresso do cooldown na base do widget
+  - **Opacidade do widget**: slider global para ajustar a transparência de todos os widgets (10%–100%)
+  - **Exibir apenas com BDO em foco**: quando ativado, todos os widgets do overlay são automaticamente ocultados enquanto o Black Desert Online não for a janela ativa
   - **Pré-visualização em tempo real** das configurações visuais antes de salvar.
 
 ### ⚙️ Configurações
@@ -306,7 +328,7 @@ Aplicativo desktop para rastrear sessões de farm, registrar itens e acompanhar 
   - **Diário de Aventureiro** — Special Elite + Courier Prime, máquina de escrever
 - A fonte selecionada é aplicada globalmente em todas as páginas do sistema.
 - **Idioma**: selecione entre Inglês (English) e Português (pt-BR). A interface inteira — incluindo textos, rótulos, tooltips e mensagens — é aplicada imediatamente ao trocar o idioma.
-- **Transferência de Dados**: exporta todos os itens, locais e imagens cadastrados em um único arquivo compactado para compartilhar com amigos ou fazer backup; importa um arquivo exportado anteriormente, substituindo os dados atuais.
+- **Transferência de Dados**: exporta dados em um único arquivo compactado para compartilhar ou fazer backup. O escopo da exportação pode ser selecionado: Tudo, Itens, Locais, Sessões, Bosses, Configurações, Combos ou Metas. Importa um arquivo exportado anteriormente, substituindo os dados atuais.
 - **Modo Desenvolvedor**: preenche todas as abas com dados fictícios para testes de interface sem salvar nada — ao desativar, tudo volta ao estado real.
 - **Debug de Mercado** (visível apenas no Modo Desenvolvedor): consulta os dados de qualquer item na API da arsha.io pelo ID, exibindo preço base, estoque e detalhes de preço.
 
