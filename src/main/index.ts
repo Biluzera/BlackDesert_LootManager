@@ -629,6 +629,7 @@ ipcMain.handle('export-data', async (_event, scope: string = 'all') => {
   const includeSettings  = includeAll || scope === 'settings'
   const includeCombo     = includeAll || scope === 'combo'
   const includeGoals     = includeAll || scope === 'goals'
+  const includeMilestones = includeAll || scope === 'milestones'
 
   const payload: Record<string, unknown> = {
     version: 1,
@@ -673,6 +674,11 @@ ipcMain.handle('export-data', async (_event, scope: string = 'all') => {
   if (includeGoals) {
     payload.goals = readJsonFile('goals.json')
   }
+  if (includeMilestones) {
+    const milestones = readJsonFile('milestones.json')
+    payload.milestones = milestones
+    if (Array.isArray(milestones)) milestones.forEach(collectImage)
+  }
 
   const images: Record<string, string> = {}
   for (const filename of imageFiles) {
@@ -715,7 +721,7 @@ ipcMain.handle('import-data', async () => {
 
   const {
     items, locations, bosses, sessions, settings,
-    comboConfigs, comboPositions, comboVisualConfig, goals,
+    comboConfigs, comboPositions, comboVisualConfig, goals, milestones,
     images
   } = payload as Record<string, unknown>
 
@@ -749,6 +755,9 @@ ipcMain.handle('import-data', async () => {
   if (Array.isArray(goals)) {
     fs.writeFileSync(path.join(dataDir, 'goals.json'), JSON.stringify(goals, null, 2), 'utf-8')
   }
+  if (Array.isArray(milestones)) {
+    fs.writeFileSync(path.join(dataDir, 'milestones.json'), JSON.stringify(milestones, null, 2), 'utf-8')
+  }
 
   // Restore images — validate magic bytes before writing
   if (typeof images === 'object' && images !== null) {
@@ -759,7 +768,8 @@ ipcMain.handle('import-data', async () => {
       const isPng  = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47
       const isWebp = buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
                      buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50
-      if (!isPng && !isWebp) continue
+      const isJpeg = buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF
+      if (!isPng && !isWebp && !isJpeg) continue
       fs.writeFileSync(path.join(imagesDir, filename), buf)
     }
   }

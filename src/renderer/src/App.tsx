@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings, Wrench, Keyboard } from 'lucide-react'
+import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings, Wrench, Keyboard, Target } from 'lucide-react'
 import HomePage from './pages/HomePage'
 import ItemRegistrationPage from './pages/ItemRegistrationPage'
 import FarmLocationPage from './pages/FarmLocationPage'
@@ -8,6 +8,7 @@ import StatsPage from './pages/StatsPage'
 import SettingsPage from './pages/SettingsPage'
 import WorldBossPage from './pages/WorldBossPage'
 import ComboOverlayPage from './pages/ComboOverlayPage'
+import MilestonesPage from './pages/MilestonesPage'
 import FarmTimer from './components/FarmTimer'
 import LoadingScreen from './components/LoadingScreen'
 import type { AppSettings } from './pages/SettingsPage'
@@ -20,7 +21,7 @@ import { ItemDbProvider } from './context/ItemDbContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type TabId = 'home' | 'items' | 'locations' | 'sessions' | 'stats' | 'bosses' | 'combo' | 'settings'
+export type TabId = 'home' | 'items' | 'locations' | 'sessions' | 'stats' | 'bosses' | 'milestones' | 'combo' | 'settings'
 
 interface Tab {
   id: TabId
@@ -37,6 +38,7 @@ const TABS: Tab[] = [
   { id: 'sessions',  label: 'Sessões de Farm',   icon: <ScrollText size={16} /> },
   { id: 'stats',     label: 'Estatísticas',      icon: <BarChart2 size={16} /> },
   { id: 'bosses',    label: 'Bosses Mundiais',   icon: <Swords size={16} /> },
+  { id: 'milestones', label: 'Marcos',            icon: <Target size={16} /> },
   { id: 'combo',     label: 'Overlay de Combo',  icon: <Keyboard size={16} /> },
   { id: 'settings',  label: 'Configurações',     icon: <Settings size={16} /> }
 ]
@@ -63,6 +65,7 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
     { id: 'sessions',  icon: <ScrollText size={16} /> },
     { id: 'stats',     icon: <BarChart2 size={16} /> },
     { id: 'bosses',    icon: <Swords size={16} /> },
+    { id: 'milestones', icon: <Target size={16} /> },
     { id: 'combo',     icon: <Keyboard size={16} /> },
     { id: 'settings',  icon: <Settings size={16} /> },
   ]
@@ -117,6 +120,7 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
       case 'sessions':  return <FarmSessionPage />
       case 'stats':     return <StatsPage />
       case 'bosses':    return <WorldBossPage />
+      case 'milestones': return <MilestonesPage />
       case 'combo':     return <ComboOverlayPage />
       case 'settings':  return <SettingsPage settings={settings} onSettingsChange={handleSettingsChange} />
     }
