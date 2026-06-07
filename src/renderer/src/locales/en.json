@@ -345,8 +345,6 @@
   },
   "settings": {
     "pageTitle": "Settings",
-    "themeSectionTitle": "Interface Theme",
-    "themeDesc": "Choose the color set that best matches your adventurer style.",
     "fontSectionTitle": "Interface Font",
     "fontDesc": "Choose the typography that best suits your reading.",
     "languageSectionTitle": "Language",
@@ -584,18 +582,6 @@
     "createFirstBtn": "Create first configuration",
     "opacityLabel": "Widget opacity",
     "onlyShowOnBdoFocusLabel": "Only show widgets when BDO window is focused"
-  },
-  "themes": {
-    "medieval":   { "label": "Golden Medieval",            "description": "The classic theme — dark wood and ancient gold." },
-    "crimson":    { "label": "Blood Crimson",              "description": "Deep red, perfect for the Arsha server." },
-    "elvia":      { "label": "Elvia Violet",               "description": "Ethereal purple of the corrupted Elvia lands." },
-    "night":      { "label": "Starry Night",               "description": "Deep blue of the night, silver of the stars." },
-    "desert":     { "label": "Valencia Desert",            "description": "Warm sand and terracotta of the Valencia lands." },
-    "abyss":      { "label": "Ocean Abyss",                "description": "Teal from the depths of the Margoria sea." },
-    "kamasylve":  { "label": "Kamasylve Forest",           "description": "Vivid green of the eternal Fairy forests." },
-    "drieghan":   { "label": "Drieghan Volcano",           "description": "Blazing orange of the volcanic Drieghan lands." },
-    "calpheon":   { "label": "Calpheon Aristocratic",      "description": "Elegant steel-blue of Calpheon nobility." },
-    "shadow":     { "label": "Shadow Grey",                "description": "Monochromatic, minimalist and austere." }
   },
   "fonts": {
     "classic":    { "label": "Classic Medieval",    "description": "Cinzel + Crimson Text — elegant and ornate." },

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings, Wrench, Keyboard, Target } from 'lucide-react'
+import { motion } from 'framer-motion'
 import HomePage from './pages/HomePage'
 import ItemRegistrationPage from './pages/ItemRegistrationPage'
 import FarmLocationPage from './pages/FarmLocationPage'
@@ -51,6 +52,35 @@ interface AppInnerProps {
   onDataReady: () => void
 }
 
+function BlackSpiritMascot(): React.ReactElement {
+  return (
+    <motion.div
+      className="black-spirit-card"
+      initial={{ opacity: 0, y: 18, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.55, ease: 'easeOut' }}
+      aria-label="Mascote Espirito Negro"
+    >
+      <div className="black-spirit-aura" aria-hidden="true" />
+      <div className="black-spirit-body" aria-hidden="true">
+        <span className="black-spirit-horn black-spirit-horn-left" />
+        <span className="black-spirit-horn black-spirit-horn-right" />
+        <span className="black-spirit-eye black-spirit-eye-left" />
+        <span className="black-spirit-eye black-spirit-eye-right" />
+        <span className="black-spirit-smile" />
+        <span className="black-spirit-spark black-spirit-spark-one" />
+        <span className="black-spirit-spark black-spirit-spark-two" />
+        <span className="black-spirit-spark black-spirit-spark-three" />
+      </div>
+      <div className="black-spirit-copy">
+        <span className="black-spirit-kicker">Companheiro</span>
+        <strong>Espirito Negro</strong>
+        <small>Guardiao do espolio</small>
+      </div>
+    </motion.div>
+  )
+}
+
 function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
   const [activeTab, setActiveTab] = useState<TabId>('home')
   const [settings,  setSettings]  = useState<AppSettings>(DEFAULT_SETTINGS)
@@ -59,16 +89,17 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
   const { t, setLanguage } = useLanguage()
 
   const TABS: Tab[] = [
-    { id: 'home',      icon: <Home size={16} /> },
-    { id: 'items',     icon: <Gem size={16} /> },
-    { id: 'locations', icon: <Map size={16} /> },
-    { id: 'sessions',  icon: <ScrollText size={16} /> },
-    { id: 'stats',     icon: <BarChart2 size={16} /> },
-    { id: 'bosses',    icon: <Swords size={16} /> },
-    { id: 'milestones', icon: <Target size={16} /> },
-    { id: 'combo',     icon: <Keyboard size={16} /> },
-    { id: 'settings',  icon: <Settings size={16} /> },
+    { id: 'home',      label: 'Inicio', icon: <Home size={16} /> },
+    { id: 'items',     label: 'Itens', icon: <Gem size={16} /> },
+    { id: 'locations', label: 'Locais', icon: <Map size={16} /> },
+    { id: 'sessions',  label: 'Sessoes', icon: <ScrollText size={16} /> },
+    { id: 'stats',     label: 'Estatisticas', icon: <BarChart2 size={16} /> },
+    { id: 'bosses',    label: 'Bosses', icon: <Swords size={16} /> },
+    { id: 'milestones', label: 'Marcos', icon: <Target size={16} /> },
+    { id: 'combo',     label: 'Combo', icon: <Keyboard size={16} /> },
+    { id: 'settings',  label: 'Configuracoes', icon: <Settings size={16} /> },
   ]
+  const activeTabMeta = TABS.find((tab) => tab.id === activeTab)
 
   // Track when both startup loads complete (idempotent set to handle StrictMode)
   const readySet    = useRef(new Set<string>())
@@ -91,15 +122,18 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
     loadItemsForMarket()
   }, [setMarketItems, markReady])
 
-  // Load settings on mount and apply theme
+  // Load settings on mount and apply persisted preferences
   useEffect(() => {
     async function loadSettings(): Promise<void> {
       const data = (await window.api.readJson('settings.json')) as AppSettings | null
-      if (data && data.theme) {
-        setSettings(data)
-        document.documentElement.setAttribute('data-theme', data.theme)
-        document.documentElement.setAttribute('data-font', data.font ?? 'classic')
-        if (data.language) setLanguage(data.language as LanguageId)
+      if (data) {
+        const next: AppSettings = {
+          font: data.font ?? DEFAULT_SETTINGS.font,
+          language: (data.language ?? DEFAULT_SETTINGS.language) as LanguageId
+        }
+        setSettings(next)
+        document.documentElement.setAttribute('data-font', next.font ?? 'classic')
+        if (next.language) setLanguage(next.language as LanguageId)
       }
       markReady('settings')
     }
@@ -108,7 +142,6 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
 
   function handleSettingsChange(s: AppSettings): void {
     setSettings(s)
-    document.documentElement.setAttribute('data-theme', s.theme)
     document.documentElement.setAttribute('data-font', s.font ?? 'classic')
   }
 
@@ -130,35 +163,52 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
     <div className="app-container">
       {/* ── Header ── */}
       <header className="app-header">
-        <div className="app-title">
-          <span className="title-ornament" aria-hidden="true"><Swords size={16} /></span>
-          <h1>BDO Loot Log</h1>
-          <span className="title-ornament" aria-hidden="true"><Swords size={16} /></span>
+        <div className="app-brand">
+          <div className="app-title">
+            <span className="title-ornament" aria-hidden="true"><Swords size={16} /></span>
+            <h1>BDO Loot Log</h1>
+          </div>
+          <p className="app-subtitle">{t('app.subtitle')}</p>
         </div>
-        <p className="app-subtitle">{t('app.subtitle')}</p>
+        <div className="top-nav-status" aria-label="Status da interface">
+          <span className="top-nav-pill">Black Desert Online</span>
+          <span className="top-nav-divider" aria-hidden="true" />
+          <span className="top-nav-section">{activeTabMeta ? t(`nav.${activeTabMeta.id}`) : activeTab}</span>
+        </div>
       </header>
 
       {/* ── Body: sidebar + content ── */}
       <div className="app-body">
         {/* ── Tab navigation ── */}
         <nav className="tab-nav" aria-label={t('common.mainNavAria')}>
+          <BlackSpiritMascot />
           {TABS.map((tab) => (
-            <button
+            <motion.button
               key={tab.id}
               className={`tab-button${activeTab === tab.id ? ' tab-active' : ''}`}
               onClick={() => setActiveTab(tab.id)}
               aria-current={activeTab === tab.id ? 'page' : undefined}
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.16 }}
             >
               <span className="tab-icon" aria-hidden="true">{tab.icon}</span>
               <span className="tab-label">{t(`nav.${tab.id}`)}</span>
-            </button>
+            </motion.button>
           ))}
         </nav>
 
         {/* ── Page content ── */}
-        <main className="content-area" role="main">
+        <motion.main
+          key={activeTab}
+          className="content-area"
+          role="main"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.26, ease: 'easeOut' }}
+        >
           {renderPage()}
-        </main>
+        </motion.main>
       </div>
 
       {/* ── Floating timer widget ── */}

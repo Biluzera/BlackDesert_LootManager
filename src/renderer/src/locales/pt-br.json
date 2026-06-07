@@ -346,8 +346,6 @@
   },
   "settings": {
     "pageTitle": "Configurações",
-    "themeSectionTitle": "Tema da Interface",
-    "themeDesc": "Escolha o conjunto de cores que mais combina com o seu estilo de aventureiro.",
     "fontSectionTitle": "Fonte da Interface",
     "fontDesc": "Escolha a tipografia que melhor se adapta à sua leitura.",
     "languageSectionTitle": "Idioma",
@@ -585,18 +583,6 @@
     "createFirstBtn": "Criar primeira configuração",
     "opacityLabel": "Opacidade dos widgets",
     "onlyShowOnBdoFocusLabel": "Exibir widgets apenas com a janela do BDO em foco"
-  },
-  "themes": {
-    "medieval":   { "label": "Medieval Dourado",        "description": "O tema clássico — madeira escura e ouro antigo." },
-    "crimson":    { "label": "Crimson Sangue",           "description": "Vermelho profundo, perfeito para o servidor Arsha." },
-    "elvia":      { "label": "Elvia Violeta",            "description": "Roxo etéreo das terras corrompidas de Elvia." },
-    "night":      { "label": "Noite Estrelada",          "description": "Azul profundo da noite, prata das estrelas." },
-    "desert":     { "label": "Deserto de Valencia",      "description": "Areia quente e terracota das terras de Valencia." },
-    "abyss":      { "label": "Abismo Oceânico",          "description": "Verde-azulado das profundezas do mar de Margoria." },
-    "kamasylve":  { "label": "Floresta de Kamasylve",    "description": "Verde vivo das florestas eternas das Fadas." },
-    "drieghan":   { "label": "Vulcão de Drieghan",       "description": "Laranja flamejante das terras vulcânicas de Drieghan." },
-    "calpheon":   { "label": "Calpheon Aristocrático",   "description": "Azul-aço elegante da nobreza de Calpheon." },
-    "shadow":     { "label": "Sombra Cinzenta",          "description": "Monocromático, minimalista e severo." }
   },
   "fonts": {
     "classic":    { "label": "Clássico Medieval",    "description": "Cinzel + Crimson Text — elegante e ornamentado." },

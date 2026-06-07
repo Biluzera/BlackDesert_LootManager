@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Settings, Palette, Type, Wrench, ShoppingCart, Search, BarChart2, Tag, CircleOff, CircleCheck, TriangleAlert, Check, CheckCircle2, ArrowLeftRight, Upload, Download, HardDrive, Languages } from 'lucide-react'
+import { Settings, Type, Wrench, ShoppingCart, Search, BarChart2, Tag, CircleOff, CircleCheck, TriangleAlert, Check, CheckCircle2, ArrowLeftRight, Upload, Download, HardDrive, Languages } from 'lucide-react'
 import { useDevMode } from '../context/DevModeContext'
 import { useLanguage, type LanguageId } from '../context/LanguageContext'
 import { fetchMarketPrices, fetchMarketPriceDetail } from '../services/marketApi'
@@ -8,39 +8,13 @@ import type { MarketEntry, MarketPriceDetail } from '../services/marketApi'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface AppSettings {
-  theme:    ThemeId
   font:     FontId
   language: LanguageId
 }
 
-export type ThemeId =
-  | 'medieval' | 'crimson' | 'elvia'     | 'night'
-  | 'desert'   | 'abyss'   | 'kamasylve' | 'drieghan'
-  | 'calpheon' | 'shadow'
-
 export type FontId = 'classic' | 'oldworld' | 'modern' | 'fantasy' | 'typewriter'
 
-export const DEFAULT_SETTINGS: AppSettings = { theme: 'medieval', font: 'classic', language: 'en' }
-
-// ── Theme definitions ─────────────────────────────────────────────────────────
-
-export interface ThemeDef {
-  id:      ThemeId
-  preview: string[] // 3 color swatches
-}
-
-export const THEMES: ThemeDef[] = [
-  { id: 'medieval',  preview: ['#1c0f07', '#c9a030', '#f0deb4'] },
-  { id: 'crimson',   preview: ['#1a0505', '#c03030', '#f0c8b0'] },
-  { id: 'elvia',     preview: ['#0e0518', '#8b44cc', '#d4b8f0'] },
-  { id: 'night',     preview: ['#050a1a', '#4488cc', '#c0d0f0'] },
-  { id: 'desert',    preview: ['#1a1005', '#cc8822', '#f0d89a'] },
-  { id: 'abyss',     preview: ['#021510', '#14836a', '#a0e8d4'] },
-  { id: 'kamasylve', preview: ['#071408', '#449933', '#b8f0a0'] },
-  { id: 'drieghan',  preview: ['#160800', '#ee6622', '#f8d0a0'] },
-  { id: 'calpheon',  preview: ['#08101c', '#8aaade', '#d0ddf4'] },
-  { id: 'shadow',    preview: ['#0c0c0c', '#aaaaaa', '#e0e0e0'] },
-]
+export const DEFAULT_SETTINGS: AppSettings = { font: 'classic', language: 'en' }
 
 // ── Font definitions ──────────────────────────────────────────────────────────
 
@@ -157,13 +131,6 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
     setTimeout(() => setSaved(false), 1800)
   }
 
-  async function applyTheme(theme: ThemeId): Promise<void> {
-    const next: AppSettings = { ...settings, theme }
-    onSettingsChange(next)
-    await window.api.writeJson('settings.json', next)
-    markSaved()
-  }
-
   async function applyFont(font: FontId): Promise<void> {
     const next: AppSettings = { ...settings, font }
     onSettingsChange(next)
@@ -186,41 +153,7 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
         {t('settings.pageTitle')}
       </h2>
 
-      {/* ── Themes ── */}
-      <section className="settings-section">
-        <div className="settings-section-title">
-          <Palette size={16} aria-hidden="true" /> {t('settings.themeSectionTitle')}
-        </div>
-        <p className="settings-section-desc">{t('settings.themeDesc')}</p>
-
-        <div className="theme-grid">
-          {THEMES.map(theme => {
-            const active = settings.theme === theme.id
-            const label  = t(`themes.${theme.id}.label`)
-            return (
-              <button
-                key={theme.id}
-                className={`theme-card${active ? ' theme-card-active' : ''}`}
-                onClick={() => applyTheme(theme.id)}
-                aria-pressed={active}
-                aria-label={label}
-              >
-                <div className="theme-swatches">
-                  {theme.preview.map((color, i) => (
-                    <div key={i} className="theme-swatch" style={{ background: color }} />
-                  ))}
-                </div>
-                <div className="theme-card-body">
-                  <span className="theme-card-name">{label}</span>
-                  <span className="theme-card-desc">{t(`themes.${theme.id}.description`)}</span>
-                </div>
-                {active && <Check size={15} className="theme-card-check" aria-hidden="true" />}
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
+      {/* ── Font ── */}
       <section className="settings-section">
         <div className="settings-section-title">
           <Type size={16} aria-hidden="true" /> {t('settings.fontSectionTitle')}
@@ -250,7 +183,7 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
                   <span className="font-card-name">{label}</span>
                   <span className="font-card-desc">{t(`fonts.${font.id}.description`)}</span>
                 </div>
-                {active && <Check size={15} className="theme-card-check" aria-hidden="true" />}
+                {active && <Check size={15} className="settings-card-check" aria-hidden="true" />}
               </button>
             )
           })}
