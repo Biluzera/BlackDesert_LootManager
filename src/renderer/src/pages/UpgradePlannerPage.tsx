@@ -19,6 +19,8 @@ export interface UpgradeSession {
   id: string
   itemId: string
   itemName: string
+  enhancementFrom: string
+  enhancementTo: string
   pityAttempts: number
   currentAttempts: number
   materialName: string
@@ -48,6 +50,11 @@ interface SessionCosts {
 }
 
 const EMPTY_DATA: UpgradePlannerData = { cronUnitPrice: 0, sessions: [] }
+
+const ENHANCEMENT_LEVELS = [
+  ...Array.from({ length: 16 }, (_, index) => `+${index}`),
+  'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'
+]
 
 function createId(): string {
   return `upgrade_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
@@ -84,6 +91,8 @@ function UpgradePlannerPage(): React.ReactElement {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [itemQuery, setItemQuery] = useState('')
   const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null)
+  const [enhancementFrom, setEnhancementFrom] = useState('+0')
+  const [enhancementTo, setEnhancementTo] = useState('+1')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [pityAttempts, setPityAttempts] = useState('')
   const [currentAttempts, setCurrentAttempts] = useState('0')
@@ -103,7 +112,13 @@ function UpgradePlannerPage(): React.ReactElement {
         const parsed = saved as Partial<UpgradePlannerData>
         setData({
           cronUnitPrice: asNonNegativeInt(parsed.cronUnitPrice ?? 0),
-          sessions: Array.isArray(parsed.sessions) ? parsed.sessions : []
+          sessions: Array.isArray(parsed.sessions)
+            ? parsed.sessions.map(session => ({
+                ...session,
+                enhancementFrom: session.enhancementFrom ?? '+0',
+                enhancementTo: session.enhancementTo ?? '+1'
+              }))
+            : []
         })
       }
       setRegisteredItems(Array.isArray(items) ? items as Item[] : [])
@@ -162,6 +177,8 @@ function UpgradePlannerPage(): React.ReactElement {
     setEditingId(null)
     setItemQuery('')
     setSelectedItem(null)
+    setEnhancementFrom('+0')
+    setEnhancementTo('+1')
     setPityAttempts('')
     setCurrentAttempts('0')
     setMaterialName('')
@@ -179,6 +196,14 @@ function UpgradePlannerPage(): React.ReactElement {
     setError('')
   }
 
+  function handleEnhancementFromChange(value: string): void {
+    const nextFromIndex = ENHANCEMENT_LEVELS.indexOf(value)
+    setEnhancementFrom(value)
+    if (ENHANCEMENT_LEVELS.indexOf(enhancementTo) <= nextFromIndex) {
+      setEnhancementTo(ENHANCEMENT_LEVELS[nextFromIndex + 1])
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent): Promise<void> {
     event.preventDefault()
     const pity = asNonNegativeInt(pityAttempts)
@@ -186,6 +211,8 @@ function UpgradePlannerPage(): React.ReactElement {
     const materialPrice = asNonNegativeInt(materialUnitPrice)
     const materialQty = asNonNegativeInt(materialQuantity)
     const crons = asNonNegativeInt(cronQuantity)
+    const fromIndex = ENHANCEMENT_LEVELS.indexOf(enhancementFrom)
+    const toIndex = ENHANCEMENT_LEVELS.indexOf(enhancementTo)
 
     if (!selectedItem) {
       setError(t('upgrades.itemRequired'))
@@ -195,11 +222,17 @@ function UpgradePlannerPage(): React.ReactElement {
       setError(t('upgrades.invalidValues'))
       return
     }
+    if (fromIndex < 0 || toIndex <= fromIndex) {
+      setError(t('upgrades.invalidEnhancementRange'))
+      return
+    }
 
     const session: UpgradeSession = {
       id: editingId ?? createId(),
       itemId: selectedItem.id,
       itemName: selectedItem.name,
+      enhancementFrom,
+      enhancementTo,
       pityAttempts: pity,
       currentAttempts: current,
       materialName: materialName.trim() || t('upgrades.materialFallback'),
@@ -222,6 +255,8 @@ function UpgradePlannerPage(): React.ReactElement {
     setEditingId(session.id)
     setSelectedItem({ id: session.itemId, name: session.itemName, grade: 0 })
     setItemQuery(session.itemName)
+    setEnhancementFrom(session.enhancementFrom ?? '+0')
+    setEnhancementTo(session.enhancementTo ?? '+1')
     setPityAttempts(String(session.pityAttempts))
     setCurrentAttempts(String(session.currentAttempts))
     setMaterialName(session.materialName)
@@ -325,6 +360,24 @@ function UpgradePlannerPage(): React.ReactElement {
             <span className="form-label">{t('upgrades.pityAttempts')}</span>
             <input className="form-input" type="number" min="1" value={pityAttempts} onChange={event => setPityAttempts(event.target.value)} />
           </label>
+          <div className="form-field upgrade-level-fieldset">
+            <span className="form-label">{t('upgrades.enhancementRange')}</span>
+            <div className="upgrade-level-selects">
+              <label>
+                <span>{t('upgrades.levelFrom')}</span>
+                <select className="form-select" value={enhancementFrom} onChange={event => handleEnhancementFromChange(event.target.value)}>
+                  {ENHANCEMENT_LEVELS.slice(0, -1).map(level => <option key={`from-${level}`} value={level}>{level}</option>)}
+                </select>
+              </label>
+              <span className="upgrade-level-arrow" aria-hidden="true">→</span>
+              <label>
+                <span>{t('upgrades.levelTo')}</span>
+                <select className="form-select" value={enhancementTo} onChange={event => setEnhancementTo(event.target.value)}>
+                  {ENHANCEMENT_LEVELS.filter(level => ENHANCEMENT_LEVELS.indexOf(level) > ENHANCEMENT_LEVELS.indexOf(enhancementFrom)).map(level => <option key={`to-${level}`} value={level}>{level}</option>)}
+                </select>
+              </label>
+            </div>
+          </div>
           <label className="form-field">
             <span className="form-label">{t('upgrades.currentAttempts')}</span>
             <input className="form-input" type="number" min="0" max={pityAttempts || undefined} value={currentAttempts} onChange={event => setCurrentAttempts(event.target.value)} />
@@ -364,7 +417,7 @@ function UpgradePlannerPage(): React.ReactElement {
               return (
                 <article className="upgrade-session-card" key={session.id}>
                   <div className="upgrade-session-top">
-                    <div className="upgrade-session-title"><span><Gem size={18} /></span><div><h3>{session.itemName}</h3><p>{session.materialQuantity}× {session.materialName} + {session.cronQuantity.toLocaleString(locale)} {t('upgrades.cronsPerAttempt')}</p></div></div>
+                    <div className="upgrade-session-title"><span><Gem size={18} /></span><div><div className="upgrade-name-row"><h3>{session.itemName}</h3><strong className="upgrade-level-badge"><span>{session.enhancementFrom ?? '+0'}</span><i>→</i><span>{session.enhancementTo ?? '+1'}</span></strong></div><p>{session.materialQuantity}× {session.materialName} + {session.cronQuantity.toLocaleString(locale)} {t('upgrades.cronsPerAttempt')}</p></div></div>
                     <div className="upgrade-card-actions">
                       <button type="button" className="btn-icon-sm" onClick={() => handleEdit(session)} aria-label={`${t('common.edit')} ${session.itemName}`}><Pencil size={15} /></button>
                       <button type="button" className="btn-icon-sm btn-icon-danger" onClick={() => handleDelete(session.id)} aria-label={`${t('common.delete')} ${session.itemName}`}><Trash2 size={15} /></button>

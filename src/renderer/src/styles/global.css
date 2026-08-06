@@ -7685,6 +7685,12 @@ body {
 }
 
 .upgrade-item-field { position: relative; }
+.upgrade-level-fieldset { min-width: 215px; }
+.upgrade-level-selects { display: grid; grid-template-columns: minmax(72px, 1fr) 20px minmax(72px, 1fr); align-items: end; gap: 6px; }
+.upgrade-level-selects label { min-width: 0; }
+.upgrade-level-selects label > span { display: block; margin-bottom: 4px; color: var(--text-muted); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.upgrade-level-selects .form-select { width: 100%; min-width: 0; height: 39px; padding: 0 8px; color: var(--gold-hi); font-family: var(--font-display); font-size: 0.84rem; font-weight: 700; text-align: center; }
+.upgrade-level-arrow { display: grid; place-items: center; height: 39px; color: var(--gold-hi); font-size: 1rem; text-shadow: var(--glow-gold-soft); }
 .upgrade-item-search { position: relative; }
 .upgrade-item-search > svg { position: absolute; z-index: 1; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
 .upgrade-item-search > .form-input { width: 100%; padding-left: 35px; }
@@ -7736,6 +7742,23 @@ body {
 .upgrade-session-title { min-width: 0; }
 .upgrade-session-title > div { min-width: 0; }
 .upgrade-session-title h3 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upgrade-name-row { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.upgrade-name-row h3 { min-width: 0; }
+.upgrade-level-badge {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 7px;
+  padding: 5px 10px;
+  color: #160e05;
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  background: linear-gradient(180deg, #f0d785, #bd8637 62%, #75451e);
+  border: 1px solid rgba(255,229,157,0.72);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 0 14px rgba(198,154,69,0.25);
+}
+.upgrade-level-badge i { color: rgba(38,22,6,0.66); font-style: normal; }
 .upgrade-session-title p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.74rem; }
 .upgrade-card-actions { display: flex; gap: 6px; }
 .btn-icon-danger:hover { color: #e9786e; border-color: rgba(233,120,110,0.52); }
@@ -7768,6 +7791,7 @@ body {
   .upgrade-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .upgrade-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .upgrade-item-field { grid-column: span 2; }
+  .upgrade-level-fieldset { grid-column: span 2; }
 }
 
 @media (max-width: 720px) {
@@ -7777,6 +7801,8 @@ body {
   .upgrade-form-grid,
   .upgrade-cost-grid { grid-template-columns: 1fr; }
   .upgrade-item-field { grid-column: auto; }
+  .upgrade-level-fieldset { grid-column: auto; }
+  .upgrade-name-row { align-items: flex-start; flex-direction: column; gap: 7px; }
   .upgrade-cost-grid > div { border-right: 0; border-bottom: 1px solid rgba(198,154,69,0.12); }
   .upgrade-inline-attempts { align-items: flex-start; flex-direction: column; }
 }
