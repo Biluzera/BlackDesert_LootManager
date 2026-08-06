@@ -631,6 +631,7 @@ ipcMain.handle('export-data', async (_event, scope: string = 'all') => {
   const includeMacros    = includeAll || scope === 'macros'
   const includeGoals     = includeAll || scope === 'goals'
   const includeMilestones = includeAll || scope === 'milestones'
+  const includeUpgrades   = includeAll || scope === 'upgrades'
 
   const payload: Record<string, unknown> = {
     version: 1,
@@ -683,6 +684,9 @@ ipcMain.handle('export-data', async (_event, scope: string = 'all') => {
     payload.milestones = milestones
     if (Array.isArray(milestones)) milestones.forEach(collectImage)
   }
+  if (includeUpgrades) {
+    payload.upgrades = readJsonFile('upgrade-planner.json')
+  }
 
   const images: Record<string, string> = {}
   for (const filename of imageFiles) {
@@ -725,7 +729,7 @@ ipcMain.handle('import-data', async () => {
 
   const {
     items, locations, bosses, sessions, settings,
-    comboConfigs, comboPositions, comboVisualConfig, macros, goals, milestones,
+    comboConfigs, comboPositions, comboVisualConfig, macros, goals, milestones, upgrades,
     images
   } = payload as Record<string, unknown>
 
@@ -764,6 +768,9 @@ ipcMain.handle('import-data', async () => {
   }
   if (Array.isArray(milestones)) {
     fs.writeFileSync(path.join(dataDir, 'milestones.json'), JSON.stringify(milestones, null, 2), 'utf-8')
+  }
+  if (upgrades !== null && upgrades !== undefined && typeof upgrades === 'object' && !Array.isArray(upgrades)) {
+    fs.writeFileSync(path.join(dataDir, 'upgrade-planner.json'), JSON.stringify(upgrades, null, 2), 'utf-8')
   }
 
   // Restore images — validate magic bytes before writing

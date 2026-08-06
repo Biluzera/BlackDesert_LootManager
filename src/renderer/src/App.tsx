@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings, Wrench, Keyboard, Target, MousePointer } from 'lucide-react'
+import { Home, Gem, Map, ScrollText, BarChart2, Swords, Settings, Wrench, Keyboard, Target, MousePointer, TrendingUp } from 'lucide-react'
 import { motion } from 'framer-motion'
 import HomePage from './pages/HomePage'
 import ItemRegistrationPage from './pages/ItemRegistrationPage'
@@ -11,6 +11,7 @@ import WorldBossPage from './pages/WorldBossPage'
 import ComboOverlayPage from './pages/ComboOverlayPage'
 import MilestonesPage from './pages/MilestonesPage'
 import MacroPage from './pages/MacroPage'
+import UpgradePlannerPage from './pages/UpgradePlannerPage'
 import FarmTimer from './components/FarmTimer'
 import LoadingScreen from './components/LoadingScreen'
 import type { AppSettings } from './pages/SettingsPage'
@@ -23,7 +24,7 @@ import { ItemDbProvider } from './context/ItemDbContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type TabId = 'home' | 'items' | 'locations' | 'sessions' | 'stats' | 'bosses' | 'milestones' | 'combo' | 'macros' | 'settings'
+export type TabId = 'home' | 'items' | 'locations' | 'sessions' | 'stats' | 'upgrades' | 'bosses' | 'milestones' | 'combo' | 'macros' | 'settings'
 
 interface Tab {
   id: TabId
@@ -39,6 +40,7 @@ const TABS: Tab[] = [
   { id: 'locations', label: 'Locais de Farm',    icon: <Map size={16} /> },
   { id: 'sessions',  label: 'Sessões de Farm',   icon: <ScrollText size={16} /> },
   { id: 'stats',     label: 'Estatísticas',      icon: <BarChart2 size={16} /> },
+  { id: 'upgrades',  label: 'Aprimoramentos',     icon: <TrendingUp size={16} /> },
   { id: 'bosses',    label: 'Bosses Mundiais',   icon: <Swords size={16} /> },
   { id: 'milestones', label: 'Marcos',            icon: <Target size={16} /> },
   { id: 'combo',     label: 'Overlay de Combo',  icon: <Keyboard size={16} /> },
@@ -96,6 +98,7 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
     { id: 'locations', label: 'Locais', icon: <Map size={16} /> },
     { id: 'sessions',  label: 'Sessoes', icon: <ScrollText size={16} /> },
     { id: 'stats',     label: 'Estatisticas', icon: <BarChart2 size={16} /> },
+    { id: 'upgrades',  label: 'Aprimoramentos', icon: <TrendingUp size={16} /> },
     { id: 'bosses',    label: 'Bosses', icon: <Swords size={16} /> },
     { id: 'milestones', label: 'Marcos', icon: <Target size={16} /> },
     { id: 'combo',     label: 'Combo', icon: <Keyboard size={16} /> },
@@ -155,6 +158,7 @@ function AppInner({ onDataReady }: AppInnerProps): React.ReactElement {
       case 'locations': return <FarmLocationPage />
       case 'sessions':  return <FarmSessionPage />
       case 'stats':     return <StatsPage />
+      case 'upgrades':  return <UpgradePlannerPage />
       case 'bosses':    return <WorldBossPage />
       case 'milestones': return <MilestonesPage />
       case 'combo':     return <ComboOverlayPage />
