@@ -13,6 +13,7 @@
     "bosses": "Bosses Mundiais",
     "milestones": "Marcos",
     "combo": "Overlay de Combo",
+    "macros": "Macros",
     "settings": "Configurações"
   },
   "common": {
@@ -385,6 +386,7 @@
     "scopeBosses": "World Bosses",
     "scopeSettings": "Configurações do App",
     "scopeCombo": "Combo Overlay",
+    "scopeMacros": "Macros",
     "scopeGoals": "Metas de Farm",
     "scopeMilestones": "Marcos",
     "importLabel": "Importar",

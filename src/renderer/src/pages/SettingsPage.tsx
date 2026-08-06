@@ -36,7 +36,7 @@ export const FONTS: FontDef[] = [
 
 export type ExportScope =
   | 'all' | 'items' | 'locations' | 'sessions'
-  | 'bosses' | 'settings' | 'combo' | 'goals' | 'milestones'
+  | 'bosses' | 'settings' | 'combo' | 'macros' | 'goals' | 'milestones'
 
 // ── Props ──────────────────────────────────────────────────────────────────────
 
@@ -368,6 +368,7 @@ export default function SettingsPage({ settings, onSettingsChange }: SettingsPag
                 <option value="bosses">{t('settings.scopeBosses')}</option>
                 <option value="settings">{t('settings.scopeSettings')}</option>
                 <option value="combo">{t('settings.scopeCombo')}</option>
+                <option value="macros">{t('settings.scopeMacros')}</option>
                 <option value="goals">{t('settings.scopeGoals')}</option>
                 <option value="milestones">{t('settings.scopeMilestones')}</option>
               </select>

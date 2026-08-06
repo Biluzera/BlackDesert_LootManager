@@ -42,6 +42,10 @@ declare global {
       onVisualConfig: (cb: (config: WidgetVisualConfig) => void) => () => void
       setBdoFocusFilter: (enabled: boolean) => void
     }
+    macroApi: {
+      execute: (macro: unknown) => Promise<{ success: boolean; reason?: string }>
+      stop: () => Promise<{ success: boolean; reason?: string }>
+    }
   }
 }
 

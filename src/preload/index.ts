@@ -98,3 +98,11 @@ contextBridge.exposeInMainWorld('comboApi', {
   }
 })
 
+contextBridge.exposeInMainWorld('macroApi', {
+  execute: (macro: unknown): Promise<{ success: boolean; reason?: string }> =>
+    ipcRenderer.invoke('macro:execute', macro),
+
+  stop: (): Promise<{ success: boolean; reason?: string }> =>
+    ipcRenderer.invoke('macro:stop')
+})
+

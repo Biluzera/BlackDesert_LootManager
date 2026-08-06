@@ -13,6 +13,7 @@
     "bosses": "World Bosses",
     "milestones": "Milestones",
     "combo": "Combo Overlay",
+    "macros": "Macros",
     "settings": "Settings"
   },
   "common": {
@@ -384,6 +385,7 @@
     "scopeBosses": "World Bosses",
     "scopeSettings": "App Settings",
     "scopeCombo": "Combo Overlay",
+    "scopeMacros": "Macros",
     "scopeGoals": "Farm Goals",
     "scopeMilestones": "Milestones",
     "importLabel": "Import",

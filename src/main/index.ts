@@ -628,6 +628,7 @@ ipcMain.handle('export-data', async (_event, scope: string = 'all') => {
   const includeBosses    = includeAll || scope === 'bosses'
   const includeSettings  = includeAll || scope === 'settings'
   const includeCombo     = includeAll || scope === 'combo'
+  const includeMacros    = includeAll || scope === 'macros'
   const includeGoals     = includeAll || scope === 'goals'
   const includeMilestones = includeAll || scope === 'milestones'
 
@@ -670,6 +671,9 @@ ipcMain.handle('export-data', async (_event, scope: string = 'all') => {
     payload.comboConfigs      = readJsonFile('combo-configs.json')
     payload.comboPositions    = readJsonFile('combo-positions.json')
     payload.comboVisualConfig = readJsonFile('combo-visual-config.json')
+  }
+  if (includeMacros) {
+    payload.macros = readJsonFile('macros.json')
   }
   if (includeGoals) {
     payload.goals = readJsonFile('goals.json')
@@ -721,7 +725,7 @@ ipcMain.handle('import-data', async () => {
 
   const {
     items, locations, bosses, sessions, settings,
-    comboConfigs, comboPositions, comboVisualConfig, goals, milestones,
+    comboConfigs, comboPositions, comboVisualConfig, macros, goals, milestones,
     images
   } = payload as Record<string, unknown>
 
@@ -751,6 +755,9 @@ ipcMain.handle('import-data', async () => {
   }
   if (comboVisualConfig !== null && comboVisualConfig !== undefined && typeof comboVisualConfig === 'object' && !Array.isArray(comboVisualConfig)) {
     fs.writeFileSync(path.join(dataDir, 'combo-visual-config.json'), JSON.stringify(comboVisualConfig, null, 2), 'utf-8')
+  }
+  if (Array.isArray(macros)) {
+    fs.writeFileSync(path.join(dataDir, 'macros.json'), JSON.stringify(macros, null, 2), 'utf-8')
   }
   if (Array.isArray(goals)) {
     fs.writeFileSync(path.join(dataDir, 'goals.json'), JSON.stringify(goals, null, 2), 'utf-8')
@@ -920,6 +927,221 @@ ipcMain.on('combo:set-bdo-focus-filter', (_event, enabled: boolean) => {
 })
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
+
+// User-mode macro executor. It sends input only to the current foreground window
+// and refuses protected game/anti-cheat windows by title before every step.
+interface MacroStepInput {
+  type: 'keys' | 'mouse' | 'delay'
+  keys?: string
+  mouseButton?: 'LMB' | 'RMB' | 'MMB'
+  delayMs?: number
+  holdMs?: number
+  repeat?: number
+  delayAfterMs?: number
+}
+
+interface MacroExecutionInput {
+  name?: string
+  startDelayMs?: number
+  repeatCount?: number
+  repeatIntervalMs?: number
+  globalDelayMs?: number
+  steps?: MacroStepInput[]
+}
+
+let macroRunner: ReturnType<typeof spawn> | null = null
+
+function clampInt(value: unknown, fallback: number, min: number, max: number): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return fallback
+  return Math.min(max, Math.max(min, Math.round(n)))
+}
+
+function sanitizeMacroForExecution(raw: unknown): MacroExecutionInput | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+  const input = raw as Record<string, unknown>
+  const rawSteps = Array.isArray(input.steps) ? input.steps : []
+  const steps = rawSteps.slice(0, 80)
+    .filter((step): step is Record<string, unknown> => !!step && typeof step === 'object' && !Array.isArray(step))
+    .map((step): MacroStepInput => {
+      const type = step.type === 'mouse' || step.type === 'delay' ? step.type : 'keys'
+      const mouseButton = step.mouseButton === 'RMB' || step.mouseButton === 'MMB' ? step.mouseButton : 'LMB'
+      return {
+        type,
+        keys: typeof step.keys === 'string' ? step.keys.slice(0, 80) : '',
+        mouseButton,
+        delayMs: clampInt(step.delayMs, 100, 1, 60000),
+        holdMs: clampInt(step.holdMs, 40, 1, 10000),
+        repeat: clampInt(step.repeat, 1, 1, 99),
+        delayAfterMs: clampInt(step.delayAfterMs, 0, 0, 60000)
+      }
+    })
+
+  if (steps.length === 0) return null
+  return {
+    name: typeof input.name === 'string' ? input.name.slice(0, 120) : 'Macro',
+    startDelayMs: clampInt(input.startDelayMs, 0, 0, 60000),
+    repeatCount: clampInt(input.repeatCount, 1, 1, 50),
+    repeatIntervalMs: clampInt(input.repeatIntervalMs, 250, 0, 60000),
+    globalDelayMs: clampInt(input.globalDelayMs, 0, 0, 10000),
+    steps
+  }
+}
+
+const MACRO_EXECUTOR_PS = String.raw`
+param([Parameter(Mandatory=$true)][string]$PayloadPath)
+
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public static class MacroNative {
+  [DllImport("user32.dll")] public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+  [DllImport("user32.dll")] public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+
+  public static string GetTitle() {
+    IntPtr h = GetForegroundWindow();
+    var sb = new StringBuilder(512);
+    GetWindowText(h, sb, 512);
+    return sb.ToString();
+  }
+}
+'@
+
+$vk = @{
+  SHIFT=0x10; CTRL=0x11; ALT=0x12; SPACE=0x20; TAB=0x09; ENTER=0x0D; ESC=0x1B;
+  BACKSPACE=0x08; DELETE=0x2E; INSERT=0x2D; HOME=0x24; END=0x23; PAGEUP=0x21; PAGEDOWN=0x22;
+  UP=0x26; DOWN=0x28; LEFT=0x25; RIGHT=0x27;
+  NUM0=0x60; NUM1=0x61; NUM2=0x62; NUM3=0x63; NUM4=0x64; NUM5=0x65; NUM6=0x66; NUM7=0x67; NUM8=0x68; NUM9=0x69;
+  NUM_ENTER=0x0D
+}
+foreach ($c in 65..90) { $vk[[string][char]$c] = $c }
+foreach ($c in 48..57) { $vk[[string][char]$c] = $c }
+for ($i = 1; $i -le 12; $i++) { $vk["F$i"] = 0x6F + $i }
+
+$blockedTitles = @('black desert', 'blackdesert', 'gameguard', 'xigncode', 'easy anti-cheat', 'battleye')
+
+function Assert-SafeForeground {
+  $rawTitle = [MacroNative]::GetTitle()
+  if ($null -eq $rawTitle) { $rawTitle = '' }
+  $title = $rawTitle.ToLowerInvariant()
+  foreach ($blocked in $blockedTitles) {
+    if ($title.Contains($blocked)) { exit 42 }
+  }
+}
+
+function Key-Down([string]$key) {
+  $upper = $key.Trim().ToUpperInvariant()
+  if (-not $vk.ContainsKey($upper)) { exit 43 }
+  [MacroNative]::keybd_event([byte]$vk[$upper], 0, 0, [UIntPtr]::Zero)
+}
+
+function Key-Up([string]$key) {
+  $upper = $key.Trim().ToUpperInvariant()
+  if (-not $vk.ContainsKey($upper)) { exit 43 }
+  [MacroNative]::keybd_event([byte]$vk[$upper], 0, 2, [UIntPtr]::Zero)
+}
+
+function Click-Mouse([string]$button, [int]$holdMs) {
+  $down = 0x0002; $up = 0x0004
+  if ($button -eq 'RMB') { $down = 0x0008; $up = 0x0010 }
+  if ($button -eq 'MMB') { $down = 0x0020; $up = 0x0040 }
+  [MacroNative]::mouse_event($down, 0, 0, 0, [UIntPtr]::Zero)
+  Start-Sleep -Milliseconds $holdMs
+  [MacroNative]::mouse_event($up, 0, 0, 0, [UIntPtr]::Zero)
+}
+
+$macro = Get-Content -LiteralPath $PayloadPath -Raw | ConvertFrom-Json
+Assert-SafeForeground
+if ($macro.startDelayMs -gt 0) { Start-Sleep -Milliseconds ([int]$macro.startDelayMs) }
+
+$loopCount = [Math]::Max(1, [int]$macro.repeatCount)
+for ($loop = 0; $loop -lt $loopCount; $loop++) {
+  Assert-SafeForeground
+  foreach ($step in $macro.steps) {
+    Assert-SafeForeground
+    if ($step.type -eq 'delay') {
+      Start-Sleep -Milliseconds ([int]$step.delayMs)
+      continue
+    }
+
+    $stepRepeat = [Math]::Max(1, [int]$step.repeat)
+    for ($r = 0; $r -lt $stepRepeat; $r++) {
+      Assert-SafeForeground
+      if ($step.type -eq 'mouse') {
+        Click-Mouse ([string]$step.mouseButton) ([int]$step.holdMs)
+      } else {
+        $parts = @(([string]$step.keys).Split('+') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+        if ($parts.Count -eq 0) { exit 43 }
+        foreach ($part in $parts) { Key-Down $part }
+        Start-Sleep -Milliseconds ([int]$step.holdMs)
+        [array]::Reverse($parts)
+        foreach ($part in $parts) { Key-Up $part }
+      }
+      $wait = [int]$step.delayAfterMs + [int]$macro.globalDelayMs
+      if ($wait -gt 0) { Start-Sleep -Milliseconds $wait }
+    }
+  }
+  if ($loop -lt ($loopCount - 1) -and $macro.repeatIntervalMs -gt 0) {
+    Start-Sleep -Milliseconds ([int]$macro.repeatIntervalMs)
+  }
+}
+`
+
+ipcMain.handle('macro:execute', async (_event, rawMacro: unknown) => {
+  if (process.platform !== 'win32') return { success: false, reason: 'unsupported-platform' }
+  if (macroRunner) return { success: false, reason: 'already-running' }
+
+  const macro = sanitizeMacroForExecution(rawMacro)
+  if (!macro) return { success: false, reason: 'invalid-macro' }
+
+  const runId = randomUUID()
+  const scriptPath = path.join(os.tmpdir(), `bdo-lootlog-macro-${runId}.ps1`)
+  const payloadPath = path.join(os.tmpdir(), `bdo-lootlog-macro-${runId}.json`)
+  fs.writeFileSync(scriptPath, MACRO_EXECUTOR_PS, 'utf-8')
+  fs.writeFileSync(payloadPath, JSON.stringify(macro), 'utf-8')
+
+  return await new Promise<{ success: boolean; reason?: string }>((resolve) => {
+    macroRunner = spawn('powershell', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      scriptPath,
+      '-PayloadPath',
+      payloadPath
+    ], { stdio: 'ignore', windowsHide: true })
+
+    macroRunner.on('exit', (code, signal) => {
+      macroRunner = null
+      try { fs.unlinkSync(scriptPath) } catch { /* ignore */ }
+      try { fs.unlinkSync(payloadPath) } catch { /* ignore */ }
+      if (signal) resolve({ success: false, reason: 'stopped' })
+      else if (code === 0) resolve({ success: true })
+      else if (code === 42) resolve({ success: false, reason: 'blocked-window' })
+      else if (code === 43) resolve({ success: false, reason: 'unsupported-key' })
+      else resolve({ success: false, reason: `executor-exit-${code ?? 'unknown'}` })
+    })
+
+    macroRunner.on('error', () => {
+      macroRunner = null
+      try { fs.unlinkSync(scriptPath) } catch { /* ignore */ }
+      try { fs.unlinkSync(payloadPath) } catch { /* ignore */ }
+      resolve({ success: false, reason: 'spawn-error' })
+    })
+  })
+})
+
+ipcMain.handle('macro:stop', () => {
+  if (!macroRunner) return { success: false, reason: 'not-running' }
+  macroRunner.kill()
+  macroRunner = null
+  return { success: true }
+})
 
 app.whenReady().then(() => {
   // If not elevated, prompt the user to relaunch as Administrator.
